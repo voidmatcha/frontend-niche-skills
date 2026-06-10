@@ -58,6 +58,36 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
   bundle (they fire on failure too); `READY` proves the web app actually ran.
 - Skip the signal for low-stakes screens — it costs an app-side loading + timeout
   policy.
+- **Pair READY with an error policy** in the same contract: what the app does when
+  `READY` never arrives (timeout → fallback or dismiss), what the page shows on its
+  own API failures (web-owned error state with retry — native can't see them),
+  bridge-unavailable = noop by design, and who logs which telemetry (exposure and
+  purchase events app-side; page errors web-side).
+
+## Auth & session handoff
+
+Decide in the contract where identity comes from — in order of preference:
+
+- **None** — the page renders purely from params (simplest; no identity surface).
+- **Shared cookie session** — host-specific behavior (e.g. React Native WebView has a
+  `sharedCookiesEnabled` prop for Android; verify per host and OS version).
+- **Bridge-injected token** — app sends it after a handshake message; note this
+  requires an inbound message, weigh against the one-way preference.
+- **Query-param token — avoid.** URLs leak into server logs, browser history, and
+  referrer headers; treat any token that touched a URL as exposed.
+
+## Navigation & capabilities
+
+Bridge screens should be single screens — but define in the contract what happens
+when the page would navigate or use device capabilities:
+
+- External links: in-app, system browser, or blocked? Deep links into other native
+  screens: which scheme/route? Downloads, `<a download>`, file inputs/camera,
+  permission prompts: several of these **silently no-op or behave differently inside
+  WebViews** — don't assume browser behavior; test the specific host.
+- The app side typically enforces the policy via navigation interception
+  (e.g. RN `onShouldStartLoadWithRequest`, `originWhitelist`); the web side should not
+  emit navigations that aren't in the agreed policy.
 
 ## A/B variants via query params
 

@@ -40,13 +40,13 @@ component names. Pair them with project-local skills for repo conventions.
 
 This package is the **knowledge layer** — it tells you how to design the page and the
 contract. For the transport implementation itself, or deeper dives, these are solid
-(all links live-verified at curation time):
+(all links live-verified 2026-06):
 
 ### Bridge libraries (transport implementations)
 
 | Library | What it gives the web side |
 |---------|---------------------------|
-| [gronxb/webview-bridge](https://github.com/gronxb/webview-bridge) | Type-safe React Native ↔ web bridge (tRPC-style); ships a dedicated `@webview-bridge/web` package. Actively maintained. |
+| [gronxb/webview-bridge](https://github.com/gronxb/webview-bridge) | Type-safe React Native ↔ web bridge (tRPC-style); ships a dedicated `@webview-bridge/web` package. Active as of 2026-02 (v1.7.9). |
 | [daangn/metabridge](https://github.com/daangn/metabridge) | JSON-Schema-driven codegen from Karrot: one schema → typed TS SDK for the page + Kotlin/Swift stubs. |
 | [marcuswestin/WebViewJavascriptBridge](https://github.com/marcuswestin/WebViewJavascriptBridge) | The classic iOS bridge (14k★); injects a `registerHandler`/`callHandler` shim into the page. Dormant but historically formative. |
 | [kibotu/jsbridge](https://github.com/kibotu/jsbridge) | One injected `bridge.js` for both Android `@JavascriptInterface` and iOS `WKScriptMessageHandler` — single `window.jsbridge` API. |
@@ -55,7 +55,7 @@ contract. For the transport implementation itself, or deeper dives, these are so
 ### Engineering write-ups
 
 - [Shopify — Mobile Bridge: Making WebViews Feel Native](https://shopify.engineering/mobilebridge-native-webviews) (2025) — ~600 WebView screens: background preloading, snapshotting against blank screens.
-- [Close — Communicating with React Native Web Views](https://making.close.com/posts/react-native-webviews/) (2024) — strongly-typed `{action, payload}` message bridge design.
+- [Close — Communicating with React Native Web Views](https://making.close.com/posts/react-native-webviews/) (2024) — strongly-typed `{action, payload}` message bridge design (equivalent envelope to this skill's `{ type, data }` — standardize on one).
 - [Zellic — You're Probably Using WebViews Wrong](https://www.zellic.io/blog/webview-security) (2025) — bridge security: iframe access, origin checks, spoofed messages.
 - [MECH2CS — RN WebView 브릿지 통신 안정성 개선](https://blog.mech2cs.com/posts/react-native-webview-bridge-handshake) (2025, Korean) — independently converges on the WEB_READY handshake this skill recommends.
 - [당근 — 웹 프로젝트 배포하기 #1: 파일 기반 웹뷰](https://medium.com/daangn/%EB%8B%B9%EA%B7%BC%EB%A7%88%EC%BC%93%EC%97%90-%EC%9B%B9-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EB%B0%B0%ED%8F%AC%ED%95%98%EA%B8%B0-1-%ED%8C%8C%EC%9D%BC-%EA%B8%B0%EB%B0%98-%EC%9B%B9%EB%B7%B0-d312b17e697c) (2022, Korean) — local `file://` webview serving, its origin-model limits, and why they moved off it.
