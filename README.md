@@ -21,15 +21,29 @@ The skill is a compact checklist + transport adapter; details live in
 Skills follow the [agentskills.io](https://agentskills.io/specification) `SKILL.md`
 format, compatible with Claude Code and Codex.
 
+### Claude Code (plugin, recommended)
+
+```shell
+/plugin marketplace add dididy/webview-skills
+/plugin install webview-skills@webview-skills
+```
+
+### Manual (Claude Code or Codex)
+
 ```bash
 # Claude Code (user-level)
-ln -s ~/Documents/webview-skills/skills/webview-bridge-pages ~/.claude/skills/webview-bridge-pages
+ln -s <repo>/skills/webview-bridge-pages ~/.claude/skills/webview-bridge-pages
 
 # Codex (user-level)
-ln -s ~/Documents/webview-skills/skills/webview-bridge-pages ~/.agents/skills/webview-bridge-pages
+ln -s <repo>/skills/webview-bridge-pages ~/.agents/skills/webview-bridge-pages
 ```
 
 Project-level: symlink or copy into the repo's `.claude/skills/` / `.agents/skills/`.
+Codex has no plugin system — the manual symlink is the supported path there.
+
+## License
+
+[Apache-2.0](./LICENSE.txt) · [Security policy](./SECURITY.md) · [Changelog](./CHANGELOG.md)
 
 ## Scope
 

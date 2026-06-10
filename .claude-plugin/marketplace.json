@@ -1,0 +1,33 @@
+{
+  "name": "webview-skills",
+  "owner": {
+    "name": "YONGJAE LEE"
+  },
+  "plugins": [
+    {
+      "name": "webview-skills",
+      "source": "./",
+      "description": "Skills for building the web-page side of native app WebViews (React Native WebView, WKWebView, Android WebView, Flutter): postMessage bridge contracts, native close/back ownership, READY loading signals, query-param A/B variants, and webview layout pitfalls (safe-area, 100vh, keyboard, font scale).",
+      "version": "1.0.0",
+      "author": {
+        "name": "YONGJAE LEE"
+      },
+      "license": "Apache-2.0",
+      "category": "web-development",
+      "keywords": [
+        "webview",
+        "in-app-webview",
+        "hybrid-app",
+        "bridge",
+        "postmessage",
+        "react-native-webview",
+        "wkwebview",
+        "android-webview",
+        "flutter",
+        "safe-area",
+        "remote-config",
+        "ab-testing"
+      ]
+    }
+  ]
+}
