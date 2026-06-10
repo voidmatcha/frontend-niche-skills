@@ -10,7 +10,7 @@
       "source": "./",
       "homepage": "https://github.com/dididy/frontend-niche-skills",
       "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, and deep-link hydration. Every factual claim checked against official sources.",
-      "version": "1.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "YONGJAE LEE"
       },

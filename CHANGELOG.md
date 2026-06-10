@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-06-11
+## [0.2.0] - 2026-06-11
 
 ### Added
 
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   marketplace manifests updated (plugin `frontend-niche-skills` ships all skills;
   install command changed).
 
-## [1.0.0] - 2026-06-10
+## [0.1.0] - 2026-06-10
 
 ### Added
 
@@ -57,6 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorporates an external Codex CLI review (auth/navigation/error-contract topics,
   framework-neutral adapter snippet, source-wording accuracy).
 
-[Unreleased]: https://github.com/dididy/frontend-niche-skills/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/dididy/frontend-niche-skills/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/dididy/frontend-niche-skills/releases/tag/v1.0.0
+[Unreleased]: https://github.com/dididy/frontend-niche-skills/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dididy/frontend-niche-skills/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/dididy/frontend-niche-skills/releases/tag/v0.1.0
