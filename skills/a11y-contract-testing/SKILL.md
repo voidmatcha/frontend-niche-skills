@@ -32,10 +32,12 @@ by role + name, and the test fails the moment the contract breaks.
 
 - **Query by role + name, nothing else**:
   `getByRole('dialog', { name: '...' })` (Playwright / Testing Library). This single
-  query asserts role, accessible name, and **AT-visibility** (both tools exclude
-  elements hidden from the ARIA tree — `aria-hidden`, `display:none` — which is not
-  the same as CSS/visual visibility). If a refactor drops the `aria-labelledby`, the
-  locator stops resolving and the test fails for the right reason.
+  query asserts role, accessible name, and **AT-visibility** — not CSS/visual
+  visibility. Testing Library explicitly documents excluding elements hidden from
+  the ARIA tree (`aria-hidden`, `display:none`; WAI-ARIA tree exclusion); Playwright
+  matches by W3C ARIA role/name semantics and behaves the same way in practice.
+  If a refactor drops the `aria-labelledby`, the locator stops resolving and the
+  test fails for the right reason.
 - **Sentinel spec**: one test file that opens every modal in the app and asserts each
   resolves via `getByRole('dialog', { name })`. New unnamed modals fail the sentinel
   instead of shipping. Keep it data-driven (list of route + trigger + expected name).

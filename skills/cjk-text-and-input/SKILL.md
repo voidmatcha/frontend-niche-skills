@@ -60,8 +60,9 @@ multiple keystrokes, so key events lie).
 ## Counting and slicing
 
 - `String.length` counts UTF-16 code units, not user-perceived characters. Hangul
-  syllables in NFC are 1 unit, but decomposed jamo (NFD — e.g. file names from
-  macOS HFS+-era tooling, which stored strings decomposed) are 2-3; emoji are 2+.
+  syllables in NFC are 1 unit, but decomposed jamo are 2-3 (NFD; also file names
+  from macOS HFS+-era tooling — HFS+ stored names in a frozen canonical
+  decomposition similar to, but not identical to, standard NFD); emoji are 2+.
   For user-facing length limits and cursor-safe slicing use `Intl.Segmenter`
   (grapheme granularity) and normalize (`.normalize('NFC')`) before comparing
   strings from mixed sources.
