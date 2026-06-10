@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-11
+
+### Added
+
+- `a11y-contract-testing` skill — accessibility semantics as testable contracts:
+  dialog role/name requirements (WCAG 4.1.2, ARIA APG), role+name queries,
+  sentinel specs, decorative-wrapper `role="presentation"` rules.
+- `cjk-text-and-input` skill — CJK line breaking (`word-break: keep-all`,
+  `line-break`, UAX #14), IME composition events (`isComposing`, legacy keyCode 229,
+  Enter-during-composition guard), controlled-input composition pitfalls,
+  grapheme-safe counting (`Intl.Segmenter`, NFC normalization).
+- `deeplink-hydration` skill — deep links surviving SPA/SSR hydration:
+  `router.isReady` gating, `window.location` as client-side source of truth,
+  auth-bounce `returnTo`, direct-navigation e2e rule.
+
+### Changed
+
+- Renamed the collection from `webview-skills` to **`frontend-niche-skills`** —
+  the scope is the long tail of frontend topics, not just webviews. Plugin and
+  marketplace manifests updated (plugin `frontend-niche-skills` ships all skills;
+  install command changed).
+
 ## [1.0.0] - 2026-06-10
 
 ### Added
@@ -35,5 +57,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorporates an external Codex CLI review (auth/navigation/error-contract topics,
   framework-neutral adapter snippet, source-wording accuracy).
 
-[Unreleased]: https://github.com/dididy/webview-skills/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/dididy/webview-skills/releases/tag/v1.0.0
+[Unreleased]: https://github.com/dididy/frontend-niche-skills/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/dididy/frontend-niche-skills/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/dididy/frontend-niche-skills/releases/tag/v1.0.0

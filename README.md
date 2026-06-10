@@ -1,32 +1,27 @@
-# webview-skills
+# frontend-niche-skills
 
-Agent skills for building **web pages that run inside native app WebViews**
-(in-app webviews / bridge pages / hybrid screens). Web-side perspective —
-complements app-side mobile skills.
+Verified agent skills for the **frontend topics general best-practice skills don't
+cover** — the long tail where the first mistake is expensive and English-only,
+browser-only testing never catches it.
 
-In ten seconds — the page renders from URL params and talks to the app through one
-adapter, one envelope:
+Two rules for everything in this collection:
 
-```js
-// ?type=d0&ctaTextType=priceStart&expiresAt=1781136000&statusBarHeight=44
-postToNative({ type: 'READY' });            // first meaningful render → app swaps off its loader
-postToNative({ type: 'REQUEST_PURCHASE' }); // CTA tap → native IAP; button stays enabled
-// close/back? nothing — the native X button and Android back own dismissal
-```
-
-The skill is the checklist of decisions and pitfalls around those three lines.
+1. **Every factual claim is checked against official sources** (specs, vendor docs)
+   before release; community-sourced claims are labeled as such.
+2. Each skill is a compact one-pass checklist; depth lives in per-skill `references/`.
 
 ## Skills
 
 | Skill | Use when |
 |-------|----------|
-| [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | Building a page loaded in a native WebView (React Native, WKWebView, Android WebView, Flutter): postMessage bridge contracts, native close/back, blank-screen loading signals, query-param A/B variants, webview layout pitfalls (safe-area, 100vh, keyboard, font scale) |
+| [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | Building a page loaded in a native WebView (React Native, WKWebView, Android WebView, Flutter): postMessage bridge contracts, native close/back, blank-screen READY signals, query-param A/B variants, webview layout pitfalls |
+| [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | Locking accessibility semantics in as testable contracts — dialog roles/names, `getByRole` queries, sentinel specs that fail when a modal ships unnamed |
+| [`cjk-text-and-input`](./skills/cjk-text-and-input/SKILL.md) | CJK line breaking (`keep-all`, `line-break`), IME composition events breaking controlled inputs, Enter-during-composition, grapheme-safe length counting |
+| [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | Deep links losing query params on first SPA/SSR render — `router.isReady` gating, `window.location` fallback, auth-bounce `returnTo`, direct-navigation tests |
 
-The skill is a compact checklist + transport adapter; details live in
-[`skills/webview-bridge-pages/references/`](./skills/webview-bridge-pages/references/):
-`contract-design.md` (decisions to agree with the app team) ·
-`page-implementation.md` (parsing/timers/layout) ·
-`react-native.md` · `wkwebview.md` · `android-webview.md` · `flutter.md` (host APIs).
+`webview-bridge-pages` ships with host references
+([`references/`](./skills/webview-bridge-pages/references/)): contract-design ·
+page-implementation · react-native · wkwebview · android-webview · flutter.
 
 ## Install
 
@@ -36,18 +31,18 @@ format, compatible with Claude Code and Codex.
 ### Claude Code (plugin, recommended)
 
 ```shell
-/plugin marketplace add dididy/webview-skills
-/plugin install webview-skills@webview-skills
+/plugin marketplace add dididy/frontend-niche-skills
+/plugin install frontend-niche-skills@frontend-niche-skills
 ```
 
 ### Manual (Claude Code or Codex)
 
 ```bash
-# Claude Code (user-level)
-ln -s <repo>/skills/webview-bridge-pages ~/.claude/skills/webview-bridge-pages
+# Claude Code (user-level) — repeat per skill you want
+ln -s <repo>/skills/<skill-name> ~/.claude/skills/<skill-name>
 
 # Codex (user-level; some setups use a shared ~/.agents/skills instead)
-ln -s <repo>/skills/webview-bridge-pages ~/.codex/skills/webview-bridge-pages
+ln -s <repo>/skills/<skill-name> ~/.codex/skills/<skill-name>
 ```
 
 Project-level: symlink or copy into the repo's `.claude/skills/` / `.codex/skills/`.
@@ -63,11 +58,11 @@ Codex has no plugin system — the manual symlink is the supported path there.
 These skills are deliberately generic — no company-specific paths, i18n systems, or
 component names. Pair them with project-local skills for repo conventions.
 
-## Related libraries & further reading
+## Related libraries & further reading (webview)
 
-This package is the **knowledge layer** — it tells you how to design the page and the
-contract. For the transport implementation itself, or deeper dives, these are solid
-(all links live-verified 2026-06):
+The webview skill is the **knowledge layer** — it tells you how to design the page and
+the contract. For the transport implementation itself, or deeper dives, these are
+solid (all links live-verified 2026-06):
 
 ### Bridge libraries (transport implementations)
 
