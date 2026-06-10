@@ -4,6 +4,18 @@ Agent skills for building **web pages that run inside native app WebViews**
 (in-app webviews / bridge pages / hybrid screens). Web-side perspective —
 complements app-side mobile skills.
 
+In ten seconds — the page renders from URL params and talks to the app through one
+adapter, one envelope:
+
+```js
+// ?type=d0&ctaTextType=priceStart&expiresAt=1781136000&statusBarHeight=44
+postToNative({ type: 'READY' });            // first meaningful render → app swaps off its loader
+postToNative({ type: 'REQUEST_PURCHASE' }); // CTA tap → native IAP; button stays enabled
+// close/back? nothing — the native X button and Android back own dismissal
+```
+
+The skill is the checklist of decisions and pitfalls around those three lines.
+
 ## Skills
 
 | Skill | Use when |
@@ -34,16 +46,17 @@ format, compatible with Claude Code and Codex.
 # Claude Code (user-level)
 ln -s <repo>/skills/webview-bridge-pages ~/.claude/skills/webview-bridge-pages
 
-# Codex (user-level)
-ln -s <repo>/skills/webview-bridge-pages ~/.agents/skills/webview-bridge-pages
+# Codex (user-level; some setups use a shared ~/.agents/skills instead)
+ln -s <repo>/skills/webview-bridge-pages ~/.codex/skills/webview-bridge-pages
 ```
 
-Project-level: symlink or copy into the repo's `.claude/skills/` / `.agents/skills/`.
+Project-level: symlink or copy into the repo's `.claude/skills/` / `.codex/skills/`.
 Codex has no plugin system — the manual symlink is the supported path there.
 
 ## License
 
-[Apache-2.0](./LICENSE.txt) · [Security policy](./SECURITY.md) · [Changelog](./CHANGELOG.md)
+[Apache-2.0](./LICENSE.txt) · Copyright 2026 YONGJAE LEE ·
+[Security policy](./SECURITY.md) · [Changelog](./CHANGELOG.md)
 
 ## Scope
 

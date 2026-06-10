@@ -1,6 +1,6 @@
 ---
 name: webview-bridge-pages
-description: Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — bridge messaging, native close/back, READY loading signals, query-param variants, auth handoff, safe-area/viewport/font-scale layout. Hosts: React Native, WKWebView, Android WebView, Flutter.
+description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — bridge messaging, native close/back, READY loading signals, query-param variants, auth handoff, safe-area/viewport/font-scale layout. Hosts: React Native, WKWebView, Android WebView, Flutter."
 ---
 
 # Webview bridge pages (web side)
