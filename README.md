@@ -21,6 +21,7 @@ Two rules for everything in this collection:
 | [`i18n-copy-and-layout`](./skills/i18n-copy-and-layout/SKILL.md) | UI copy shipped in multiple languages — text expansion overflowing buttons/labels, CLDR plural categories beyond singular/plural, no string concatenation for sentences, `Intl` number/date/currency formatting, RTL + `lang`/`dir` markup and CSS logical properties |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | Hardening the client side before it ships — XSS sinks & DOMPurify & framework escape hatches & Trusted Types, strict CSP (nonce vs host allowlist) & security headers & SRI & HSTS preload, auth tokens (localStorage vs HttpOnly cookies) & SameSite & CSRF defenses, reverse tabnabbing & open redirects & npm supply chain & secrets in the bundle |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Implementing or reviewing auth UI as a browser/backend contract — login/signup/password-reset, email verification & one-time-code entry, passkeys/WebAuthn UI, auth callbacks & `returnTo` redirects, autofill/`autocomplete` hints, account-enumeration-safe errors, fresh verification before sensitive actions |
+| [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | Dates/times that must stay correct across timezones, DST, and server-vs-client — UTC/epoch storage, `new Date("2026-06-14")` parsed as UTC printing the previous day, `datetime-local` floating values with no zone, DST gaps/overlaps, pinning `Intl.DateTimeFormat`'s `timeZone`, Temporal types |
 
 `webview-bridge-pages` ships with host references
 ([`references/`](./skills/webview-bridge-pages/references/)): contract-design ·
@@ -32,6 +33,8 @@ page-implementation · react-native · wkwebview · android-webview · flutter.
 csp-and-headers · auth-tokens-and-csrf · navigation-and-supply-chain.
 `frontend-auth-flow-contracts` ships a reference
 ([`references/`](./skills/frontend-auth-flow-contracts/references/)): browser-auth-contracts.
+`datetime-correctness` ships references
+([`references/`](./skills/datetime-correctness/references/)): storage-and-math · display-and-input.
 
 ## Install
 

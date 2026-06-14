@@ -1,7 +1,7 @@
 {
   "name": "frontend-niche-skills",
   "version": "0.4.0+codex.20260612131603",
-  "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, and frontend auth flow contracts. Every factual claim checked against official sources.",
+  "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, frontend auth flow contracts, and datetime correctness. Every factual claim checked against official sources.",
   "author": {
     "name": "YONGJAE LEE"
   },
@@ -46,13 +46,18 @@
     "oauth",
     "autocomplete",
     "csrf-tokens",
-    "account-security"
+    "account-security",
+    "datetime",
+    "timezone",
+    "dst",
+    "temporal",
+    "intl-datetimeformat"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Frontend Niche Skills",
     "shortDescription": "Verified frontend edge-case skills for Codex.",
-    "longDescription": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, and frontend auth flow contracts. Every factual claim checked against official sources.",
+    "longDescription": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, frontend auth flow contracts, and datetime correctness. Every factual claim checked against official sources.",
     "developerName": "YONGJAE LEE",
     "category": "Productivity",
     "capabilities": [
@@ -66,7 +71,8 @@
       "Audit my WebView page bridge contract.",
       "Write accessibility contract tests for this dialog.",
       "Check CJK/IME and i18n layout risks in this UI.",
-      "Review my auth flow's returnTo redirect and passkey/autocomplete contract."
+      "Review my auth flow's returnTo redirect and passkey/autocomplete contract.",
+      "Check this date/time code for timezone, DST, and datetime-local round-trip bugs."
     ]
   }
 }

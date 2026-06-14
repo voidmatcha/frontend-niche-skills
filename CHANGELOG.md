@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Cross-references the boundary with `frontend-security-baseline` (token storage,
   cookies, SameSite, CSRF, open-redirect primitives), `deeplink-hydration` (router
   readiness / `returnTo` plumbing), and `a11y-contract-testing` (generic role/name/focus).
+- `datetime-correctness` skill — dates/times that stay correct across timezones, DST
+  transitions, and server-vs-client environments: UTC/epoch storage, the date-only
+  `new Date("2026-06-14")` parsed as UTC (off-by-one in negative-offset zones),
+  `<input type="datetime-local">` floating values with no zone, DST gaps/overlaps and
+  zone-aware arithmetic, pinning `Intl.DateTimeFormat`'s `timeZone`, and the Temporal
+  type model. Ships `references/storage-and-math.md` and `references/display-and-input.md`.
+  Invariant-first (Temporal presented as the tool that encodes the distinctions). Bounded
+  against `i18n-copy-and-layout` (locale display formatting) and `ssr-hydration-mismatch`
+  (in-render `Date` / zone-dependent text divergence). All claims verified against MDN,
+  TC39 Temporal, ECMA-402, and RFC 3339; a verification pass corrected the
+  `Temporal.PlainDate.from` strictness claim and a fall-back DST example before release.
 
 ### Changed
 
