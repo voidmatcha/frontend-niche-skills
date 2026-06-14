@@ -22,6 +22,7 @@ Two rules for everything in this collection:
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | Hardening the client side before it ships — XSS sinks & DOMPurify & framework escape hatches & Trusted Types, strict CSP (nonce vs host allowlist) & security headers & SRI & HSTS preload, auth tokens (localStorage vs HttpOnly cookies) & SameSite & CSRF defenses, reverse tabnabbing & open redirects & npm supply chain & secrets in the bundle |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Implementing or reviewing auth UI as a browser/backend contract — login/signup/password-reset, email verification & one-time-code entry, passkeys/WebAuthn UI, auth callbacks & `returnTo` redirects, autofill/`autocomplete` hints, account-enumeration-safe errors, fresh verification before sensitive actions |
 | [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | Dates/times that must stay correct across timezones, DST, and server-vs-client — UTC/epoch storage, `new Date("2026-06-14")` parsed as UTC printing the previous day, `datetime-local` floating values with no zone, DST gaps/overlaps, pinning `Intl.DateTimeFormat`'s `timeZone`, Temporal types |
+| [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | Server-rendered HTML diverging from the client's first render — React/Next "Hydration failed" / "text content did not match", non-deterministic render (`Date.now()`/`Math.random()`/`typeof window`/locale), invalid HTML nesting, `suppressHydrationWarning` limits, the recoverable-error model, and bounding the re-render with `Suspense`/no-SSR |
 
 `webview-bridge-pages` ships with host references
 ([`references/`](./skills/webview-bridge-pages/references/)): contract-design ·
@@ -35,6 +36,8 @@ csp-and-headers · auth-tokens-and-csrf · navigation-and-supply-chain.
 ([`references/`](./skills/frontend-auth-flow-contracts/references/)): browser-auth-contracts.
 `datetime-correctness` ships references
 ([`references/`](./skills/datetime-correctness/references/)): storage-and-math · display-and-input.
+`ssr-hydration-mismatch` ships a reference
+([`references/`](./skills/ssr-hydration-mismatch/references/)): triggers-and-containment.
 
 ## Install
 

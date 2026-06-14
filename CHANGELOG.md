@@ -30,6 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (in-render `Date` / zone-dependent text divergence). All claims verified against MDN,
   TC39 Temporal, ECMA-402, and RFC 3339; a verification pass corrected the
   `Temporal.PlainDate.from` strictness claim and a fall-back DST example before release.
+- `ssr-hydration-mismatch` skill — server-rendered HTML diverging from the client's first
+  render ("Hydration failed" / "text content did not match"), which makes the framework
+  discard the server tree and re-render on the client. Covers the trigger taxonomy
+  (non-determinism: `Date.now()`/`Math.random()`/`typeof window`/locale/timezone; invalid
+  HTML nesting), the fixes (two-pass `useEffect`, `useSyncExternalStore`, no-SSR dynamic
+  import), and containment/diagnosis (`Suspense` blast radius, `suppressHydrationWarning`'s
+  one-level limit, the React 18 recoverable-error model that hides in production, finding the
+  diverging node). React/Next as the worked example with Vue/Nuxt, Svelte/SvelteKit, and
+  Astro notes. Ships `references/triggers-and-containment.md`. Bounded against
+  `deeplink-hydration` (router/query-param readiness) and `datetime-correctness`
+  (zone-dependent text is one trigger). Verified against react.dev, the React 18 server-errors
+  RFC, and Next.js/Vue/Astro docs; a verification pass corrected the dev-vs-prod
+  `onRecoverableError` framing before release.
 
 ### Changed
 
