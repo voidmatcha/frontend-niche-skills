@@ -18,24 +18,56 @@ Two rules for everything in this collection:
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | Locking accessibility semantics in as testable contracts — dialog roles/names, `getByRole` queries, sentinel specs that fail when a modal ships unnamed |
 | [`cjk-text-and-input`](./skills/cjk-text-and-input/SKILL.md) | CJK line breaking (`keep-all`, `line-break`), IME composition events breaking controlled inputs, Enter-during-composition, grapheme-safe length counting |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | Deep links losing query params on first SPA/SSR render — `router.isReady` gating, `window.location` fallback, auth-bounce `returnTo`, direct-navigation tests |
+| [`i18n-copy-and-layout`](./skills/i18n-copy-and-layout/SKILL.md) | UI copy shipped in multiple languages — text expansion overflowing buttons/labels, CLDR plural categories beyond singular/plural, no string concatenation for sentences, `Intl` number/date/currency formatting, RTL + `lang`/`dir` markup and CSS logical properties |
+| [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | Hardening the client side before it ships — XSS sinks & DOMPurify & framework escape hatches & Trusted Types, strict CSP (nonce vs host allowlist) & security headers & SRI & HSTS preload, auth tokens (localStorage vs HttpOnly cookies) & SameSite & CSRF defenses, reverse tabnabbing & open redirects & npm supply chain & secrets in the bundle |
+| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Implementing or reviewing auth UI as a browser/backend contract — login/signup/password-reset, email verification & one-time-code entry, passkeys/WebAuthn UI, auth callbacks & `returnTo` redirects, autofill/`autocomplete` hints, account-enumeration-safe errors, fresh verification before sensitive actions |
 
 `webview-bridge-pages` ships with host references
 ([`references/`](./skills/webview-bridge-pages/references/)): contract-design ·
 page-implementation · react-native · wkwebview · android-webview · flutter.
+`i18n-copy-and-layout` ships references
+([`references/`](./skills/i18n-copy-and-layout/references/)): copy · layout.
+`frontend-security-baseline` ships references
+([`references/`](./skills/frontend-security-baseline/references/)): xss-and-sanitization ·
+csp-and-headers · auth-tokens-and-csrf · navigation-and-supply-chain.
+`frontend-auth-flow-contracts` ships a reference
+([`references/`](./skills/frontend-auth-flow-contracts/references/)): browser-auth-contracts.
 
 ## Install
 
 Skills follow the [agentskills.io](https://agentskills.io/specification) `SKILL.md`
-format, compatible with Claude Code and Codex.
+format and are packaged for Claude Code and Codex.
 
 ### Claude Code (plugin, recommended)
 
 ```shell
-/plugin marketplace add dididy/frontend-niche-skills
+/plugin marketplace add voidmatcha/frontend-niche-skills
 /plugin install frontend-niche-skills@frontend-niche-skills
 ```
 
-### Manual (Claude Code or Codex)
+### Codex plugin
+
+This repository includes a Codex plugin manifest at `.codex-plugin/plugin.json`
+and a repo-local marketplace at `.agents/plugins/marketplace.json`. The marketplace
+entry points at `plugins/frontend-niche-skills`, a lightweight wrapper that reuses
+the root manifest and `skills/` directory.
+
+```shell
+codex plugin marketplace add /absolute/path/to/frontend-niche-skills
+codex plugin add frontend-niche-skills@frontend-niche-skills
+```
+
+For local development from this checkout:
+
+```shell
+codex plugin marketplace add "$(pwd)"
+codex plugin add frontend-niche-skills@frontend-niche-skills
+```
+
+Start a new Codex thread after installing or updating the plugin so the bundled
+skills are refreshed.
+
+### Manual skill symlinks
 
 ```bash
 # Claude Code (user-level) — repeat per skill you want
@@ -46,11 +78,10 @@ ln -s <repo>/skills/<skill-name> ~/.codex/skills/<skill-name>
 ```
 
 Project-level: symlink or copy into the repo's `.claude/skills/` / `.codex/skills/`.
-Codex has no plugin system — the manual symlink is the supported path there.
 
 ## License
 
-[Apache-2.0](./LICENSE.txt) · Copyright 2026 YONGJAE LEE ·
+[Apache-2.0](./LICENSE) · Copyright 2026 YONGJAE LEE ·
 [Security policy](./SECURITY.md) · [Changelog](./CHANGELOG.md)
 
 ## Scope

@@ -1,0 +1,72 @@
+{
+  "name": "frontend-niche-skills",
+  "version": "0.4.0+codex.20260612131603",
+  "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, and frontend auth flow contracts. Every factual claim checked against official sources.",
+  "author": {
+    "name": "YONGJAE LEE"
+  },
+  "homepage": "https://github.com/voidmatcha/frontend-niche-skills",
+  "repository": "https://github.com/voidmatcha/frontend-niche-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "frontend",
+    "webview",
+    "in-app-webview",
+    "hybrid-app",
+    "accessibility",
+    "a11y",
+    "wcag",
+    "ime",
+    "cjk",
+    "korean",
+    "composition-events",
+    "deep-link",
+    "hydration",
+    "nextjs",
+    "react-native-webview",
+    "i18n",
+    "l10n",
+    "internationalization",
+    "pluralization",
+    "rtl",
+    "intl",
+    "security",
+    "xss",
+    "csp",
+    "csrf",
+    "sanitization",
+    "dompurify",
+    "trusted-types",
+    "owasp",
+    "supply-chain",
+    "authentication",
+    "login",
+    "passkey",
+    "webauthn",
+    "oauth",
+    "autocomplete",
+    "csrf-tokens",
+    "account-security"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Frontend Niche Skills",
+    "shortDescription": "Verified frontend edge-case skills for Codex.",
+    "longDescription": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, and frontend auth flow contracts. Every factual claim checked against official sources.",
+    "developerName": "YONGJAE LEE",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/voidmatcha/frontend-niche-skills",
+    "brandColor": "#2563EB",
+    "defaultPrompt": [
+      "Audit my WebView page bridge contract.",
+      "Write accessibility contract tests for this dialog.",
+      "Check CJK/IME and i18n layout risks in this UI.",
+      "Review my auth flow's returnTo redirect and passkey/autocomplete contract."
+    ]
+  }
+}

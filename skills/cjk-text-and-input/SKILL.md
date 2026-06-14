@@ -9,6 +9,11 @@ Two families of bugs that English-only testing never surfaces: **line breaking**
 (CJK text wraps differently) and **IME composition** (characters are composed across
 multiple keystrokes, so key events lie).
 
+This skill is East-Asian glyph rendering + input. For the broader multi-language
+copy layer — text expansion breaking layout, CLDR plural categories, `Intl`
+number/date/currency formatting, RTL and `lang`/`dir` markup — use
+**i18n-copy-and-layout**.
+
 ## Line breaking
 
 - East Asian text lines can break **between almost any two characters** by default
@@ -65,7 +70,10 @@ multiple keystrokes, so key events lie).
   decomposition similar to, but not identical to, standard NFD); emoji are 2+.
   For user-facing length limits and cursor-safe slicing use `Intl.Segmenter`
   (grapheme granularity) and normalize (`.normalize('NFC')`) before comparing
-  strings from mixed sources.
+  strings from mixed sources. Feature-detect `Intl.Segmenter`; for older WebViews
+  or browsers, fall back to a tested grapheme-splitter library or a conservative
+  "validate after input, do not slice mid-string" policy rather than pretending
+  `String.length` is a character count.
 
 ## Sources
 

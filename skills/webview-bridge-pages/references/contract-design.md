@@ -10,7 +10,15 @@ Decisions to settle in the web↔native contract doc before writing page code.
 - If inbound is unavoidable, validate origin and schema. Any iframe in the page can
   call the bridge too (Android `addJavascriptInterface` is injected into **every
   frame** with no origin control); the native side must also treat incoming payloads
-  as untrusted input.
+  as untrusted input. Two real-world demonstrations of why: in Tauri, remote-origin
+  iframes could reach the IPC endpoints without being allow-listed, letting an
+  attacker-controlled iframe invoke real commands ("delete project", "transfer
+  credits") — CVE-2024-35222, fixed in 1.6.7 / 2.0.0-beta.20 by requiring explicit
+  origin/capability allow-listing. And the context that *renders* untrusted HTML must not itself hold
+  native power: Joplin rendered note content in an Electron window with
+  `nodeIntegration` enabled, so a note-content XSS escalated to remote code execution
+  (CVE-2018-1000534). Keep the bridge off untrusted frames; keep native capability
+  away from anything that renders untrusted content.
 - One shape for every message: `{ type: string, data?: object }`, `JSON.stringify`
   once. Keep `type` constants + payload types in one module, mirrored with the app's
   handler definitions. Strong typing on both sides catches misspelled actions at
@@ -28,9 +36,11 @@ Decisions to settle in the web↔native contract doc before writing page code.
   button area (per platform/notch) so content never sits under native chrome.
 - **Do not rely on WebView history for SPA pages.** WebView `goBack()`/history
   behaves unreliably with SPA client-side routing on some Android devices
-  (react-native-webview #2810 — thread points at `history.pushState` navigation;
-  same class of issue exists on other hosts). Design bridge screens as
-  **single screens with native close**.
+  (react-native-webview #2810 — thread points at `history.pushState` navigation).
+  And it isn't RN-specific: in Tauri, Android `canGoBack()` returned `false` until the
+  user physically touched the WebView, so a programmatically navigated page would exit
+  the app on back-press despite having real history (tauri #13957). Design bridge
+  screens as **single screens with native close**.
 - Only add a WEB → native `CLOSE`-type message when the web itself must trigger
   dismissal.
 
@@ -39,8 +49,9 @@ Decisions to settle in the web↔native contract doc before writing page code.
 When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands natively
 (IAP sheet), the web cannot observe cancel/failure in a one-way design:
 
-- **Never disable the button after sending.** With no re-enable signal, one cancelled
-  purchase kills the CTA permanently.
+- **Never permanently disable the button after sending unless the contract includes
+  an explicit native ack/result or a web-side timeout.** With no re-enable signal,
+  one cancelled purchase kills the CTA permanently.
 - Write into the contract doc: native ignores duplicate requests while one is in flight
   (the OS payment sheet is modal anyway), and native closes the screen on success.
 
@@ -69,8 +80,10 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
 Decide in the contract where identity comes from — in order of preference:
 
 - **None** — the page renders purely from params (simplest; no identity surface).
-- **Shared cookie session** — host-specific behavior (e.g. React Native WebView has a
-  `sharedCookiesEnabled` prop for Android; verify per host and OS version).
+- **Shared cookie session** — host-specific behavior (e.g. React Native WebView's
+  `sharedCookiesEnabled` is an **iOS/macOS** prop, bridging `NSHTTPCookieStorage` into
+  WKWebView's separate cookie store; Android's WebView already shares the cookie store,
+  so the flag is a no-op there. Verify per host and OS version).
 - **Bridge-injected token** — app sends it after a handshake message; note this
   requires an inbound message, weigh against the one-way preference.
 - **Query-param token — avoid.** URLs leak into server logs, browser history, and
@@ -107,3 +120,10 @@ when the page would navigate or use device capabilities:
   reference; Next.js Automatic Static Optimization docs; Zellic "WebView security";
   Android "Access native APIs with JavaScript bridge"; Apple WKUserContentController /
   WKScriptMessageHandlerWithReply; react-native-webview docs + issue #2810.
+- Bridge security boundary — [CVE-2024-35222](https://nvd.nist.gov/vuln/detail/CVE-2024-35222)
+  (Tauri: remote-origin iframes reached IPC without allow-listing; patched 1.6.7 /
+  2.0.0-beta.20 per advisory GHSA-57fm-592m-34r7 — the NVD text's "beta.19" is still
+  affected) · [CVE-2018-1000534](https://nvd.nist.gov/vuln/detail/CVE-2018-1000534)
+  (Joplin: note-content XSS → RCE via Electron `nodeIntegration`) ·
+  [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()`
+  false until WebView interaction).

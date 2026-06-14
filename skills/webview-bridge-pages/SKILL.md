@@ -21,7 +21,8 @@ messages through one transport adapter, let native own lifecycle
 4. Close/back ownership decided — default: native owns X button and Android back, web
    draws no close UI; layout avoids the native button area via app-passed insets
    → [contract-design](./references/contract-design.md)
-5. Never disable action buttons waiting for results the web can't observe (purchases)
+5. Never permanently disable action buttons waiting for results the web can't
+   observe (purchases); require an explicit native ack/result or a web-side timeout
    → [contract-design](./references/contract-design.md)
 6. Loading/`READY` contract decided — or consciously skipped (document load ≠ render);
    paired with an error/timeout policy

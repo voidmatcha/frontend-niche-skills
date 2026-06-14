@@ -1,0 +1,20 @@
+{
+  "name": "frontend-niche-skills",
+  "interface": {
+    "displayName": "Frontend Niche Skills"
+  },
+  "plugins": [
+    {
+      "name": "frontend-niche-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/frontend-niche-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

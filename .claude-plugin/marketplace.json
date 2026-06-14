@@ -8,9 +8,9 @@
     {
       "name": "frontend-niche-skills",
       "source": "./",
-      "homepage": "https://github.com/dididy/frontend-niche-skills",
-      "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, and deep-link hydration. Every factual claim checked against official sources.",
-      "version": "0.2.0",
+      "homepage": "https://github.com/voidmatcha/frontend-niche-skills",
+      "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, and frontend auth flow contracts. Every factual claim checked against official sources.",
+      "version": "0.4.0",
       "author": {
         "name": "YONGJAE LEE"
       },
@@ -31,7 +31,30 @@
         "deep-link",
         "hydration",
         "nextjs",
-        "react-native-webview"
+        "react-native-webview",
+        "i18n",
+        "l10n",
+        "internationalization",
+        "pluralization",
+        "rtl",
+        "intl",
+        "security",
+        "xss",
+        "csp",
+        "csrf",
+        "sanitization",
+        "dompurify",
+        "trusted-types",
+        "owasp",
+        "supply-chain",
+        "authentication",
+        "login",
+        "passkey",
+        "webauthn",
+        "oauth",
+        "autocomplete",
+        "csrf-tokens",
+        "account-security"
       ]
     }
   ]

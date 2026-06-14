@@ -21,9 +21,14 @@ router's state lags the real URL.
 
 ## Rules
 
-1. **Gate param-dependent logic on `router.isReady`** (or your router's equivalent).
-   Render a skeleton until then; never redirect on "missing" params before the router
-   is ready.
+1. **Gate param-dependent logic on router readiness.** In Next.js **Pages Router**,
+   that means `router.isReady` in a client-side `useEffect`; React Router and Vue
+   Router (`router.isReady()`) expose equivalent "params hydrated/parsed" signals.
+   Next.js **App Router** has no such flag — `useSearchParams()` is synchronous in
+   client components, but reading it forces the subtree up to the nearest `Suspense`
+   boundary into client rendering, so the equivalent discipline is wrapping the
+   param-reading component in `Suspense` (render a skeleton as its fallback). Either
+   way: never redirect on "missing" params before they're known.
 2. **`window.location` is the client-side source of truth when the router lags.**
    If a decision can't wait for hydration (e.g. choosing the initial screen), read
    `window.location.pathname` / `.search` directly on first client render and treat
@@ -32,12 +37,15 @@ router's state lags the real URL.
    destination (`returnTo`-style param or session storage) and restore it after
    authentication — a deep link that survives hydration but dies at the login wall is
    still a broken deep link.
-4. **Every deep-linkable page gets a direct-navigation test**: e2e test that opens the
+4. **Auth bounces are still deep links.** Preserve the intended destination,
+   but keep auth-specific return-target validation in `frontend-auth-flow-contracts`
+   (and open-redirect primitives in `frontend-security-baseline`).
+5. **Every deep-linkable page gets a direct-navigation test**: e2e test that opens the
    full URL cold (fresh context, no in-app navigation) and asserts the
    reconstructed screen. In-app navigation tests never catch hydration loss.
    Client-side redirects right after load can race the assertion — wait for the
    final URL, not the first response.
-5. Normalize parsing in one function per page (`string | string[] | undefined` for
+6. Normalize parsing in one function per page (`string | string[] | undefined` for
    repeated params), with explicit fallbacks — same discipline as any URL-driven
    screen.
 
@@ -52,6 +60,8 @@ router's state lags the real URL.
 
 ## Sources
 
-- Next.js docs: Automatic Static Optimization (empty `query` during prerender,
-  populated after hydration), `useRouter` (`isReady`: client-side only, in `useEffect`)
+- Next.js Pages Router docs: Automatic Static Optimization (empty `query` during
+  prerender, populated after hydration), `useRouter` (`isReady`: client-side only,
+  in `useEffect`)
 - MDN: `window.location`
+- See `frontend-auth-flow-contracts` for auth-specific return-target validation.

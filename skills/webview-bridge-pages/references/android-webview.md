@@ -20,8 +20,10 @@ What the web page sees:
   `window.<objectName>.onmessage = (e) => ...` / `addEventListener('message', ...)`.
 - `addJavascriptInterface`: app injects `window.<objectName>` with the
   `@JavascriptInterface`-annotated methods. Calls are **synchronous** (JS blocks until
-  native returns) and run on a background thread natively. Only safe on API 21+
-  (before that, JS could use reflection on the injected object).
+  native returns) and run on a background thread natively. Pre-API-17 (Android 4.2) all
+  public methods were exposed, so JS could reach `getClass()` and use reflection for
+  arbitrary code execution (CVE-2012-6636); from API 17 only `@JavascriptInterface`
+  methods are reachable — so require API 17+ and the annotation.
 - Either way, from the page: `window.<objectName>.postMessage(jsonString)` —
   fits the universal transport adapter.
 

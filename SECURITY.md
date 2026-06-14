@@ -13,7 +13,7 @@ official platform documents cited in each reference file.
 If you find guidance in this skill that would lead an implementation into a
 vulnerability (e.g. unsafe bridge advice, incorrect origin-validation claims), please
 report it privately via
-[GitHub Security Advisories](https://github.com/dididy/frontend-niche-skills/security/advisories/new)
+[GitHub Security Advisories](https://github.com/voidmatcha/frontend-niche-skills/security/advisories/new)
 rather than a public issue. Inaccuracies without security impact can go to regular
 issues.
 

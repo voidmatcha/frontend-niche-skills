@@ -8,6 +8,9 @@ description: "Use when accessibility regressions keep slipping through review �
 Core principle: treat accessibility semantics as a **testable contract**, not an audit
 checklist. A modal's role and accessible name are API surface — query them in tests
 by role + name, and the test fails the moment the contract breaks.
+Dialog is the concrete example here because it fails loudly in production, but the
+same role/name/state contract applies to menus, comboboxes, tabs, forms, alerts,
+and any custom widget that users operate through assistive technology.
 
 ## The contract (minimum for any modal/dialog)
 
@@ -46,6 +49,9 @@ by role + name, and the test fails the moment the contract breaks.
   (`aria-hidden="true"`) and name the dialog from the canonical one.
 - **i18n caveat**: role+name queries hardcode copy. Either pin the test locale, or
   resolve expected names from the same i18n source the app uses.
+- **Auth form boundary**: login/code/passkey forms still need role/name/status
+  assertions here, but auth-specific autocomplete, expiry/retry, and passkey
+  fallback cases belong in `frontend-auth-flow-contracts`.
 - Static-analysis passes (axe-core, eslint-plugin-jsx-a11y) catch attribute-level
   issues; they do NOT replace contract queries — axe can't know which name a dialog
   was *supposed* to have.
@@ -65,3 +71,4 @@ by role + name, and the test fails the moment the contract breaks.
 - WAI-ARIA Authoring Practices Guide — Dialog (Modal) pattern (w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 - WAI-ARIA `presentation`/`none` role definition (w3.org/TR/wai-aria/#presentation)
 - Testing Library "ByRole" docs; Playwright `getByRole` docs (role + accessible-name matching)
+- See `frontend-auth-flow-contracts` for auth-specific browser/autofill/error cases.
