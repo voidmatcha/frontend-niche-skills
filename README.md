@@ -23,6 +23,7 @@ Two rules for everything in this collection:
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Implementing or reviewing auth UI as a browser/backend contract — login/signup/password-reset, email verification & one-time-code entry, passkeys/WebAuthn UI, auth callbacks & `returnTo` redirects, autofill/`autocomplete` hints, account-enumeration-safe errors, fresh verification before sensitive actions |
 | [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | Dates/times that must stay correct across timezones, DST, and server-vs-client — UTC/epoch storage, `new Date("2026-06-14")` parsed as UTC printing the previous day, `datetime-local` floating values with no zone, DST gaps/overlaps, pinning `Intl.DateTimeFormat`'s `timeZone`, Temporal types |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | Server-rendered HTML diverging from the client's first render — React/Next "Hydration failed" / "text content did not match", non-deterministic render (`Date.now()`/`Math.random()`/`typeof window`/locale), invalid HTML nesting, `suppressHydrationWarning` limits, the recoverable-error model, and bounding the re-render with `Suspense`/no-SSR |
+| [`constraint-validation-contracts`](./skills/constraint-validation-contracts/SKILL.md) | The HTML Constraint Validation API — required fields painted red on load (`:invalid` vs `:user-invalid` timing), `setCustomValidity()` left set so submit is permanently blocked, `checkValidity()`/`reportValidity()`/`novalidate`, reading `ValidityState`, and wiring native validity to accessible errors |
 
 `webview-bridge-pages` ships with host references
 ([`references/`](./skills/webview-bridge-pages/references/)): contract-design ·
@@ -38,6 +39,8 @@ csp-and-headers · auth-tokens-and-csrf · navigation-and-supply-chain.
 ([`references/`](./skills/datetime-correctness/references/)): storage-and-math · display-and-input.
 `ssr-hydration-mismatch` ships a reference
 ([`references/`](./skills/ssr-hydration-mismatch/references/)): triggers-and-containment.
+`constraint-validation-contracts` ships a reference
+([`references/`](./skills/constraint-validation-contracts/references/)): validation-api-and-states.
 
 ## Install
 

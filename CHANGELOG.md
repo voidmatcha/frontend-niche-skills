@@ -43,6 +43,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (zone-dependent text is one trigger). Verified against react.dev, the React 18 server-errors
   RFC, and Next.js/Vue/Astro docs; a verification pass corrected the dev-vs-prod
   `onRecoverableError` framing before release.
+- `constraint-validation-contracts` skill — the HTML Constraint Validation API and its two
+  classic bugs: required fields painted red on first paint (`:invalid` matches immediately;
+  use `:user-invalid`), and `setCustomValidity()` left set so a field is permanently invalid
+  and submit is silently blocked. Covers CSS state/timing (`:user-invalid` vs `:invalid`,
+  `:in-range`), the JS API (`checkValidity`/`reportValidity`/`setCustomValidity`/
+  `validationMessage`/`willValidate`, the `invalid` event, `novalidate`/`formnovalidate`), the
+  `ValidityState` flags, and the accessibility boundary (`aria-invalid`/`aria-errormessage`
+  gated on interaction). Ships `references/validation-api-and-states.md`. Bounded against
+  `a11y-contract-testing` (ARIA role/name semantics), `i18n-copy-and-layout` (message copy),
+  and `frontend-auth-flow-contracts` (`autocomplete`). Verified against MDN and the WHATWG
+  HTML constraint-validation spec; a verification pass added `aria-errormessage`, the
+  `aria-invalid` interaction-gating caveat, and `:user-invalid` focus-timing / `tooLong`
+  nuances before release.
 
 ### Changed
 

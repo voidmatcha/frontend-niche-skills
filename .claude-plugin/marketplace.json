@@ -9,7 +9,7 @@
       "name": "frontend-niche-skills",
       "source": "./",
       "homepage": "https://github.com/voidmatcha/frontend-niche-skills",
-      "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, frontend auth flow contracts, datetime correctness, and SSR hydration mismatches. Every factual claim checked against official sources.",
+      "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, frontend auth flow contracts, datetime correctness, SSR hydration mismatches, and form constraint validation. Every factual claim checked against official sources.",
       "version": "0.4.0",
       "author": {
         "name": "YONGJAE LEE"
@@ -62,7 +62,11 @@
         "intl-datetimeformat",
         "ssr",
         "server-side-rendering",
-        "react"
+        "react",
+        "forms",
+        "form-validation",
+        "constraint-validation",
+        "validitystate"
       ]
     }
   ]
