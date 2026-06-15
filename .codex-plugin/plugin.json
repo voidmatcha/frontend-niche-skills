@@ -1,6 +1,6 @@
 {
   "name": "frontend-niche-skills",
-  "version": "0.4.0+codex.20260612131603",
+  "version": "0.5.0+codex.20260615142011",
   "description": "Verified agent skills for the frontend topics general best-practice skills don't cover: webview bridge pages, accessibility contract testing, CJK text & IME input, deep-link hydration, i18n copy & layout, client-side security baseline, frontend auth flow contracts, datetime correctness, SSR hydration mismatches, and form constraint validation. Every factual claim checked against official sources.",
   "author": {
     "name": "YONGJAE LEE"
