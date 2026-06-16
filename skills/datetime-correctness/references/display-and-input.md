@@ -74,17 +74,14 @@ const instant = zdt.toInstant();           // store this
 
 ## Rendering on the server and the client (SSR)
 
-If a server-rendered page formats a time using the ambient zone (or calls `new Date()` /
-`Date.now()` during render), the server's output and the client's re-render disagree and the
-hydration step throws a mismatch. The datetime-specific discipline:
+A server-rendered page that formats a time in the ambient zone (or calls `new Date()` /
+`Date.now()` during render) is a classic hydration-mismatch trigger — that mechanism and its
+containment are **ssr-hydration-mismatch**'s scope. The datetime-specific fix:
 
 - Compute the **instant** on the server, serialize it as epoch/ISO-with-offset, and send
   that — not a pre-formatted local string.
 - Format on **one fixed, explicit zone** on both sides (a pinned `timeZone`), or defer
   user-local formatting to a client-only effect after hydration.
-
-The general server/client divergence mechanism (and `suppressHydrationWarning`'s limits) is
-**ssr-hydration-mismatch**'s scope; this is only the datetime trigger and its fix.
 
 ## Find these in your codebase
 

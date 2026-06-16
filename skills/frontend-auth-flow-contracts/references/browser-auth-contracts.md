@@ -7,10 +7,12 @@
   a default dashboard is still broken.
 - Treat `returnTo`, `next`, `redirect_uri`, callback URLs, and session-stored
   post-login destinations as untrusted input. Restore only same-origin relative
-  paths or explicit allowlisted origins.
-- Reject scheme-relative URLs (`//evil.example`), encoded backslashes, mixed-origin
-  absolute URLs, and string-prefix checks such as `startsWith("/")` without URL
-  parsing.
+  paths or explicit allowlisted origins, validated with a real URL parser. The full
+  open-redirect bypass catalog (scheme-relative `//evil`, the userinfo separator,
+  encoded backslashes, `startsWith`/denylist evasion) and the allow-list-not-denylist
+  rule are the canonical property of **frontend-security-baseline**
+  (`references/navigation-and-supply-chain.md`) — don't restate them; this skill owns
+  only the auth-bounce delta (carry intent through the flow, restore it afterward).
 - Test from a cold URL, not only in-app navigation: unauthenticated direct link →
   login → complete auth → final intended path.
 

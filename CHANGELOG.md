@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Overlap-audit trims (no factual claims changed; each duplicated rule now lives in one
+  place with the others pointing to it):
+  - `frontend-auth-flow-contracts` now cites `frontend-security-baseline` as the canonical
+    owner of the open-redirect bypass catalog instead of re-enumerating it, keeping only the
+    auth-bounce delta (`references/browser-auth-contracts.md`).
+  - `datetime-correctness` trims the SSR sub-section to point at `ssr-hydration-mismatch` for
+    the divergence mechanism rather than re-narrating it (`references/display-and-input.md`).
+  - `deeplink-hydration`'s `description` now disambiguates against `ssr-hydration-mismatch`
+    (router/param readiness vs server/client DOM divergence) to reduce invocation confusion.
+
 ## [0.5.0] - 2026-06-15
 
 ### Added

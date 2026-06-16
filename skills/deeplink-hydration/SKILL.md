@@ -1,6 +1,6 @@
 ---
 name: deeplink-hydration
-description: "Use when deep links into an SPA/SSR page lose query params or land on the wrong screen — Next.js router.query empty on first render, redirects firing before router.isReady, login bounces dropping the intended destination, or deep-linkable pages lacking direct-navigation tests."
+description: "Use when deep links into an SPA/SSR page lose query params or land on the wrong screen — Next.js router.query empty on first render, redirects firing before router.isReady, login bounces dropping the intended destination, or deep-linkable pages lacking direct-navigation tests. Router/param-readiness scope; for server/client DOM divergence (\"Hydration failed\" / \"text content did not match\") see ssr-hydration-mismatch."
 ---
 
 # Deep-link hydration survival
