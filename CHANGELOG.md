@@ -7,8 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `webview-bridge-pages` — coverage expansion (all claims primary-source-verified and
+  Codex-reviewed):
+  - Layout/page: bottom-fixed CTA height+inset reserve, iOS scroll/`overscroll-behavior`
+    scoping vs native `bounces` (WebKit 243270), `position:fixed` hit-test drift, and iOS
+    input focus auto-zoom on sub-16px font (`references/page-implementation.md`).
+  - Multi-step funnel back-semantics — `history.pushState`/`popstate` vs native-forwarded
+    `BACK`, with Android `canGoBack` unreliability called out (`references/contract-design.md`).
+  - Bridge-robustness trio: buffer-and-flush for the bridge global arriving after the first
+    send (cold-start message loss), gating app-only UI on the injected global instead of
+    User-Agent sniffing, and re-posting `READY` after mid-session renderer death
+    (`onRenderProcessGone` / `webViewWebContentProcessDidTerminate`). Host detail in
+    `references/react-native.md` and `references/flutter.md`.
+
 ### Changed
 
+- `webview-bridge-pages` — accuracy, performance, and scope pass:
+  - The `SKILL.md` transport adapter now actually **buffers and flushes** (it previously
+    no-op'd when the host global was absent, contradicting its own guidance); the agreed
+    handler/channel name is unified behind one `BRIDGE_NAME` contract constant.
+  - `description` rewritten symptom-rich with outgoing scope cross-links to
+    `deeplink-hydration` (router readiness), `frontend-security-baseline` (token storage /
+    CSP / XSS), and `frontend-auth-flow-contracts` (login/returnTo); matching body
+    cross-links added.
+  - Corrections (Codex + adversarial primary-source review): funnel `canGoBack` is advisory
+    only (Capacitor/Tauri pattern), a default WKWebView honors `maximum-scale`
+    (`ignoresViewportScaleLimits` false → fails WCAG 1.4.4, unlike mobile Safari),
+    `position:fixed` momentum hit-test fix attributed to WebKit bug 262287 / Safari
+    Technology Preview 239, and corrected `webview_flutter` channel-injection timing.
+  - Bloat trim (no surviving factual claim changed): removed the off-host Joplin/Electron
+    desktop CVE, compressed the Tauri CVE and Sources blocks, and shortened the pre-API-17
+    reflection-RCE backstory.
 - Overlap-audit trims (no factual claims changed; each duplicated rule now lives in one
   place with the others pointing to it):
   - `frontend-auth-flow-contracts` now cites `frontend-security-baseline` as the canonical

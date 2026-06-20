@@ -21,6 +21,11 @@ window.ChannelName.postMessage(jsonString); // string only
   so the same `window.<name>.postMessage(...)` call shape works.
 - Channel name is part of the contract — agree on one generic name (e.g. `NativeBridge`)
   so the universal transport adapter works unchanged.
+- **Timing:** `webview_flutter` registers the channel at document-start (Android
+  `addJavascriptInterface`, iOS a document-start `WKUserScript`), so `window.ChannelName`
+  is normally present before your scripts run — but if the host adds the channel late or
+  under a different name, an early `window.ChannelName.postMessage` hits `undefined`. The
+  adapter's buffer-until-`window.ChannelName`-exists guard covers that race.
 
 ## Receiving (app → web)
 

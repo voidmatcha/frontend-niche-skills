@@ -10,6 +10,16 @@ window.ReactNativeWebView.postMessage(jsonString); // string only
 
 - Injected **only when the app sets the `onMessage` prop** — guard for absence.
 - App receives it in `onMessage` as `event.nativeEvent.data` (string → parse + validate).
+- **Timing:** the global is injected at page-start, but an early synchronous send can
+  still miss it — `injectedJavaScriptBeforeContentLoaded` is *not* 100% reliable on
+  Android (it can run after the page's own scripts, or not at all on first launch —
+  #1609). Have the page buffer messages until `window.ReactNativeWebView` exists, then
+  flush; prefer the app passing startup data via `injectedJavaScriptObject` over an
+  early bridge round-trip.
+- **Detecting the app:** test for `window.ReactNativeWebView`, not the User-Agent — the
+  app's custom `userAgent`/`applicationNameForUserAgent` is applied only to the *first*
+  page request on Android and reverts to the default UA on later in-funnel navigations
+  (#3703, #1971), so a UA-based gate breaks mid-flow.
 
 ## Receiving (app → web)
 

@@ -1,6 +1,6 @@
 ---
 name: webview-bridge-pages
-description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — bridge messaging, native close/back, READY loading signals, query-param variants, auth handoff, safe-area/viewport/font-scale layout. Hosts: React Native, WKWebView, Android WebView, Flutter."
+description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — postMessage-to-native bridge, native close/back and Android hardware-back, multi-step funnel back, the first READY/auth/analytics message silently dropped on cold start (bridge global not ready → buffer + flush), blank screen after renderer death (onRenderProcessGone / webViewWebContentProcessDidTerminate), READY-vs-blank-cold-load signal, query-param render inputs and A/B variants, purchase/IAP button stuck disabled, auth/token handoff (never in query params), safe-area insets, 100vh wrong (svh/dvh), iOS input-zoom on sub-16px font, Android system-font-scale and overscroll layout breakage. Hosts: React Native, WKWebView, Android WebView, Flutter. Native-WebView bridge + inbound-origin scope; for first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
 ---
 
 # Webview bridge pages (web side)
@@ -13,7 +13,8 @@ messages through one transport adapter, let native own lifecycle
 ## Checklist (apply in order; details in references/)
 
 1. Single transport adapter (below); every message one JSON string `{ type, data? }`;
-   plain browser = noop
+   plain browser = noop; buffer sends until the host global appears, then flush; gate
+   app-only UI on that global, never User-Agent
 2. Message `type` constants + payload types in one module, mirrored with app handlers
    → [contract-design](./references/contract-design.md)
 3. No inbound (native→web) listener unless justified; if present, validate origin +
@@ -24,11 +25,12 @@ messages through one transport adapter, let native own lifecycle
 5. Never permanently disable action buttons waiting for results the web can't
    observe (purchases); require an explicit native ack/result or a web-side timeout
    → [contract-design](./references/contract-design.md)
-6. Loading/`READY` contract decided — or consciously skipped (document load ≠ render);
-   paired with an error/timeout policy
+6. Loading/`READY` contract decided — required for costly-blank screens (payment,
+   onboarding), skippable for low-stakes ones (document load ≠ render); paired with an
+   error/timeout policy; re-sent on involuntary reload (renderer death)
    → [contract-design](./references/contract-design.md)
-7. Auth/session source decided (none / cookies / bridge-injected / header) — no tokens
-   in query params → [contract-design](./references/contract-design.md)
+7. Auth/session source decided (none / shared cookie / bridge-injected — never a
+   query-param token) → [contract-design](./references/contract-design.md)
 8. Navigation & capabilities policy decided (external links, deep links, downloads,
    file inputs) — don't assume browser behavior
    → [contract-design](./references/contract-design.md)
@@ -39,31 +41,51 @@ messages through one transport adapter, let native own lifecycle
     → [contract-design](./references/contract-design.md)
 11. Viewport meta set; `svh`/`dvh` instead of `vh`; insets from app params, not
     `env()` alone → [page-implementation](./references/page-implementation.md)
-12. Layout verified at 130% system font scale (200% on Android 14+); keyboard
-    behavior decided → [page-implementation](./references/page-implementation.md)
+12. Layout verified at 130% system font scale (200% on Android 14+); keyboard +
+    input-focus zoom (≥16px font) behavior decided → [page-implementation](./references/page-implementation.md)
 
 ## Transport adapter
 
 ```js
+const BRIDGE_NAME = 'bridge';  // one name agreed in the contract: WKWebView handler + Android interface + Flutter channel (RN uses its own fixed global)
+let queue = [];
+let host = null;
+let tries = 0;
+
+function resolveHost() {
+  if (window.ReactNativeWebView) return window.ReactNativeWebView;             // React Native WebView
+  if (window.webkit?.messageHandlers?.[BRIDGE_NAME]) {                         // iOS WKWebView
+    return window.webkit.messageHandlers[BRIDGE_NAME];
+  }
+  if (window[BRIDGE_NAME]?.postMessage) return window[BRIDGE_NAME];            // Android addJavascriptInterface / Flutter channel
+  return null;                                                                 // plain browser, or global not injected yet
+}
+
+function flushQueue() {
+  host = host || resolveHost();
+  if (!host) {                          // global not injected yet — poll briefly so a lone cold-start message still drains
+    if (queue.length && tries++ < 40) setTimeout(flushQueue, 50);  // ~2s cap; plain browser exhausts tries and stays a noop
+    return;
+  }
+  for (const json of queue) host.postMessage(json);  // FIFO; queue cleared below so nothing double-sends
+  queue = [];
+}
+
 function postToNative(message) {
-  const json = JSON.stringify(message);
-  if (window.ReactNativeWebView) {                       // React Native WebView
-    return window.ReactNativeWebView.postMessage(json);
-  }
-  if (window.webkit?.messageHandlers?.bridge) {          // iOS WKWebView (handler name agreed with app)
-    return window.webkit.messageHandlers.bridge.postMessage(json);
-  }
-  if (window.NativeBridge?.postMessage) {                // Android addJavascriptInterface / Flutter channel
-    return window.NativeBridge.postMessage(json);
-  }
-  // No native host (plain browser): intentionally a noop.
-  // Add debug logging behind your framework's own dev flag if useful.
+  queue.push(JSON.stringify(message));  // single JSON string: lowest common denominator across hosts
+  flushQueue();                         // drains now if the host is ready, else the poll in flushQueue drains it once it appears
 }
 ```
 
-Always send a single JSON string — the lowest common denominator (WKWebView accepts
-any JSON-serializable body; RN/Android/Flutter accept strings only). The injected
-global only exists when the app registers a handler.
+The adapter sends one JSON string (WKWebView accepts any JSON-serializable body, but
+RN/Android/Flutter accept strings only) and **buffers, polling briefly until the host
+global appears**, so the first `READY`/auth/analytics message isn't dropped on cold
+start — the global is wired at page-start but can be absent when your first message fires
+(if the app exposes a `bridge-ready` event, drive `flushQueue` from it instead of the
+poll). Detect the host by this **presence check, never User-Agent sniffing** (WebView
+UAs are Safari-shaped and apps override them) — the same signal gates app-only UI like
+hiding the close chrome. Per-host injection-timing caveats (Android
+`injectedJavaScriptBeforeContentLoaded`) → [react-native](./references/react-native.md).
 
 ## References
 

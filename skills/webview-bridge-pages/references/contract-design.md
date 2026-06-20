@@ -9,16 +9,12 @@ Decisions to settle in the web↔native contract doc before writing page code.
   moving parts and no origin-validation surface.
 - If inbound is unavoidable, validate origin and schema. Any iframe in the page can
   call the bridge too (Android `addJavascriptInterface` is injected into **every
-  frame** with no origin control); the native side must also treat incoming payloads
-  as untrusted input. Two real-world demonstrations of why: in Tauri, remote-origin
-  iframes could reach the IPC endpoints without being allow-listed, letting an
-  attacker-controlled iframe invoke real commands ("delete project", "transfer
-  credits") — CVE-2024-35222, fixed in 1.6.7 / 2.0.0-beta.20 by requiring explicit
-  origin/capability allow-listing. And the context that *renders* untrusted HTML must not itself hold
-  native power: Joplin rendered note content in an Electron window with
-  `nodeIntegration` enabled, so a note-content XSS escalated to remote code execution
-  (CVE-2018-1000534). Keep the bridge off untrusted frames; keep native capability
-  away from anything that renders untrusted content.
+  frame** with no origin control), so the native side must treat incoming payloads as
+  untrusted — remote-origin iframes have reached bridge/IPC endpoints with no
+  allow-listing (Tauri CVE-2024-35222). Keep the bridge off untrusted frames, and keep
+  native capability away from anything that renders untrusted HTML. (General HTML-sink
+  XSS hardening and CSP belong to **frontend-security-baseline**; the bridge-specific
+  rule here is origin+schema validation on every inbound message.)
 - One shape for every message: `{ type: string, data?: object }`, `JSON.stringify`
   once. Keep `type` constants + payload types in one module, mirrored with the app's
   handler definitions. Strong typing on both sides catches misspelled actions at
@@ -35,14 +31,27 @@ Decisions to settle in the web↔native contract doc before writing page code.
 - Layout around the native button: reserve the status-bar height plus the agreed
   button area (per platform/notch) so content never sits under native chrome.
 - **Do not rely on WebView history for SPA pages.** WebView `goBack()`/history
-  behaves unreliably with SPA client-side routing on some Android devices
-  (react-native-webview #2810 — thread points at `history.pushState` navigation).
-  And it isn't RN-specific: in Tauri, Android `canGoBack()` returned `false` until the
-  user physically touched the WebView, so a programmatically navigated page would exit
-  the app on back-press despite having real history (tauri #13957). Design bridge
-  screens as **single screens with native close**.
+  behaves unreliably with SPA client-side routing on Android: after an in-SPA
+  navigation `canGoBack` reads false and both native `goBack()` and injected
+  `history.back()` fail, while the same code works on iOS (react-native-webview #3100;
+  #2810 related; also seen on Tauri Android, #13957). Design bridge screens as **single
+  screens with native close** (exception: multi-step funnels — see below).
 - Only add a WEB → native `CLOSE`-type message when the web itself must trigger
   dismissal.
+- **Multi-step funnels are the exception — decide back semantics explicitly.** If one
+  webview hosts a multi-step flow (signup, checkout, onboarding), the default (native
+  closes on back) dumps users out of the funnel on the first back press. Pick one in
+  the contract: (a) **web owns intra-funnel history** — `history.pushState` per step +
+  a `popstate` handler — but this inherits the Android flakiness above, so track your
+  own step index rather than trusting `canGoBack`, and verify hardware-back and
+  edge-swipe per host; or (b) **native forwards back, web decides** — native fires one
+  inbound `BACK` event and takes no native action; the web steps back by its own step
+  index, or at step 1 sends a `CLOSE` message so native dismisses (the established
+  Capacitor App-plugin `backButton` pattern, copied by Tauri PR #14133 — registering the
+  listener disables native's default back entirely, so there is no native "consumed"
+  reply). If the event carries a `canGoBack` field it is just the WebView's own
+  unreliable `canGoBack()` — advisory at most; never let it drive the close decision.
+  Adds one inbound listener — weigh against the one-way preference.
 
 ## Actions with unobservable results (purchases etc.)
 
@@ -74,10 +83,22 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
   own API failures (web-owned error state with retry — native can't see them),
   bridge-unavailable = noop by design, and who logs which telemetry (exposure and
   purchase events app-side; page errors web-side).
+- **The renderer can die mid-session, not just on cold load.** iOS WKWebView's
+  out-of-process WebContent can be killed under memory pressure
+  (`webViewWebContentProcessDidTerminate` — which itself sometimes doesn't fire,
+  rn-webview #2559); Android fires `onRenderProcessGone` (API 26+), after which the
+  WebView can't be reused and must be recreated. The page comes back **blank with no JS
+  state**. Native owns the recreate/reload; the web-side rule is the cold-load rule
+  again — keep the screen reconstructable from params/native and **re-post `READY` on
+  every (re)load** so native can re-handshake (restore route/scroll). Never assume
+  in-memory DOM/JS state survived.
 
 ## Auth & session handoff
 
-Decide in the contract where identity comes from — in order of preference:
+Decide in the contract where identity comes from — in order of preference. (Scope: this
+is only the **WebView handoff** — where identity originates once the page is already
+inside a native session; login/signup/returnTo flows → **frontend-auth-flow-contracts**,
+token storage / CSP / cookie SameSite → **frontend-security-baseline**.)
 
 - **None** — the page renders purely from params (simplest; no identity surface).
 - **Shared cookie session** — host-specific behavior (e.g. React Native WebView's
@@ -119,11 +140,11 @@ when the page would navigate or use device capabilities:
 - web.dev "User-centric performance metrics"; Android `WebViewClient.onPageFinished`
   reference; Next.js Automatic Static Optimization docs; Zellic "WebView security";
   Android "Access native APIs with JavaScript bridge"; Apple WKUserContentController /
-  WKScriptMessageHandlerWithReply; react-native-webview docs + issue #2810.
-- Bridge security boundary — [CVE-2024-35222](https://nvd.nist.gov/vuln/detail/CVE-2024-35222)
-  (Tauri: remote-origin iframes reached IPC without allow-listing; patched 1.6.7 /
-  2.0.0-beta.20 per advisory GHSA-57fm-592m-34r7 — the NVD text's "beta.19" is still
-  affected) · [CVE-2018-1000534](https://nvd.nist.gov/vuln/detail/CVE-2018-1000534)
-  (Joplin: note-content XSS → RCE via Electron `nodeIntegration`) ·
+  WKScriptMessageHandlerWithReply; react-native-webview docs + issues #2810/#3100.
+- Renderer-death recovery: Apple `WKNavigationDelegate.webViewWebContentProcessDidTerminate`;
+  Android `WebViewClient.onRenderProcessGone` (API 26+); react-native-webview #2199 / #2559.
+- Bridge security boundary: [CVE-2024-35222](https://nvd.nist.gov/vuln/detail/CVE-2024-35222)
+  (Tauri remote-origin iframes reached IPC without allow-listing) ·
   [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()`
-  false until WebView interaction).
+  unreliable). Funnel back option (b): Capacitor App-plugin `backButton`, adopted by
+  Tauri PR #14133.
