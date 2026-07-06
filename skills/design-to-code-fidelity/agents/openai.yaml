@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design-to-Code Fidelity"
+  short_description: "Verify implemented UI against a design reference."
+  default_prompt: "Use $design-to-code-fidelity to verify implemented UI against a design reference using reference export, deterministic capture, visual comparison, evidence tiers, and mismatch triage."
