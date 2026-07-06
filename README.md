@@ -95,7 +95,7 @@ Pattern value: make the agent test the right hypothesis before applying another 
 
 ## Skills
 
-18 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
+31 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
 
 Practical priority:
 
@@ -211,7 +211,7 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 
 ## Evidence
 
-repo avoids treating a grep hit as a bug. docs separate confirmed examples, candidate leads, positive controls, and known false positives.
+The repo avoids treating a grep hit as a bug. The docs separate confirmed examples, candidate leads, positive controls, and known false positives.
 
 Where evidence lives:
 
