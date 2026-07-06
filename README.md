@@ -10,6 +10,10 @@
 [![Frontend edge cases](https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&labelColor=black)](#skills)
 [![License](https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&labelColor=black)](./LICENSE)
 
+<p align="center">
+<strong>🇺🇸 English</strong> | <a href="README.ko.md">🇰🇷 한국어</a> | <a href="README.ja.md">🇯🇵 日本語</a> | <a href="README.zh-cn.md">🇨🇳 简体中文</a>
+</p>
+
 **Agent Skills for frontend edge cases that broad checklists often miss — WebView pages, semantic markup, overlay lifecycle, IME/CJK input, hydration, forms, auth, payment pages, exports, dates, visual fidelity, and report triage.**
 
 `frontend-niche-skills` gives Claude Code, Codex, and other `AGENTS.md`-compatible coding agents focused playbooks for bugs where the right fix depends on separating evidence types: layout vs paint, DOM vs accessibility tree, browser vs native WebView host, server render vs client hydration, payment-page data boundary vs runtime script surface, and export file vs spreadsheet/Blob/clipboard behavior.
