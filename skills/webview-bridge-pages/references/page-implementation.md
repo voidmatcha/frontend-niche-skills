@@ -19,6 +19,39 @@ Web-side implementation rules once the contract is settled.
   suspend/resume. Clamp at zero. Agree on the unit (unix seconds vs ms) in the
   contract.
 
+## Back navigation & form state
+
+- **Inside a WebView, back is usually a full page load.** Android WebView ships with
+  the back/forward cache **disabled** (Chrome on Android has had it since 96; the
+  Chromium bfcache Intent-to-Ship explicitly excluded WebView). Hosts can opt in via
+  androidx.webkit `WebSettingsCompat.setBackForwardCacheEnabled` (experimental in
+  1.12.0, stable in 1.15.0, behind a `WebViewFeature.BACK_FORWARD_CACHE` runtime
+  check) — but don't design assuming it's on. WKWebView usually restores from WebKit's
+  in-memory page cache, but that's not guaranteed either (HTTPS +
+  `Cache-Control: no-store`, cache eviction/memory pressure, content-process
+  termination → fresh load).
+- **What survives a non-bfcache back:** `history.state` (stored per session-history
+  entry) survives; the JS heap and component state do not; browser form re-fill is
+  best-effort only (the HTML spec's "persisted user state" is implementation-defined —
+  never rely on it); `sessionStorage` survives reloads and same-tab navigations but
+  assume it's gone when the app process is killed.
+- **Detect the restore mode** with `pageshow`: `event.persisted === true` is a bfcache
+  restore (state intact, re-sync timers); `false` is a fresh load — restore drafts
+  yourself.
+- **Pattern — bind step/form drafts to the history entry.** Write the accumulated
+  step/form context into the entry itself: `history.replaceState` the draft on change
+  (or `pushState` per funnel step), then restore from `history.state` on load and from
+  `event.state` on `popstate`. Back then restores the previous step **with its
+  inputs**, not an empty re-render, because the entry's state survives a non-bfcache
+  back. Constraints that follow from the mechanism: the context must be
+  structured-clone-serializable and size-bounded, and history-entry state is
+  client-only (restore after mount when SSR is involved). For a single form, a
+  `sessionStorage` draft keyed by form id (write on change, restore on mount) covers
+  back + reload within the app session. (React prior art: toss/use-funnel implements
+  the per-step variant of this via router adapters.)
+- Funnel back **semantics** (who owns the back button) →
+  [contract-design](./contract-design.md).
+
 ## Layout & viewport inside a WebView
 
 - **Viewport meta is mandatory** — without it Android WebView may lay out at ~980px
@@ -149,6 +182,15 @@ Web-side implementation rules once the contract is settled.
 - Dark mode: Android WebView dark-theme doc
   (https://developer.android.com/develop/ui/views/layout/webapps/dark-theme;
   meta tag required for `prefers-color-scheme` in default Force Dark mode).
+- Back/forward cache: MDN bfcache glossary + web.dev/articles/bfcache; Chromium
+  bfcache Intent-to-Ship excluding WebView
+  (https://groups.google.com/a/chromium.org/g/bfcache-dev/c/0zTVPni5F9g); androidx.webkit
+  release notes (`setBackForwardCacheEnabled`,
+  https://developer.android.com/jetpack/androidx/releases/webkit); WebKit
+  "Page Cache I – The Basics" (https://webkit.org/blog/427/webkit-page-cache-i-the-basics/);
+  MDN `PageTransitionEvent.persisted`; WHATWG HTML "persisted user state"
+  (implementation-defined form restore); toss/use-funnel browser adapter source
+  (`packages/browser/src/index.ts` — context in `history.state`).
 
 ## Paint / hit-test diagnostics
 

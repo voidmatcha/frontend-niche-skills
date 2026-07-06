@@ -40,7 +40,9 @@ messages through one transport adapter, let native own lifecycle
    Android without app-side `onShowFileChooser`
    → [contract-design](./references/contract-design.md)
 9. Query parsing centralized with fallbacks for every unknown value; timestamp unit
-   agreed; timers recomputed from absolute time
+   agreed; timers recomputed from absolute time; back is usually a full load in
+   WebViews (bfcache off/uncertain) — bind funnel/form drafts to `history.state` or
+   a `sessionStorage` draft
    → [page-implementation](./references/page-implementation.md)
 10. A/B axes orthogonal (one config key → one query param); unknown variant → control
     → [contract-design](./references/contract-design.md)

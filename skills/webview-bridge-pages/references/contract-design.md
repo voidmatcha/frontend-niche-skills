@@ -44,7 +44,10 @@ Decisions to settle in the web↔native contract doc before writing page code.
   webview hosts a multi-step flow (signup, checkout, onboarding), the default (native
   closes on back) dumps users out of the funnel on the first back press. Pick one in
   the contract: (a) **web owns intra-funnel history** — `history.pushState` per step +
-  a `popstate` handler — but this inherits the Android flakiness above, so track your
+  a `popstate` handler, binding each step's accumulated form context to the history
+  entry (`history.state`) so back restores inputs instead of an empty re-render
+  (mechanism and prior art → [page-implementation](./page-implementation.md)
+  back-navigation notes) — but this inherits the Android flakiness above, so track your
   own step index rather than trusting `canGoBack`, and verify hardware-back and
   edge-swipe per host; or (b) **native forwards back, web decides** — native fires one
   inbound `BACK` event and takes no native action; the web steps back by its own step
