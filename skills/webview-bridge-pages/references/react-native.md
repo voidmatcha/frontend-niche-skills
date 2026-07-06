@@ -24,9 +24,12 @@ window.ReactNativeWebView.postMessage(jsonString); // string only
 ## Receiving (app → web)
 
 - App calls `injectJavaScript()` (the path shown in official docs) or
-  `webViewRef.postMessage()`. For the latter, the page listens via
-  `window.addEventListener('message', ...)` — community-documented, not in the
-  official guide; historically some Android versions dispatched on `document` instead.
+  `webViewRef.postMessage()`. For the latter, the dispatch target differs by
+  platform in current source: iOS dispatches a `MessageEvent` on `window`
+  (`apple/RNCWebViewImpl.m`), Android dispatches on `document`
+  (`RNCWebViewManagerImpl.kt`) — a page listening only on `window` silently
+  receives nothing on Android. Register the same handler on both `window` and
+  `document`. Neither listener is shown in the official guide.
 - Prefer not to need this at all (one-way design). If used, validate payload schema —
   and note the race: injected JS runs in whatever page is currently loaded.
 
@@ -49,7 +52,7 @@ Official pattern: app wires `BackHandler.addEventListener('hardwareBackPress')` 
   webview history.
 - Single-screen bridge pages: no navigations → `canGoBack` stays false → the
   `BackHandler` returns false and the OS closes the screen natively, which is the
-  desired contract (inference from the official pattern, not a documented guarantee).
+  desired contract (inference from the official pattern, not a documented contract).
 
 ## Layout & text
 
@@ -58,9 +61,45 @@ Official pattern: app wires `BackHandler.addEventListener('hardwareBackPress')` 
   recommendation to preserve accessibility:
   `textZoom={Math.min(130, fontScale * 100)}`.
 - Page meta: `viewport-fit=cover`; app may pass `statusBarHeight` as a query param.
+- **White flash on rotation/load is the native layer, not the page.** In
+  `react-native-webview` v14 there is no `opaque` prop — opacity is *derived* from the
+  WebView `backgroundColor` alpha (`apple/RNCWebViewImpl.m` `setBackgroundColor:` —
+  `alpha = CGColorGetAlpha(...); opaque = (alpha == 1.0); self.opaque =
+  _webView.opaque = opaque; _webView.backgroundColor = scrollView.backgroundColor =
+  bg`), and the default container background is `clearColor`. During a rotation/resize
+  the native WKWebView surface repaints before the web layout catches up; a web-side
+  `html`/`body` color only applies *after* that repaint, so it can't cover the
+  transition frames. Fix on the native side: give the WebView an opaque dark
+  `style={{ backgroundColor }}` (plus a matching backing-view color). Scope it per
+  page via a prop — don't change a shared WebView wrapper's default.
 
 ## Security
 
 - App should set `originWhitelist` (default `http://*`/`https://*`). Avoid `['*']`
   for URI-loaded pages in production — note `source={{ html }}` legitimately requires
   `['*']` per official docs. Treat all `onMessage` data as untrusted.
+
+## Sources
+
+- react-native-webview [Reference](https://github.com/react-native-webview/react-native-webview/blob/master/docs/Reference.md)
+  and [Guide](https://github.com/react-native-webview/react-native-webview/blob/master/docs/Guide.md):
+  `onMessage`/`postMessage` string contract, `injectedJavaScriptBeforeContentLoaded`,
+  `injectedJavaScriptObject`, `injectJavaScript`, `onLoadEnd`, `startInLoadingState`,
+  `originWhitelist`, Android `textZoom`.
+- Injection timing and User-Agent behavior: issues
+  [#1609](https://github.com/react-native-webview/react-native-webview/issues/1609)
+  (`injectedJavaScriptBeforeContentLoaded` unreliable on Android),
+  [#3703](https://github.com/react-native-webview/react-native-webview/issues/3703) /
+  [#1971](https://github.com/react-native-webview/react-native-webview/issues/1971)
+  (custom `userAgent` reverts on later in-funnel navigations).
+- Back button and renderer lifecycle: React Native
+  [`BackHandler`](https://reactnative.dev/docs/backhandler); issues
+  [#2810](https://github.com/react-native-webview/react-native-webview/issues/2810)
+  (`goBack()` no-op regression),
+  [#2199](https://github.com/react-native-webview/react-native-webview/issues/2199)
+  (iOS blank WebView after idle) /
+  [#2559](https://github.com/react-native-webview/react-native-webview/issues/2559)
+  (`onContentProcessDidTerminate` not firing) — iOS renderer death; Android
+  `onRenderProcessGone` is covered in [android-webview](./android-webview.md).
+- Surface color derived from `backgroundColor` alpha: react-native-webview
+  `apple/RNCWebViewImpl.m` (`setBackgroundColor:`).

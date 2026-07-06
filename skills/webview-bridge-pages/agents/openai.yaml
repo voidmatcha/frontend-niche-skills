@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebView Bridge Pages"
+  short_description: "Web-page side of native-app in-app WebViews."
+  default_prompt: "Use $webview-bridge-pages to review the web-page side of native app WebViews: bridge messaging, READY/error signals, close/back ownership, safe-area/viewport layout, hit-test, paint, and compositing diagnostics."

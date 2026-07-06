@@ -40,6 +40,19 @@ window.ChannelName.postMessage(jsonString); // string only
   signal. Use a web-sent `READY` message for content-critical screens.
 - `onWebResourceError` catches load failures, but not broken-but-200 JS bundles —
   another reason `READY` + timeout is the robust pattern.
+- Renderer death: on iOS it surfaces through this same `onWebResourceError`
+  (`WebResourceErrorType.webContentProcessTerminated`) and hosts typically reload —
+  design the page so a silent reload recovers (re-send `READY`, keep no critical
+  state only in JS). On Android, `webview_flutter` exposes no `onRenderProcessGone`
+  hook (flutter/flutter#130297, open), so a renderer crash is invisible to the host
+  and by default kills the app process — recovery contract → [contract-design](./contract-design.md).
+
+## Capabilities
+
+- File inputs on Android need explicit host support:
+  `AndroidWebViewController.setOnShowFileSelector` (added after long-standing
+  flutter/flutter#27924) — without it `<input type="file">` dead-taps, same as raw
+  Android WebView (→ [android-webview](./android-webview.md)).
 
 ## Back button
 
@@ -53,3 +66,17 @@ window.ChannelName.postMessage(jsonString); // string only
   notes in [android-webview.md](./android-webview.md) apply (viewport meta, the
   `env(safe-area-inset-*)` support timeline, `textZoom`/font scale). Take insets from
   app-passed params.
+
+## Sources
+
+- [`webview_flutter`](https://pub.dev/packages/webview_flutter) package; API docs:
+  [`WebViewController`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/WebViewController-class.html)
+  (`addJavaScriptChannel`, `runJavaScript` / `runJavaScriptReturningResult`) and
+  [`NavigationDelegate`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/NavigationDelegate-class.html)
+  (`onPageFinished`, `onWebResourceError`).
+- Android bridge under the hood:
+  [`WebView.addJavascriptInterface`](https://developer.android.com/reference/android/webkit/WebView) /
+  [`@JavascriptInterface`](https://developer.android.com/reference/android/webkit/JavascriptInterface).
+  System back handling: Flutter
+  [`PopScope`](https://api.flutter.dev/flutter/widgets/PopScope-class.html).
+  Android-specific layout notes → [android-webview](./android-webview.md).

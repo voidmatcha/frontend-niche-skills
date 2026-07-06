@@ -1,6 +1,6 @@
 ---
 name: webview-bridge-pages
-description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — postMessage-to-native bridge, native close/back and Android hardware-back, multi-step funnel back, the first READY/auth/analytics message silently dropped on cold start (bridge global not ready → buffer + flush), blank screen after renderer death (onRenderProcessGone / webViewWebContentProcessDidTerminate), READY-vs-blank-cold-load signal, query-param render inputs and A/B variants, purchase/IAP button stuck disabled, auth/token handoff (never in query params), safe-area insets, 100vh wrong (svh/dvh), iOS input-zoom on sub-16px font, Android system-font-scale and overscroll layout breakage. Hosts: React Native, WKWebView, Android WebView, Flutter. Native-WebView bridge + inbound-origin scope; for first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
+description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — postMessage-to-native bridge, native close/back and Android hardware-back, first READY/auth message can be missed on cold start (buffer + bounded flush), blank screen after renderer death, query-param render inputs and A/B variants, IAP button stuck disabled, auth/token handoff, safe-area insets and 100vh wrong (svh/dvh), paint/compositing vs hit-test separation, iOS sub-16px input-zoom. Hosts: React Native, WKWebView, Android WebView, Flutter. For first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
 ---
 
 # Webview bridge pages (web side)
@@ -18,7 +18,8 @@ messages through one transport adapter, let native own lifecycle
 2. Message `type` constants + payload types in one module, mirrored with app handlers
    → [contract-design](./references/contract-design.md)
 3. No inbound (native→web) listener unless justified; if present, validate origin +
-   schema → [contract-design](./references/contract-design.md)
+   schema, and ignore non-string/non-JSON window messages before parsing bridge JSON
+   → [contract-design](./references/contract-design.md)
 4. Close/back ownership decided — default: native owns X button and Android back, web
    draws no close UI; layout avoids the native button area via app-passed insets
    → [contract-design](./references/contract-design.md)
@@ -26,13 +27,17 @@ messages through one transport adapter, let native own lifecycle
    observe (purchases); require an explicit native ack/result or a web-side timeout
    → [contract-design](./references/contract-design.md)
 6. Loading/`READY` contract decided — required for costly-blank screens (payment,
-   onboarding), skippable for low-stakes ones (document load ≠ render); paired with an
+   critical funnels), skippable for low-stakes ones (a brief blank is cheap); paired with an
    error/timeout policy; re-sent on involuntary reload (renderer death)
    → [contract-design](./references/contract-design.md)
 7. Auth/session source decided (none / shared cookie / bridge-injected — never a
-   query-param token) → [contract-design](./references/contract-design.md)
+   query-param token); never start OAuth/social login inside the webview (embedded
+   UAs get `403: disallowed_useragent` — bridge out to the system browser)
+   → [contract-design](./references/contract-design.md)
 8. Navigation & capabilities policy decided (external links, deep links, downloads,
-   file inputs) — don't assume browser behavior
+   file inputs) — don't assume browser behavior; no `window.open`/`target="_blank"`
+   (silently dropped without app-side support), and `input[type=file]` dead-taps on
+   Android without app-side `onShowFileChooser`
    → [contract-design](./references/contract-design.md)
 9. Query parsing centralized with fallbacks for every unknown value; timestamp unit
    agreed; timers recomputed from absolute time
@@ -40,9 +45,39 @@ messages through one transport adapter, let native own lifecycle
 10. A/B axes orthogonal (one config key → one query param); unknown variant → control
     → [contract-design](./references/contract-design.md)
 11. Viewport meta set; `svh`/`dvh` instead of `vh`; insets from app params, not
-    `env()` alone → [page-implementation](./references/page-implementation.md)
+    `env()` alone; `<meta name="color-scheme">` declared with `prefers-color-scheme`
+    styles (Android WebView can auto-invert pages that don't declare a scheme)
+    → [page-implementation](./references/page-implementation.md)
 12. Layout verified at 130% system font scale (200% on Android 14+); keyboard +
     input-focus zoom (≥16px font) behavior decided → [page-implementation](./references/page-implementation.md)
+13. Missing/incorrect visuals split DOM/layout/hit-test/paint/compositing before
+    height, padding, timeout, or repaint workarounds → [page-implementation](./references/page-implementation.md)
+14. Localized copy containing intentional `\n` line breaks preserves them with
+    `white-space: pre-line`; keep long-token protection such as `overflow-wrap: break-word`
+15. Old Android failures: identify the actual WebView/Chrome engine version, then
+    check syntax/API compatibility before treating it as an app or OS regression
+16. Legacy fallback work must include a matrix: affected old WebView engine,
+    modern Android WebView/Chrome control, and app WebView when bridge/safe-area/deeplink
+    integration matters. Record device/API/WebView version, URL environment, screenshots,
+    and whether Playwright only forced the fallback branch or an actual engine ran it.
+
+## Shared primitives, not a mega-wrapper
+
+When two or more WebView pages repeat the same host concerns, extract small
+primitives instead of copying per-page fixes:
+
+- Transport: `postToNative` (plus a framework wrapper if useful — e.g. a React
+  `useBridgePost` hook) with JSON-string messages, noop in a
+  plain browser, and optional bounded buffering for first `READY`-style messages.
+- Root shell: app-height, safe-area variables, touch/callout defaults, full-width
+  WebView root, and page-provided background/className.
+- Viewport settling: resize/orientation/visualViewport listeners that only update
+  CSS variables or trigger a bounded repaint.
+
+Do not put page-specific query parsing, auth/login, store wiring, payment product
+logic, A/B copy, or visual layout into a generic wrapper. If a proposed wrapper
+needs many feature flags or knows the page's business terms, keep the behavior local
+or extract a narrower hook/component.
 
 ## Transport adapter
 
@@ -51,6 +86,7 @@ const BRIDGE_NAME = 'bridge';  // one name agreed in the contract: WKWebView han
 let queue = [];
 let host = null;
 let tries = 0;
+let polling = false;  // re-entry guard: at most ONE poll chain ever live
 
 function resolveHost() {
   if (window.ReactNativeWebView) return window.ReactNativeWebView;             // React Native WebView
@@ -62,9 +98,13 @@ function resolveHost() {
 }
 
 function flushQueue() {
+  polling = false;                      // this invocation is the live one; a fresh poll may be re-armed below
   host = host || resolveHost();
   if (!host) {                          // global not injected yet — poll briefly so a lone cold-start message still drains
-    if (queue.length && tries++ < 40) setTimeout(flushQueue, 50);  // ~2s cap; plain browser exhausts tries and stays a noop
+    if (queue.length && tries++ < 40) { // ~2s cap shared by ALL buffered messages, not ~2s/N — one chain only
+      polling = true;
+      setTimeout(flushQueue, 50);       // plain browser exhausts tries and stays a noop
+    }
     return;
   }
   for (const json of queue) host.postMessage(json);  // FIFO; queue cleared below so nothing double-sends
@@ -72,20 +112,120 @@ function flushQueue() {
 }
 
 function postToNative(message) {
+  if (!host && tries >= 40 && queue.length >= 20) queue.shift();  // poll gave up (plain browser) — cap the dead buffer instead of growing forever
   queue.push(JSON.stringify(message));  // single JSON string: lowest common denominator across hosts
-  flushQueue();                         // drains now if the host is ready, else the poll in flushQueue drains it once it appears
+  if (host || !polling) flushQueue();   // drain now if host is ready; otherwise only kick the poll if none is already live
 }
 ```
 
 The adapter sends one JSON string (WKWebView accepts any JSON-serializable body, but
 RN/Android/Flutter accept strings only) and **buffers, polling briefly until the host
-global appears**, so the first `READY`/auth/analytics message isn't dropped on cold
-start — the global is wired at page-start but can be absent when your first message fires
+global appears**, so the first `READY`/auth/analytics message is less likely to be dropped on cold
+start — the global is usually wired at page-start but can still be absent when the first message fires
 (if the app exposes a `bridge-ready` event, drive `flushQueue` from it instead of the
 poll). Detect the host by this **presence check, never User-Agent sniffing** (WebView
 UAs are Safari-shaped and apps override them) — the same signal gates app-only UI like
 hiding the close chrome. Per-host injection-timing caveats (Android
 `injectedJavaScriptBeforeContentLoaded`) → [react-native](./references/react-native.md).
+
+## Legacy Android WebView JavaScript compatibility
+
+If an old Android WebView shows a generic client-side error while modern Chrome
+works, debug the WebView engine, not just the Android OS version. Pull the
+browser console from remote debugging or reproduce with the missing feature
+removed, then separate:
+
+- Syntax support: parse/transpile target issues.
+- Runtime API support: missing globals or methods such as `globalThis`,
+`Array.prototype.at`, `Object.hasOwn`, or `URL.canParse`.
+- Browser-native `window.postMessage(message)` compatibility: affected old engines
+  such as Android 9 WebView 66 may require `targetOrigin`; use
+  `window.postMessage(message, window.location.origin)` for same-page events.
+
+For feature fixes, prefer feature detection over User-Agent gates. In Next.js
+Pages Router, a polyfill required before the app boots should be loaded from
+`pages/_document` with `next/script` `strategy="beforeInteractive"` (App Router:
+same strategy from the root `app/layout`); verify the
+rendered HTML places it before `_next/static/chunks/*` and re-test on the old
+WebView. Do not rely on normal client imports when the failing code can run
+before hydration.
+
+## Legacy Android WebView CSS fallbacks
+
+Treat old CSS failures like runtime compatibility issues, not design tweaks. Prefer
+feature detection and a narrow marker such as `html[data-legacy-webview='true']` over
+Android-version or User-Agent gates. The marker can cover an old WebView class of
+issues, but each CSS rule under it should still be local to the failing component.
+
+For unsupported layout features such as flex/grid `gap`, `dvh`, or safe-area values,
+show the failure in an affected engine, add the smallest fallback branch, then compare
+against the same viewport without the marker. Playwright can force the marker for fast
+regression coverage; it does not establish old engine parsing/rendering. Use an actual old
+Android WebView/WebView Shell or app WebView for that.
+
+When the page is blank before the JS framework (React etc.) hydrates, suspect JavaScript syntax/API support
+first. When the page renders but spacing/paint is wrong, suspect CSS feature support,
+viewport/safe-area, or compositing. Keep the two fixes separate so modern browsers do
+not inherit old-engine workarounds.
+
+Do not verify legacy support against a dev server (`next dev`/HMR or any bundler dev
+mode). The framework's dev runtime and untranspiled `node_modules` ship modern syntax
+(optional chaining, nullish coalescing) that a `browserslist`/target setting does not
+downlevel — it lowers *your* app code but not the framework's own dev bundle — so a
+legacy WebView parse-errors there even when the production build is clean. In Next.js,
+a live WebView target with `document.readyState === 'complete'` can still stay blank
+because the Pages-Router-dev-only `style[data-next-hide-fouc]` FOUC guard leaves
+`body{display:none}` in old WebView HMR;
+treat that as dev-runtime evidence, not a product CSS regression. Iterate layout on a
+modern WebView (where HMR works); run the engine and app-integration tiers against a
+production build or deployed environment.
+
+## Legacy Android WebView verification matrix
+
+Use three tiers, and say which tiers ran. For the full evidence model and reporting
+template, read [regression-testing](./references/regression-testing.md).
+
+1. **Fast branch check:** Playwright/mobile browser same viewport, with and without the
+   feature-detection marker. Good for as-is/to-be screenshots, not sufficient for
+   engine compatibility.
+2. **Engine check:** Android emulator or WebView Shell on the affected WebView/Chrome
+   version. Capture console, screenshot, device/API/WebView version, and loaded URL.
+3. **App integration check:** real app WebView when RN bridge, safe-area params,
+   deep links, auth, or QA hidden menus are part of the claim.
+
+At minimum, cover the affected old engine plus one modern Android control. If results
+differ across devices, report by WebView/Chrome version first and Android OS/device
+second; WebView updates can make same-OS devices behave differently.
+
+## iOS Simulator and WKWebView evidence
+
+Separate direct URL and app evidence. For the full evidence model and reporting
+template, read [regression-testing](./references/regression-testing.md).
+
+1. **Simulator Safari/WebKit smoke:** open the web URL in iOS Simulator Safari to check WebKit layout, viewport, and text wrapping. This does not establish app bridge, injected safe-area params, auth, or native lifecycle.
+2. **App WKWebView integration:** open the installed app through a deeplink or QA route when bridge/safe-area/auth/native behavior is part of the claim. On iOS 16.4+, app-side `WKWebView.isInspectable = true` may be required for Safari Web Inspector.
+3. **Physical device:** use for release candidates or issues involving payments, keyboard, notch/safe-area, GPU/compositing, or hardware-specific rendering.
+
+When reporting iOS evidence, label it as Safari/WebKit simulator, app WKWebView simulator, or physical device.
+
+## Android rotation / viewport settling
+
+For Android WebView rotation or tablet/foldable resize glitches, first separate two
+failure classes:
+
+- Native surface flash/blank: WebView layer briefly paints white/blank. Native
+  `backgroundColor` / container styling can hide only this class — on RN, opacity
+  derives from the WebView `backgroundColor` alpha, see
+  [react-native](./references/react-native.md); on raw WKWebView see
+  [wkwebview](./references/wkwebview.md).
+- DOM alignment drift: content keeps an old layout or visual viewport for a frame.
+  Fix this in the page: avoid a narrow root combined with inner `100vw`; make the
+  root track the WebView viewport and constrain inner content with `max-width`.
+
+When DOM alignment depends on viewport dimensions, observe `window.resize`,
+`orientationchange`, and `window.visualViewport.resize` when available, then re-read
+viewport size after the next animation frame or a short settle delay. Do not document
+page-specific CSS transforms as a general fix.
 
 ## References
 
@@ -94,5 +234,6 @@ hiding the close chrome. Per-host injection-timing caveats (Android
 | [contract-design](./references/contract-design.md) | Message contract, close/back ownership, unobservable results, READY + error policy, auth handoff, navigation policy, A/B variants |
 | [page-implementation](./references/page-implementation.md) | Query parsing on SPA hydration, timers, viewport/safe-area/keyboard/font scale |
 | [react-native](./references/react-native.md) · [wkwebview](./references/wkwebview.md) · [android-webview](./references/android-webview.md) · [flutter](./references/flutter.md) | Host APIs, version caveats, quirks |
+| [regression-testing](./references/regression-testing.md) | WebView evidence tiers, Android/iOS actual-engine workflow, reporting template |
 
 Sources are listed in each reference file.

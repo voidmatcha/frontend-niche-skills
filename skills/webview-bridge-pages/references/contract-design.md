@@ -34,7 +34,9 @@ Decisions to settle in the web↔native contract doc before writing page code.
   behaves unreliably with SPA client-side routing on Android: after an in-SPA
   navigation `canGoBack` reads false and both native `goBack()` and injected
   `history.back()` fail, while the same code works on iOS (react-native-webview #3100;
-  #2810 related; also seen on Tauri Android, #13957). Design bridge screens as **single
+  #2810 related). Tauri on Android hits a related but distinct `canGoBack()`
+  unreliability — it reads false after programmatic navigations until the user first
+  taps the WebView (#13957). Design bridge screens as **single
   screens with native close** (exception: multi-step funnels — see below).
 - Only add a WEB → native `CLOSE`-type message when the web itself must trigger
   dismissal.
@@ -68,14 +70,14 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
 
 - Document load (`onLoadEnd` / `didFinish` / `onPageFinished`) ≠ content rendered.
   The `load` event "doesn't necessarily correspond with anything the user cares about"
-  (web.dev); Android docs state that an `onPageFinished` callback "does not guarantee
-  that the next frame drawn by WebView will reflect the state of the DOM at this
-  point"; SPA frameworks render meaningful content only after hydration
+  (web.dev); Android docs state that an `onPageFinished` callback "does not
+  guarantee that the next frame drawn by WebView will reflect the state of the DOM
+  at this point"; SPA frameworks render meaningful content only after hydration
   (Next.js: `router.query` is empty until then).
 - For screens where a blank cold load is costly (payment, onboarding): app shows a
   native loading state, web posts a `READY`-type message after first meaningful render,
   app swaps with a timeout fallback. Load-finished callbacks cannot detect a broken JS
-  bundle (they fire on failure too); `READY` proves the web app actually ran.
+  bundle (they fire on failure too); `READY` shows the web app actually ran.
 - Skip the signal for low-stakes screens — it costs an app-side loading + timeout
   policy.
 - **Pair READY with an error policy** in the same contract: what the app does when
@@ -109,6 +111,13 @@ token storage / CSP / cookie SameSite → **frontend-security-baseline**.)
   requires an inbound message, weigh against the one-way preference.
 - **Query-param token — avoid.** URLs leak into server logs, browser history, and
   referrer headers; treat any token that touched a URL as exposed.
+- **Never initiate OAuth/social login inside the webview.** Google rejects
+  authorization requests from embedded webviews with `403: disallowed_useragent`
+  (all embedded webviews blocked since 2021, per RFC 8252 native-app guidance);
+  other IdPs behave similarly. A "Sign in with …" button rendered in a bridge page
+  dead-ends with no web-side recovery. The contract must route login through the
+  system browser (Android Custom Tabs / iOS `ASWebAuthenticationSession`) via a
+  bridge message or deep link, with the app re-entering the page with the session.
 
 ## Navigation & capabilities
 
@@ -119,13 +128,28 @@ when the page would navigate or use device capabilities:
   screens: which scheme/route? Downloads, `<a download>`, file inputs/camera,
   permission prompts: several of these **silently no-op or behave differently inside
   WebViews** — don't assume browser behavior; test the specific host.
+- **New-window navigations are a distinct path**: `target="_blank"` / `window.open`
+  don't hit the same interception hooks as plain navigations. iOS cancels them unless
+  the app implements `WKUIDelegate` `webView(_:createWebViewWith:…)` (JS `window.open`
+  additionally gated by `javaScriptCanOpenWindowsAutomatically`, default off); Android
+  requires `setSupportMultipleWindows(true)` + `WebChromeClient.onCreateWindow`, and
+  these requests bypass `shouldOverrideUrlLoading`. Web-side rule: bridge pages emit
+  **no new-window navigations** — same-window nav the app intercepts, or an
+  `OPEN_EXTERNAL`-type bridge message. (Opener-leak / `rel=noopener` concerns in plain
+  browsers → **frontend-security-baseline**.)
+- **`input[type=file]` dead-taps on Android hosts** unless the app implements
+  `WebChromeClient.onShowFileChooser`; the page cannot detect the miss (silent no-op,
+  works fine in browsers and WKWebView). Confirm support in the contract, gate/hide
+  upload UI on host capability, or route the upload through a bridge message —
+  mechanism → [android-webview](./android-webview.md).
 - The app side typically enforces the policy via navigation interception
   (e.g. RN `onShouldStartLoadWithRequest`, `originWhitelist`); the web side should not
   emit navigations that aren't in the agreed policy.
 
 ## A/B variants via query params
 
-- One Remote Config key per experiment variable → one query param each. The app reads
+- One remote-config key (Firebase Remote Config, an in-house flag system — any
+  assignment source) per experiment variable → one query param each. The app reads
   the keys and composes the URL. Orthogonal slots compose; whole-URL swapping explodes
   combinatorially with parallel experiments.
 - Implement each axis as an independent slot: text variants as a
@@ -148,3 +172,14 @@ when the page would navigate or use device capabilities:
   [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()`
   unreliable). Funnel back option (b): Capacitor App-plugin `backButton`, adopted by
   Tauri PR #14133.
+- OAuth-in-webview block: Google Developers Blog
+  ["Upcoming security changes to Google's OAuth 2.0 authorization endpoint in embedded webviews"](https://developers.googleblog.com/en/upcoming-security-changes-to-googles-oauth-20-authorization-endpoint-in-embedded-webviews/)
+  and Google's `disallowed_useragent` remediation FAQ; IETF
+  [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) (OAuth 2.0 for Native Apps).
+- New-window path: Apple
+  [`webView(_:createWebViewWith:for:windowFeatures:)`](https://developer.apple.com/documentation/webkit/wkuidelegate/webview(_:createwebviewwith:for:windowfeatures:))
+  (navigation canceled when unimplemented/nil); Android
+  [`WebChromeClient.onCreateWindow`](https://developer.android.com/reference/android/webkit/WebChromeClient)
+  (+ `setSupportMultipleWindows`); in the wild:
+  [Capacitor #798](https://github.com/ionic-team/capacitor/issues/798)
+  (`window.open` `target=_blank` silently ignored).
