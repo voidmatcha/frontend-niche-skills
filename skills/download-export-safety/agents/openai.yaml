@@ -1,0 +1,4 @@
+interface:
+  display_name: "Download Export Safety"
+  short_description: "Safe CSV, Blob, clipboard exports."
+  default_prompt: "Use $download-export-safety review CSV/download/clipboard export code for formula injection, Blob URL cleanup, filenames, and fallback behavior."

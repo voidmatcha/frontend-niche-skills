@@ -1,0 +1,4 @@
+interface:
+  display_name: "Large List Data Grid Contracts"
+  short_description: "Reviewing or building a virtualized list or data grid and behavior breaks at the"
+  default_prompt: "Use $large-list-data-grid-contracts to review the code for the failure modes it covers, reporting only PR-worthy findings with file:line evidence and the narrowest fix."

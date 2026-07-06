@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deeplink Hydration"
+  short_description: "Deep links into SPA/SSR keeping params and destination."
+  default_prompt: "Use $deeplink-hydration to review SPA/SSR deep links for first-render empty params, router readiness, premature redirects, auth returnTo loss, and cold direct-navigation tests."

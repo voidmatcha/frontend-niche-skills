@@ -1,0 +1,4 @@
+interface:
+  display_name: "A11y Contract Testing"
+  short_description: "Lock accessibility semantics as a test contract."
+  default_prompt: "Use $a11y-contract-testing to review or write tests that lock UI accessibility semantics: roles, accessible names, focus behavior, ARIA state, dialogs, menus, comboboxes, tabs, and getByRole-visible modals."

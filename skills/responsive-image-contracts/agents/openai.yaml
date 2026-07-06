@@ -1,0 +1,4 @@
+interface:
+  display_name: "Responsive Image Contracts"
+  short_description: "Review responsive image srcset/sizes, LCP priority, and CLS reservation."
+  default_prompt: "Use $responsive-image-contracts to review the responsive images in this markup: check each w-descriptor srcset has a sizes that matches the real layout, intrinsic-width labels match the actual files, the LCP/hero image loads eager with fetchpriority=high (below-fold images lazy), width/height or aspect-ratio reserve space against CLS, and <picture> uses media/type only for art-direction or format fallback."

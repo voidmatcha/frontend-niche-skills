@@ -1,0 +1,4 @@
+interface:
+  display_name: "CJK Text and Input"
+  short_description: "Korean/Japanese/Chinese text wrapping and IME input."
+  default_prompt: "Use $cjk-text-and-input to review Korean/Japanese/Chinese text and input handling: line breaks, word-break/keep-all, IME composition, Enter key handling, and Hangul length counting."

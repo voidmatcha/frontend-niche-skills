@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Report Triage"
+  short_description: "Route vague frontend bug reports."
+  default_prompt: "Use $frontend-report-triage to triage this frontend bug report and recommend likely failure classes, evidence gaps, and follow-up skills."

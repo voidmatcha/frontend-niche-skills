@@ -1,0 +1,4 @@
+interface:
+  display_name: "File Ingest Contracts"
+  short_description: "File-ingest traps: drag-drop, paste, previews."
+  default_prompt: "Use $file-ingest-contracts to review drag-and-drop, file input, and paste-to-upload code for drop-event cancel and highlight flicker, DataTransfer items vs files and directory upload, accept/file.type trust vs magic bytes, and object-URL preview lifecycle."

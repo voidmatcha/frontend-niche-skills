@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pwa Offline Cache Contracts"
+  short_description: "A service worker or offline cache serves the wrong bytes"
+  default_prompt: "Use $pwa-offline-cache-contracts to review the code for the failure modes it covers, reporting only PR-worthy findings with file:line evidence and the narrowest fix."

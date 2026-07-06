@@ -1,0 +1,4 @@
+interface:
+  display_name: "Client Error Observability Contracts"
+  short_description: "Harden frontend error capture: wire the disjoint global handlers plus framework hooks,..."
+  default_prompt: "Use $client-error-observability-contracts: Review this frontend's error-capture and monitoring wiring against the client-error-observability-contracts skill. Flag dropped error classes (missing unhandledrejection or capture-phase resource handler, async/event-handler errors routed to a boundary that can't catch them), the cross-origin \"Script error.\" blackout, publicly deployed source maps or a live sourceMappingURL, grouping that fragments/merges issues, and PII/tokens/PAN reaching the reporter with no beforeSend scrub. Report evidence, risk, and the smallest fix per finding."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Semantic Markup Contracts"
+  short_description: "Review native HTML structure and semantics."
+  default_prompt: "Use $semantic-markup-contracts review frontend markup structure: buttons vs links, headings, landmarks, labels, tables/lists, invalid interactive nesting, and native-before-ARIA fixes."

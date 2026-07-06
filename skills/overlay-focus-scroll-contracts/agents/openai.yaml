@@ -1,0 +1,4 @@
+interface:
+  display_name: "Overlay Focus Scroll Contracts"
+  short_description: "Modal focus, inert, and scroll-lock checks."
+  default_prompt: "Use $overlay-focus-scroll-contracts review this modal, drawer, sheet, or popover for focus trapping/restoration, inert background, and scroll-lock cleanup."

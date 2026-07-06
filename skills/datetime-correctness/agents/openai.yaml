@@ -1,0 +1,4 @@
+interface:
+  display_name: "Datetime Correctness"
+  short_description: "Dates/times correct across timezones, DST, server vs client."
+  default_prompt: "Use $datetime-correctness to review date and time code for timezone, DST, server/client rendering, datetime-local round trips, UTC/epoch storage, Intl.DateTimeFormat, and Temporal boundaries."

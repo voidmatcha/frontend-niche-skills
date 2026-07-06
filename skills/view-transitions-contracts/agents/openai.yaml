@@ -1,0 +1,4 @@
+interface:
+  display_name: "View Transitions Contracts"
+  short_description: "Review lens for View Transitions API silent-abort and reduced-motion bugs"
+  default_prompt: "Use $view-transitions-contracts to review this view transition for silent aborts (duplicate view-transition-name on the same frame), frozen/stale old snapshots from unpainted incoming DOM, unhonored prefers-reduced-motion, wrong React Transition wrapping, ghost names, and chrome painting behind the overlay."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Payment Page Client Security"
+  short_description: "Payment-page script and PAN-boundary review."
+  default_prompt: "Use $payment-page-client-security review this checkout/payment page for payment script inventory, PAN-boundary, and PCI DSS evidence risks."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CSS Transition Animation Contracts"
+  short_description: "Review dialog/popover enter/exit transitions & transitionend cleanup"
+  default_prompt: "Use $css-transition-animation-contracts to review the enter/exit transitions on this dialog/popover/top-layer UI (display/overlay/allow-discrete/@starting-style/::backdrop) and any focus, unmount, or scroll-unlock cleanup gated on a transition finishing."
