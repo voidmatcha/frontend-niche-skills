@@ -1,0 +1,4 @@
+interface:
+  display_name: "JS Form Validation Contracts"
+  short_description: "Form-library validation lifecycle traps."
+  default_prompt: "Use $js-form-validation-contracts to review React Hook Form, Formik, vee-validate, or Final Form validation timing, stale errors, disabled submits, async/server races, and server field-error mapping."
