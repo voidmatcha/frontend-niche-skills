@@ -1,0 +1,4 @@
+interface:
+  display_name: "Component Extraction Judgment"
+  short_description: "Decide when to extract, merge, or leave frontend components."
+  default_prompt: "Use $component-extraction-judgment to review React near-duplicate components and decide whether to extract, merge, create thin wrappers, move logic into hooks, or deliberately leave them separate."
