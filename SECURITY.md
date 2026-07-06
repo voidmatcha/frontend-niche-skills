@@ -1,22 +1,19 @@
 # Security Policy
 
-## Scope
+## Supported versions
 
-This repository ships **documentation only** (agent skill markdown). There is no
-executable or installable code; the transport-adapter snippet is copied into your own
-codebase and reviewed there. Security-relevant guidance in the skill (bridge origin
-validation, token handling, `addJavascriptInterface` caveats) is sourced from the
-official platform documents cited in each reference file.
+Only the latest released version and the `main` branch are supported.
 
 ## Reporting
 
-If you find guidance in this skill that would lead an implementation into a
-vulnerability (e.g. unsafe bridge advice, incorrect origin-validation claims), please
-report it privately via
-[GitHub Security Advisories](https://github.com/voidmatcha/frontend-niche-skills/security/advisories/new)
-rather than a public issue. Inaccuracies without security impact can go to regular
-issues.
+Please report security-sensitive issues privately. For local or pre-release copies, use
+the distribution channel that provided the package. After the public repository is
+available, use its GitHub Security Advisories flow.
 
-## Supported versions
+Use private reporting for:
 
-Only the latest `main` is maintained; the skill is versioned via CHANGELOG.md.
+- guidance that would lead users toward an insecure implementation;
+- unsafe or misleading scripts shipped with a skill;
+- plugin or installation metadata that could create a supply-chain risk.
+
+Non-security documentation bugs can be filed as regular issues.

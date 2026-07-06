@@ -1,0 +1,4 @@
+pre-push:
+  commands:
+    skill-pack-checks:
+      run: ./scripts/pre-push-checks.sh
