@@ -7,7 +7,8 @@ description: "Use when deep links into an SPA/SSR page lose query params or land
 
 A deep link is a contract: the URL alone must reconstruct the screen. SPAs break this
 contract during the window between document load and router hydration, when the
-router's state lags the real URL.
+router's state lags the real URL. If this page renders inside a native WebView, see
+`webview-bridge-pages`; this skill owns plain-SPA router/param readiness only.
 
 ## The failure mode
 
@@ -22,30 +23,35 @@ router's state lags the real URL.
 ## Rules
 
 1. **Gate param-dependent logic on router readiness.** In Next.js **Pages Router**,
-   that means `router.isReady` in a client-side `useEffect`; React Router and Vue
-   Router (`router.isReady()`) expose equivalent "params hydrated/parsed" signals.
-   Next.js **App Router** has no such flag — `useSearchParams()` is synchronous in
-   client components, but reading it forces the subtree up to the nearest `Suspense`
-   boundary into client rendering, so the equivalent discipline is wrapping the
-   param-reading component in `Suspense` (render a skeleton as its fallback). Either
-   way: never redirect on "missing" params before they're known.
+   this means `router.isReady` in client-side `useEffect`. Vue Router has
+   `router.isReady()`. React Router does **not** have an equivalent router-ready
+   flag; use `useLocation()` / `useParams()` / loader data from the current route,
+   and treat deferred loader/network data as data readiness rather than param
+   hydration. Next.js **App Router** has no `router.isReady` flag —
+   `useSearchParams()` is synchronous in client components, but reading it forces
+   the subtree up to the nearest `Suspense` boundary into client rendering, so the
+   equivalent discipline is wrapping the param-reading component in `Suspense`
+   (render a skeleton as its fallback). Either way: never redirect on "missing"
+   params before they're known.
 2. **`window.location` is the client-side source of truth when the router lags.**
    If a decision can't wait for hydration (e.g. choosing the initial screen), read
-   `window.location.pathname` / `.search` directly on first client render and treat
-   router state as eventually consistent. (Guard for SSR: `typeof window`.)
-3. **Don't lose the URL across auth bounces.** Login redirects must carry the intended
-   destination (`returnTo`-style param or session storage) and restore it after
-   authentication — a deep link that survives hydration but dies at the login wall is
-   still a broken deep link.
-4. **Auth bounces are still deep links.** Preserve the intended destination,
-   but keep auth-specific return-target validation in `frontend-auth-flow-contracts`
-   (and open-redirect primitives in `frontend-security-baseline`).
-5. **Every deep-linkable page gets a direct-navigation test**: e2e test that opens the
+   `window.location.pathname` / `.search` directly and treat router state as
+   eventually consistent. In a pure CSR SPA you may read `window.location` on first
+   render; under SSR defer this read until after mount — the `typeof window` guard
+   that gates it is itself the hydration-mismatch trigger, so see
+   `ssr-hydration-mismatch`.
+3. **Don't lose the URL across auth bounces — they're still deep links.** Login
+   redirects must carry the intended destination (`returnTo`-style param or session
+   storage) and restore it after authentication; a deep link that survives hydration
+   but dies at the login wall is still a broken deep link. Keep auth-specific
+   return-target validation in `frontend-auth-flow-contracts` (and open-redirect
+   primitives in `frontend-security-baseline`).
+4. **Every deep-linkable page gets a direct-navigation test**: e2e test that opens the
    full URL cold (fresh context, no in-app navigation) and asserts the
    reconstructed screen. In-app navigation tests never catch hydration loss.
    Client-side redirects right after load can race the assertion — wait for the
    final URL, not the first response.
-6. Normalize parsing in one function per page (`string | string[] | undefined` for
+5. Normalize parsing in one function per page (`string | string[] | undefined` for
    repeated params), with explicit fallbacks — same discipline as any URL-driven
    screen.
 
@@ -60,8 +66,10 @@ router's state lags the real URL.
 
 ## Sources
 
-- Next.js Pages Router docs: Automatic Static Optimization (empty `query` during
-  prerender, populated after hydration), `useRouter` (`isReady`: client-side only,
-  in `useEffect`)
-- MDN: `window.location`
-- See `frontend-auth-flow-contracts` for auth-specific return-target validation.
+- Next.js Pages Router `useRouter` docs (`query`, `isReady`): <https://nextjs.org/docs/pages/api-reference/functions/use-router>
+- Next.js Automatic Static Optimization docs (empty `query` during prerender, populated after hydration): <https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization>
+- Vue Router `router.isReady()` API: <https://router.vuejs.org/api/interfaces/Router.html#isReady>
+- React Router `useLocation`: <https://reactrouter.com/api/hooks/useLocation>
+- React Router `useParams`: <https://reactrouter.com/api/hooks/useParams>
+- React Router data routers/loaders: <https://reactrouter.com/start/data/route-object>
+- MDN `window.location`: <https://developer.mozilla.org/en-US/docs/Web/API/Window/location>

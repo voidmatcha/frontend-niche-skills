@@ -1,6 +1,6 @@
 ---
 name: datetime-correctness
-description: "Use when storing, computing, or displaying dates/times that must stay correct across timezones, DST transitions, and server-vs-client environments — wall-clock values stored with no zone, `new Date(\"2026-06-14\")` parsed as UTC and printing the previous day, `<input type=datetime-local>` floating values with no zone, adding 24h across a DST boundary, or `toLocaleString` rendering the server's zone. Correctness/storage scope; for which locale format to show (grouping, currency, format string) see i18n-copy-and-layout; for in-render `Date` causing server/client divergence see ssr-hydration-mismatch."
+description: "Use when date/time behavior depends on timezone, DST, date-only parsing, floating local inputs, SSR/server zone differences, or instant-vs-wall-clock boundaries — wall-clock values stored with no zone, `new Date(\"2026-06-14\")` parsed as UTC and printing the previous day, `datetime-local input` floating values with no zone, adding 24h across a DST boundary, or `toLocaleString` rendering the server's zone. Correctness/storage scope; for which locale format to show (grouping, currency, format string) see i18n-copy-and-layout; for in-render `Date` causing server/client divergence see ssr-hydration-mismatch."
 ---
 
 # Datetime correctness
@@ -34,7 +34,10 @@ see **ssr-hydration-mismatch**.
    **zone-aware** — never by adding `86_400_000` ms.
 4. Where targetable, reach for **Temporal**: `Instant` (epoch), `PlainDate`/`PlainDateTime`
    (no zone), `ZonedDateTime` (instant + zone) make these distinctions un-skippable.
-   Otherwise use a polyfill or Luxon / date-fns-tz with the same discipline.
+   As of 2026-06 Temporal is Stage 4 but not universal across evergreen targets: MDN BCD
+   lists Firefox 139+, Chrome/Edge 144+, and Node 26+, while Safari is still preview/flagged
+   and iOS Safari is not shipped. Feature-detect and polyfill with `@js-temporal/polyfill`,
+   or use Luxon / date-fns-tz with the same discipline.
 
 **Display & input** → [display-and-input](./references/display-and-input.md)
 
@@ -47,6 +50,20 @@ see **ssr-hydration-mismatch**.
 7. Don't compute zone- or locale-dependent text during render: it diverges between the
    server's zone and the client's (→ **ssr-hydration-mismatch**). Send a stable serialized
    instant and render it in one fixed, explicit zone on both sides.
+
+## PR-worthiness gate
+
+A date/time finding is PR-worthy only when it changes rendered, stored, or compared behavior for a
+real user or timezone — an instant stored with no zone, `new Date("2026-06-14")` printing the
+previous day in a negative-offset zone, 24h arithmetic across a DST boundary, or output rendered in
+the runtime's ambient zone — not a cosmetic format nit.
+
+Reject weak findings: dev-only logs or UTC-only test fixtures, a value that never crosses a zone/DST
+boundary, or pure locale display formatting (grouping, `MM/DD` vs `DD/MM`) — that is
+`i18n-copy-and-layout`'s.
+
+Minimal useful PR: make the zone explicit at the boundary (store epoch/offset, keep date-only
+date-only, pin `Intl` `timeZone`) and add a test that runs in a non-UTC zone or across a DST transition.
 
 ## References
 

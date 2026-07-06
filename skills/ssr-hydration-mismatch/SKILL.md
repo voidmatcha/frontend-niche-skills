@@ -9,7 +9,8 @@ Server-side rendering only pays off if the client can **hydrate** the server's H
 event handlers to the existing DOM without rebuilding it. The moment the client's first
 render disagrees with what the server sent, the framework throws out the server tree and
 re-renders on the client, and you lose the SSR benefit you paid for (plus a visible flash and,
-on React 18+, an error that is *silently recovered in production*). The triggers are almost
+on React 18+, an error that is *recovered in production but logged only as an uninformative
+minified error (#418, no diff), so it is easy to miss*). The triggers are almost
 all forms of one thing: **the first render is not deterministic across the server/client
 boundary** — it reads the clock, a random value, the timezone, the locale, or `window`.
 
@@ -29,19 +30,45 @@ For first-render **router/query-param readiness** (params empty until hydration)
    `useSyncExternalStore` with a server snapshot — never inline in the first render.
 3. **Keep HTML nesting valid.** `<div>`/`<p>` inside `<p>`, or raw text/`<div>` directly
    under `<table>`/`<tbody>`, gets repaired by the browser's parser, so the client DOM no
-   longer matches the string the server emitted — a guaranteed mismatch.
+   longer matches the string the server emitted — a deterministic mismatch.
 4. **`suppressHydrationWarning` is one level deep.** It silences the warning for a single
    element's own text/attributes (e.g. an unavoidable timestamp), not its descendants. It's a
    scalpel for known-divergent leaves, not a blanket fix.
-5. **A React 18+ mismatch is a *recoverable* error.** In production React recovers by
-   re-rendering on the client, so nothing visibly breaks and the bug hides — surface it via
-   `hydrateRoot`'s `onRecoverableError` / your error monitoring, not just local dev.
+5. **A React 18+ mismatch is a *recoverable* error.** React logs it in both dev and prod by
+   default, but the prod log is a minified error with no server-vs-client diff, so it is easy
+   to miss — wire `hydrateRoot`'s `onRecoverableError` into monitoring with source maps to turn
+   it into an actionable signal, not just local dev.
 6. **Bound the blast radius.** For genuinely client-only UI, isolate it behind `<Suspense>`
    or a no-SSR dynamic import (`next/dynamic` `{ ssr: false }`) so a mismatch re-renders that
    island instead of cascading the whole route.
 7. **Framework-agnostic principle, framework-specific tools.** React/Next is the worked
    example; Vue/Nuxt (`<ClientOnly>`), Svelte/SvelteKit, and Astro (`client:only`) expose the
    same "render this only on the client" escape hatch — see the reference.
+
+## PR-worthiness gate
+
+Hydration findings are easy to overclaim. Count a case only when you can tie a nondeterministic
+first render to an SSR path:
+
+- Confirm the component/module participates in server render or initial HTML generation. If it is a
+  no-SSR dynamic import or purely client-rendered route, downgrade to "determinism cleanup," not a
+  hydration bug.
+- Show the exact first-render value that can differ: time, random id, locale/timezone formatting,
+  browser-only API branch, invalid HTML repair, or persisted client state before hydration.
+- Prefer evidence from a hydration smoke test, React `onRecoverableError`, Next.js dev warning, or
+  a server-vs-client render diff.
+
+Reject weak findings:
+
+- `Math.random()`/`Date.now()` inside event handlers, effects, request handlers, or server-only code
+  that does not affect the client first render.
+- Locale formatting after mount, behind `useEffect`, behind `dynamic(..., { ssr: false })`, or inside
+  an explicitly client-only island.
+- Stable ids generated once on the server and serialized to the client.
+
+Minimal useful PR: make initial HTML deterministic, render a placeholder until mounted, pin an
+explicit locale/timeZone for SSR text, or isolate the widget as no-SSR; add a test that fails on
+recoverable hydration errors.
 
 ## References
 

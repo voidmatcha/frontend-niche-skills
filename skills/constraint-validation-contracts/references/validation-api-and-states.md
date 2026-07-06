@@ -11,11 +11,14 @@ the *timing* and the *lifecycle* right is the whole game.
 `<input required>` matches `:invalid` before the user has done anything — style it red and the
 form looks broken on load.
 
-`:user-invalid` matches **after the user has interacted with the control** *and* it's still
-invalid: a control that was valid on focus begins matching on blur, while one that was
-**already invalid when it gained focus** matches during focus (once the user edits it), before
-any blur — either way it never matches on a pristine load. That's the state you want for error
-styling. (Its counterpart `:user-valid` matches after interaction once valid.)
+`:user-invalid` matches **after the user has interacted with the control or attempted to submit**
+*and* it's still invalid — never on a pristine load. That's the reliable invariant and the state
+you want for error styling. The spec only normatively defines `:user-invalid` around submission
+and otherwise leaves the timing UA-optional ("MAY match at other times"); current browsers
+*tend* to flip it on blur for a field that was valid on focus, and during editing for one that
+was already invalid when focused, but treat that precise focus/blur distinction as a
+heuristic, not a contract. (Its counterpart `:user-valid` matches after
+interaction once valid.)
 
 ```css
 /* WRONG: paints required fields red on page load */
@@ -38,9 +41,10 @@ failure mode plus `valid`:
 - `valueMissing` — `required` and empty
 - `typeMismatch` — value wrong for `type` (`email`, `url`)
 - `patternMismatch` — fails the `pattern` regex
-- `tooLong` / `tooShort` — exceeds `maxlength` / under `minlength` (note: `tooLong` rarely
-  fires from typing because browsers block over-typing past `maxlength` — it mainly triggers on
-  programmatic or pre-filled values; `tooShort` fires normally)
+- `tooLong` / `tooShort` — exceeds `maxlength` / under `minlength` (note: `tooLong`/`tooShort`
+  apply only to a value the user has edited — the dirty-value-flag rule — so they never fire for
+  programmatically-set or never-edited prefilled values; and since browsers block typing past
+  `maxlength`, `tooLong` rarely fires in practice at all)
 - `rangeOverflow` / `rangeUnderflow` — over `max` / under `min`
 - `stepMismatch` — not aligned to `step`
 - `badInput` — the UA can't convert the input (e.g. letters in `type="number"`)
@@ -100,9 +104,11 @@ Native validity is the *mechanism*; the user-facing contract is owned elsewhere:
   the user has attempted to submit (they may still be filling it in). Associate the visible
   error text with **`aria-errormessage`** — MDN's purpose-built attribute for a validation
   message, used together with `aria-invalid="true"`; `aria-describedby` is the broadly
-  supported alternative and the right tool for persistent hint text. On a failed submit, move
-  focus to the first invalid control. The role/name/focus *contract* and how to lock it in
-  tests is **a11y-contract-testing**.
+  supported alternative and the right tool for persistent hint text. Note that
+  `aria-errormessage` is only conveyed to assistive tech while `aria-invalid="true"`; clear
+  `aria-invalid` when the field becomes valid (otherwise the error silently does nothing or
+  goes stale). On a failed submit, move focus to the first invalid control. The
+  role/name/focus *contract* and how to lock it in tests is **a11y-contract-testing**.
 - The native `validationMessage` is localized by the browser but not controllable; once you
   render custom copy, its wording, pluralization, and translation are **i18n-copy-and-layout**.
 

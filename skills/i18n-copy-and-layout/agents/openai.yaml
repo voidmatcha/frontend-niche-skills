@@ -1,0 +1,4 @@
+interface:
+  display_name: "i18n Copy and Layout"
+  short_description: "Multi-language copy, pluralization, RTL, and layout."
+  default_prompt: "Use $i18n-copy-and-layout to review internationalized UI copy and layout: overflow, pluralization, concatenated strings, date/number/currency formatting, RTL, and long translated tokens."

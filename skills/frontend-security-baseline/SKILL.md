@@ -1,107 +1,166 @@
 ---
 name: frontend-security-baseline
-description: "Use when building or hardening the client side of a web app before it ships — rendering user/CMS HTML (XSS sinks, DOMPurify, Trusted Types), setting CSP and security headers (nonce vs host allowlist, frame-ancestors, HSTS preload, SRI), storing auth tokens and stopping CSRF (localStorage vs HttpOnly cookies, SameSite, double-submit), or handling outbound links, open redirects, and the npm supply chain. Client-side scope; for native-WebView bridge & inbound-origin contracts see webview-bridge-pages."
+description: "Use when running a trap-first client-side security pass before shipping, focused on non-obvious frontend security traps: unsafe HTML sinks, sanitizer misuse, framework raw-HTML escape hatches, Trusted Types/DOMPurify gaps, host-allowlist CSP silently fails, JWT/localStorage token theft, SameSite/CSRF edge cases, opener leaks/window.open, open-redirect string checks, npm supply-chain footguns. Client-side scope; payment-page/PAN/PCI DSS evidence use payment-page-client-security; native-WebView bridge inbound-origin contracts use webview-bridge-pages."
 ---
 
 # Frontend security baseline
 
-The expensive frontend security bugs aren't exotic — they're the **default-looking
-choice that quietly fails open**: HTML-encoding into `innerHTML`, a host-allowlist CSP
-that reviewers wave through, a JWT in `localStorage`. Each looks done and isn't. Core
-rule: **prefer the control that makes the unsafe operation
-structurally impossible** (safe sink, nonce, HttpOnly cookie, allowlist) over the one
-that depends on encoding/validating your way to safety every time.
+This is a **trap-first hardening pass**, not a generic security checklist. Start with the
+default-looking choice that quietly fails open, then replace it with the control that makes
+the unsafe operation difficult or impossible.
 
-This is the client-side baseline. For the **postMessage bridge contract and inbound
-(native→web) origin/schema validation**, use **webview-bridge-pages** — not repeated here.
+Use this skill when reviewing browser-rendered surfaces before release: rich text, markdown
+or CMS HTML, script policy, cookie/session behavior, cross-site requests, outbound links,
+redirects, build/install steps, and client-bundled secrets.
 
-**Start here — the traps that pass code review (verify these first):**
+## Scope and non-goals
 
-- **#7 `'strict-dynamic'` makes the browser ignore your host allowlist** — a long
-  `script-src https://…` list kept "just in case" is dead weight, not a layer.
-- **#8 nonce-rewriting middleware stamps the nonce onto attacker-injected scripts too**
-  — it looks like a CSP but provides no XSS protection.
-- **#10 cross-origin SRI without `crossorigin` fails *closed*** — the resource doesn't
-  load at all; the integrity check only runs once both attributes are present.
-- **#13 browser-default `SameSite=Lax` still rides a top-level POST for ~2 min after
-  the cookie is set**, and `SameSite=None` is silently dropped without `Secure`.
-- **#16 `target="_blank"` covers anchors, not `window.open()`** — the JS call needs
-  explicit `'noopener,noreferrer'`.
+- Covers browser/client-side implementation and frontend-owned build configuration.
+- Does not replace backend authz, server-side input validation, threat modeling, or a full
+  application security review.
+- For WebView page ↔ native bridge origin/message contracts, use `webview-bridge-pages`.
+- For login/email-code/passkey browser-flow contracts, use `frontend-auth-flow-contracts`.
 
-## Checklist (lead with the trap; details in references/)
+## How to use
 
-**XSS & sanitization** → [xss-and-sanitization](./references/xss-and-sanitization.md)
+1. Identify the feature boundary: HTML rendering, script loading, token/session storage,
+   cookie-authenticated mutation, navigation, redirect, install/build, or secret exposure.
+2. Pick the matching trap row below. Do **not** produce a broad baseline report when only
+   one trap family is relevant.
+3. Read the linked reference only for the selected trap family.
+4. Recommend the narrowest control that fails closed, plus one verification probe (`rg`,
+   header check, unit/e2e assertion, or CI config check).
 
-1. Encoding into `innerHTML` is the fragile fix — assign untrusted data to `textContent`
-   (or `.value`, `createTextNode`), which is structurally inert. Pick the sink; don't
-   encode your way into a dangerous one.
-2. One global HTML-escaper is **not** XSS-safe — encode for the *exact* context (HTML
-   body / attribute / JS string / URL / CSS); each parses differently. Quote attribute
-   and JS-string values.
-3. Never feed user input to `eval`, `new Function`, or string-form `setTimeout/setInterval`
-   — encoding doesn't help; pass a function reference and `JSON.parse` for JSON.
-4. For user-authored rich HTML, sanitize with a maintained allowlist library (OWASP
-   recommends **DOMPurify**), keep it patched, and run it **last** — mutate nothing after.
-5. Framework escape hatches bypass auto-escaping — React `dangerouslySetInnerHTML`, Vue
-   `v-html`, Angular `bypassSecurityTrust*`: trusted+sanitized data only, built close to
-   its source so every raw-HTML site is greppable.
-6. Defense-in-depth: **Trusted Types** (`require-trusted-types-for 'script'`) makes the
-   sinks themselves reject raw strings; roll out with `-Report-Only` first.
+## Default-looking traps to check first
 
-**CSP & security headers** → [csp-and-headers](./references/csp-and-headers.md)
+| Trap | Why it fails open | Prefer | Details |
+| --- | --- | --- | --- |
+| HTML-encoding before assigning to `innerHTML` | Browser parses in HTML/URL/CSS/JS contexts differently; one wrong encoder is enough. | Safe sinks (`textContent`), DOMPurify for rich HTML, Trusted Types for sink enforcement. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
+| Framework escape hatches (`dangerouslySetInnerHTML`, `v-html`, `bypassSecurityTrust*`) | They bypass the framework's auto-escaping and normalize raw HTML as an app feature. | Trusted + sanitized data only; keep sanitizer last, with no post-sanitize mutation. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
+| Sanitizer output post-processed or re-parsed | Linkifiers, markdown passes, string replaces, DOM mutation, or another library after `sanitize()` can reintroduce dangerous markup. | Put every transform before DOMPurify; insert exact returned string/TrustedHTML into sink. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
+| Host-allowlist CSP (`script-src https://cdn...`) | JSONP, compromised hosts, redirects, and broad CDNs can satisfy the allowlist. | Strict nonce/hash CSP with `strict-dynamic`; roll out in `Report-Only` first. | [csp-and-headers](./references/csp-and-headers.md) |
+| A host allow-list used *instead of* nonce/hash + `'strict-dynamic'` | A bare host allow-list (`script-src https://cdn… 'unsafe-inline'`) with no nonce/hash + `strict-dynamic` is the bypassable kind: JSONP, redirects, and broad CDNs satisfy it. (Note: `https:`/`'unsafe-inline'` placed *after* the nonce + `strict-dynamic` are an intentional, security-neutral legacy fallback CSP3 browsers ignore — not the trap.) | Reason from nonce/hash trust propagation; keep any host/`'unsafe-inline'` tokens only as a post-`strict-dynamic` legacy fallback. | [csp-and-headers](./references/csp-and-headers.md) |
+| Nonce-rewriting middleware | A string-rewriter can stamp the nonce onto attacker-injected `<script>` tags too. | Generate the nonce per response in the template/render path that owns trusted scripts. | [csp-and-headers](./references/csp-and-headers.md) |
+| CSP in `<meta>` or missing framing headers | Some directives are ignored in meta; framing is often left to defaults. | Real HTTP headers: `Content-Security-Policy`, `frame-ancestors`, HSTS, SRI as applicable. | [csp-and-headers](./references/csp-and-headers.md) |
+| Cross-origin SRI without `crossorigin` | The load can fail closed because a `no-cors` response cannot be integrity-checked. | Pin both `integrity` and `crossorigin="anonymous"` for cross-origin static resources. | [csp-and-headers](./references/csp-and-headers.md) |
+| JWT/session/refresh token in `localStorage` | Any XSS on the origin can read and exfiltrate it. | Opaque server session or BFF pattern with `HttpOnly; Secure; SameSite` cookies. | [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md) |
+| "SameSite means no CSRF" | `Lax` has edge cases, including the browser-default Lax top-level POST grace window after a cookie is set; high-risk actions still need intent proof. | SameSite plus signed anti-CSRF token from a header for sensitive cookie-auth mutations. | [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md) |
+| Cookie-vs-cookie double submit | An injected/subdomain cookie can match the submitted cookie value. | Signed/HMAC double-submit tied to the session and validated from a request header. | [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md) |
+| `target="_blank"` is fixed, so all popups are safe | Modern anchors may imply `noopener`; `window.open()` does not unless requested. | `rel="noopener noreferrer"` on anchors and `'noopener,noreferrer'` features for `window.open`. | [navigation-and-supply-chain](./references/navigation-and-supply-chain.md) |
+| `?next=` / `returnUrl=` checked with `startsWith` or deny-lists | Parser tricks, encoded hosts, and trusted-prefix phishing bypass string checks. | Server-side URL parsing and explicit allow-list/mapping of destinations. | [navigation-and-supply-chain](./references/navigation-and-supply-chain.md) |
+| `npm install` / AI-suggested package accepted by name | Lock drift, install scripts, typosquatting, and dependency confusion execute attacker code. | `npm ci`, committed lockfile, install-script policy, package provenance review. | [navigation-and-supply-chain](./references/navigation-and-supply-chain.md) |
+| "It is only in the browser bundle" | Anything shipped to the browser is public, including keys, internal URLs, and source maps. | No client secrets; gate production source maps and debug routes. | [navigation-and-supply-chain](./references/navigation-and-supply-chain.md) |
 
-7. Build CSP on a per-response **nonce/hash + `strict-dynamic`**, not host allowlists —
-   allowlists are bypassable (JSONP, hosted libs, open redirects). Add `object-src 'none';
-   base-uri 'none'`.
-8. Generate the nonce fresh per response via a real templating engine — never middleware
-   that string-replaces `<script>` (it stamps attacker-injected scripts too); never a
-   static nonce.
-9. Clickjacking: CSP `frame-ancestors` is the real control; `X-Frame-Options` is only a
-   legacy fallback (browsers ignore XFO once `frame-ancestors` is set).
-10. On a cross-origin `<script>`, SRI needs `crossorigin="anonymous"` too — without it the
-    load fails closed (a `no-cors` fetch can't be integrity-checked), so add both and pin the
-    third-party version. HSTS `preload` is near-irreversible: opt in only when *every*
-    subdomain is HTTPS.
-11. Set Referrer-Policy and cross-origin isolation (COOP/COEP/CORP) explicitly rather
-    than trusting defaults — and dry-run isolation with `-Report-Only` (it breaks
-    cross-origin embeds and OAuth popups).
+## Quick probes
 
-**Auth tokens & CSRF** → [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md)
+Use probes as starting evidence, not as proof of safety:
 
-12. Tokens in `localStorage`/`sessionStorage` are read by *any* XSS on the origin — keep
-    the credential in an `HttpOnly; Secure; SameSite` cookie (or a BFF). HttpOnly stops
-    theft, not riding the session, so still prevent XSS.
-13. Set `SameSite` explicitly (browser defaults differ; default-Lax has a ~2-min POST
-    window); `SameSite=None` is dropped unless `Secure` is also set.
-14. Cookie auth still needs CSRF defense *on top of* SameSite — synchronizer token
-    (stateful) or signed/HMAC double-submit (stateless; validate via header/form, never
-    cookie-vs-cookie). A bearer/`Authorization` header isn't auto-sent, so it sidesteps
-    CSRF (back in XSS-theft territory instead).
-15. Regenerate the session ID on login/privilege change (else session fixation); on
-    logout, invalidate **server-side** + `Clear-Site-Data` — a client-only logout leaves
-    the token valid. For login/email-code/passkey browser-flow contracts, use
-    `frontend-auth-flow-contracts`.
+```sh
+# Dangerous HTML/code sinks — each needs a safe sink, sanitizer, or Trusted Types path
+rg -n 'innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(' src/
 
-**Navigation & supply chain** → [navigation-and-supply-chain](./references/navigation-and-supply-chain.md)
+# Framework raw-HTML escape hatches and sanitizer policy points
+rg -n 'dangerouslySetInnerHTML|v-html|\{@html|bypassSecurityTrust|DOMPurify|sanitize\(|setHTMLUnsafe|parseHTMLUnsafe' src/
 
-16. `target="_blank"` implies `noopener` on modern anchors, but still set
-    `rel="noopener noreferrer"` (noreferrer also strips `Referer`); `window.open()` is
-    **not** covered — pass `'noopener,noreferrer'`.
-17. Open redirects: map a short ID server-side, or allowlist hosts with a real URL parser
-    — never reflect `?next=`/`?returnUrl=` through `startsWith`/a denylist.
-18. Supply chain: `npm ci` (not `install`) in CI; `ignore-scripts=true` + explicit
-    allowlist; verify every new/AI-suggested package; scoped names + private-registry
-    pinning against dependency confusion.
-19. Nothing shipped to the browser is secret — no API keys, credentials, or hidden routes
-    in client JS, and don't publish production source maps.
+# Browser-readable token storage
+rg -n 'localStorage|sessionStorage' src/ | rg -i 'token|jwt|session|refresh|auth'
+
+# Popup opener leaks and reflected redirects
+rg -n 'window\.open\(' src/ | rg -v 'noopener'
+rg -n 'next=|returnUrl=|redirect_uri=|returnTo=' -i src/
+
+# CI/install looseness
+rg -n 'npm install' .github/ ci/ Makefile package.json 2>/dev/null
+rg -n 'ignore-scripts|audit=false' .npmrc package.json 2>/dev/null
+```
+
+## Baseline controls by family
+
+**XSS and sanitization** — [xss-and-sanitization](./references/xss-and-sanitization.md)
+
+1. Prefer safe sinks: `textContent`, `setAttribute` non-URL attributes, DOM APIs that
+ create text nodes.
+2. Treat raw HTML as exceptional. If rich HTML is required, sanitize with a maintained
+ allow-list library like DOMPurify and assign only the returned value.
+3. Never mutate sanitized HTML afterward; post-sanitize rewrites, linkifiers, markdown
+ passes, or DOM libraries can reintroduce XSS.
+4. Run `eslint-plugin-no-unsanitized`, Semgrep, or CodeQL as candidate generators
+ when available; still show source → sink → exploitability before filing.
+5. Avoid string-to-code APIs (`eval`, `new Function`, string timers). Use data parsing and
+ function references instead.
+6. Consider Trusted Types where supported to enforce that injection sinks cannot receive
+ raw strings.
+
+
+**CSP and headers** — [csp-and-headers](./references/csp-and-headers.md)
+
+1. Prefer strict nonce/hash CSP with `strict-dynamic` over host allow-lists.
+2. Roll CSP out in `Content-Security-Policy-Report-Only` before enforcement.
+3. Set framing policy with `frame-ancestors` in an HTTP CSP header; do not rely on meta CSP.
+4. Use HSTS only when HTTPS is correct for the whole host; preload is a long-lived contract.
+5. Use SRI for third-party static scripts/styles when bytes are expected to be stable.
+
+**Auth tokens and CSRF** — [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md)
+
+1. Do not store auth tokens, refresh tokens, JWTs, session IDs, or credentials in
+    `localStorage` or `sessionStorage`.
+2. Prefer host-only `HttpOnly; Secure; SameSite=Strict` cookies for opaque sessions; relax
+    to `Lax` only for a specific top-level navigation need.
+3. CSRF defenses still matter for high-risk cookie-authenticated mutations: validate a
+    signed token sent in a custom header.
+4. Regenerate session IDs on login and privilege change; client-only login/logout state is
+    not enough.
+5. On logout, invalidate server-side first, then clear client-visible state.
+
+**Navigation and supply chain** — [navigation-and-supply-chain](./references/navigation-and-supply-chain.md)
+
+1. For outbound new tabs, set `rel="noopener noreferrer"`; for `window.open`, pass
+    `'noopener,noreferrer'` in the feature string.
+2. Validate redirects on the server with URL parsing and explicit allow-lists or route IDs.
+3. Treat every new dependency as executable code: inspect provenance, scripts, package age,
+    maintainers, and registry scope.
+4. Use deterministic CI installs (`npm ci`) and commit lockfiles.
+5. Assume browser-shipped assets are public: no secrets, production credentials, or private
+    operational endpoints in client bundles.
+
+## PR-worthiness gate
+
+A security grep hit is only a lead. Before calling it a vulnerability, show the boundary:
+
+1. **Source**: attacker/user/CMS/package/URL-controlled data, or a browser security boundary such
+   as cookies, CSP, opener, redirect destinations, or install scripts.
+2. **Sink/control**: the data reaches an executable HTML/code/navigation sink, or the protective
+   browser control is absent/misapplied.
+3. **Exploit or policy effect**: show the smallest payload, header behavior, redirect, storage
+   exposure, or install behavior that would change security posture.
+4. **Fail-closed patch**: prefer a safe sink, renderer hook, URL parser allow-list, nonce/hash CSP,
+   HttpOnly cookie, or CI install policy over ad-hoc string filtering.
+
+Be precise about modern browser behavior:
+
+- `<a target="_blank">` is lower signal by itself because modern browsers generally apply
+  implicit `noopener` for anchors. Count it as a hardening/policy consistency issue only when the
+  project requires `noreferrer`, supports older WebViews/browsers, or performs fragile post-render
+  HTML mutation. `window.open()` remains high signal unless it passes `noopener,noreferrer`.
+- Raw HTML APIs are not automatically bugs when the input is constant, sanitized immediately before
+  assignment, and not mutated afterward. The bug is the unsafe trust boundary, not the API name.
+- Client-visible API keys are not secrets if they are documented public identifiers; prove privilege
+  or quota impact before filing.
+
+## Output shape
+
+Return findings as trap-focused bullets:
+
+- **Trap**: the default-looking unsafe choice.
+- **Evidence**: file/header/config/probe that shows the risk.
+- **Fix**: the fail-closed control.
+- **Verification**: smallest regression check that would detect reintroduction.
 
 ## References
 
 | File | Covers |
-|------|--------|
-| [xss-and-sanitization](./references/xss-and-sanitization.md) | Safe vs dangerous sinks, contextual encoding, code-execution sinks, DOMPurify (allowlist + sanitize-last), React/Vue/Angular escape hatches, Trusted Types |
-| [csp-and-headers](./references/csp-and-headers.md) | Strict CSP (nonce/hash + `strict-dynamic`), nonce generation, `frame-ancestors`, SRI, HSTS preload, COOP/COEP/CORP, Referrer-Policy |
-| [auth-tokens-and-csrf](./references/auth-tokens-and-csrf.md) | Web storage vs HttpOnly cookies, SameSite semantics, CSRF (synchronizer / signed double-submit / custom-header, Origin/content-type gates), bearer vs cookie, session fixation & logout |
-| [navigation-and-supply-chain](./references/navigation-and-supply-chain.md) | Reverse tabnabbing & `rel`/`window.open`, open-redirect allowlisting, npm lockfile/`ci`/scripts/typosquatting, secrets & source maps in the bundle |
-
-Sources are listed in each reference file.
+| --- | --- |
+| [xss-and-sanitization.md](./references/xss-and-sanitization.md) | Source-to-sink XSS, safe sinks, sanitizer/allow-list misuse, Trusted Types. |
+| [csp-and-headers.md](./references/csp-and-headers.md) | CSP (nonce/hash, `strict-dynamic`), `frame-ancestors`, HSTS, SRI, report-only rollout. |
+| [auth-tokens-and-csrf.md](./references/auth-tokens-and-csrf.md) | Token/session storage boundaries, cookie flags, CSRF defenses, session regeneration. |
+| [navigation-and-supply-chain.md](./references/navigation-and-supply-chain.md) | `noopener`/`noreferrer`, open-redirect validation, dependency provenance, public-bundle secrets. |

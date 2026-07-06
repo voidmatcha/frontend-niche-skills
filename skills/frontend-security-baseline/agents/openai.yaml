@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Security Baseline"
+  short_description: "Client-side security hardening before shipping."
+  default_prompt: "Use $frontend-security-baseline to harden client-side web security: unsafe HTML sinks, CSP, Trusted Types, token storage, SameSite/CSRF, opener leaks, open redirects, and npm supply-chain risks."

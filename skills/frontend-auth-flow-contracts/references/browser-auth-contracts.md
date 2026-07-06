@@ -39,7 +39,9 @@
   limits, one-time invalidation after success, and invalidation after email change or
   cancellation.
 - Use `autocomplete="one-time-code"` and mobile-friendly input hints (`inputmode`,
-  grouping, paste support) without changing the submitted code semantics.
+  grouping, paste support) without changing the submitted code semantics. Note scope:
+  `one-time-code` drives OS-level SMS autofill on iOS/macOS Safari only — on Android use
+  the Web OTP API (`navigator.credentials.get({otp})`) with the `@` bound-origin SMS format.
 - Prefer generic "check your email" states when sending reset or sign-in codes, so
   unknown-account responses do not reveal account existence.
 - On expiry or resend, make state transitions explicit: disable stale submit paths,

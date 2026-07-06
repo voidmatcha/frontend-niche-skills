@@ -72,10 +72,13 @@ line — long before the bundle ships.
   package legitimately needs them (e.g. native builds like `sharp`), grant it via
   an explicit allow-list (e.g. `@lavamoat/allow-scripts`) rather than re-enabling
   scripts globally.
-- This is the lowest-friction supply-chain vector — eslint-scope, crossenv,
-  event-stream, Shai-Hulud all used it: a poisoned transitive package runs the
+- This is the lowest-friction supply-chain vector — eslint-scope, crossenv, and
+  the Shai-Hulud worm all used it: a poisoned transitive package runs the
   moment it's installed, with full access to SSH keys, cloud creds, and npm
-  tokens, before any code review. OWASP: *"bad actors may create or alter packages
+  tokens, before any code review. (`ignore-scripts` does not stop build- or
+  run-time injection such as the 2018 event-stream/flatmap-stream attack, whose
+  payload executed during a downstream project's release build rather than on
+  install — `npm ci`, lockfiles, and provenance/allow-list review cover that vector.) OWASP: *"bad actors may create or alter packages
   to perform malicious acts by running any arbitrary command when their package is
   installed… When installing packages make sure to add the --ignore-scripts suffix
   to disable the execution of any scripts by third-party packages. Consider adding
@@ -121,16 +124,7 @@ line — long before the bundle ships.
 
 ## Find these in your codebase
 
-Every hit is a review point, not an automatic bug:
-
-```sh
-# window.open without an opt-out → reintroduces the opener leak the anchor default solved
-rg -n 'window\.open\(' src/ | rg -v 'noopener'
-# Reflected redirect params — confirm each is mapped/allow-listed, not string-checked
-rg -n 'next=|returnUrl=|redirect_uri=|returnTo=' -i src/
-# CI installing loosely, and whether install scripts are blocked
-rg -n 'npm install' .github/ ci/ Makefile 2>/dev/null ; rg -n 'ignore-scripts' .npmrc 2>/dev/null
-```
+The `window.open`, redirect-param, and CI-install probes live in the SKILL.md "Quick probes" triage block — kept there as the single source of truth. Every hit is a review point, not an automatic bug.
 
 ## Sources
 

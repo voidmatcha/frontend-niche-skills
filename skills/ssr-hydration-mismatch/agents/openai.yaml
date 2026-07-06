@@ -1,0 +1,4 @@
+interface:
+  display_name: "SSR Hydration Mismatch"
+  short_description: "Server vs client first-render divergence in SSR apps."
+  default_prompt: "Use $ssr-hydration-mismatch to diagnose SSR/Next hydration mismatches: Date.now, Math.random, new Date, timezone/locale, typeof window, invalid HTML nesting, suppressHydrationWarning, and Suspense/no-SSR containment."

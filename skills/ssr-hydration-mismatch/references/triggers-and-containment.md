@@ -11,8 +11,12 @@ React's own docs list the common causes. They all reduce to "the first client re
 something different from the server."
 
 - **Non-deterministic values in render** — `Date.now()`, `Math.random()`, `new Date()`
-  rendered to text, or `crypto.randomUUID()` for keys/ids. The server computes one value, the
-  client another.
+  rendered to text, or `crypto.randomUUID()` rendered into an **attribute** (`id`, `htmlFor`,
+  `aria-labelledby`/`aria-describedby`, etc.). The server computes one value, the client
+  another, so the serialized attribute diverges. (A random *key* is a separate bug: keys are
+  never serialized to HTML, so a per-render key causes reconciliation churn, not a hydration
+  mismatch.) For SSR-safe deterministic ids, use React's `useId()` — it produces the same id on
+  server and client.
 - **Timezone / locale formatting** — `date.toLocaleString()`,
   `new Intl.DateTimeFormat().format()`, or number/currency formatting without a pinned
   `timeZone`/`locale`. The server's zone/locale differs from the user's. (Fix in
@@ -63,7 +67,7 @@ something different from the server."
   on the client** — without any boundary, that can be the whole document. Wrapping a risky,
   client-dependent region in its own `<Suspense>` (or rendering it no-SSR) limits the
   re-render to that island so the rest stays hydrated.
-- **It hides in production.** React 18 treats a hydration mismatch as a *recoverable error*:
+- **The prod signal is easy to miss.** React 18 treats a hydration mismatch as a *recoverable error*:
   it logs in **both** dev and production (via `onRecoverableError`, with dev additionally
   surfacing the server-vs-client diff) and then succeeds by client rendering. So a mismatch
   can ship unnoticed — wire `hydrateRoot(container, <App/>, {
@@ -100,7 +104,7 @@ something different from the server."
 - React 18 RFC — [server-errors in React 18](https://github.com/reactjs/rfcs/blob/main/text/0215-server-errors-in-react-18.md)
   (hydration mismatch as a recoverable error; client-render fallback)
 - Next.js — [Hydration error guide](https://nextjs.org/docs/messages/react-hydration-error)
-  and [`next/dynamic` `{ ssr: false }`](https://nextjs.org/docs/app/api-reference/functions/dynamic)
+  and [`next/dynamic` `{ ssr: false }`](https://nextjs.org/docs/app/guides/lazy-loading)
 - React — [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore)
   (`getServerSnapshot` for SSR-safe external state)
 - Vue — [SSR Hydration Mismatch](https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch)

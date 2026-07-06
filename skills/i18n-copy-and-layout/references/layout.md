@@ -15,7 +15,7 @@ W3C publishes IBM's average expansion rates (English → European languages):
 | 11–20 | 180–200% |
 | 21–30 | 160–180% |
 | 31–50 | 140–160% |
-| 51–70 | 151–170% |
+| 51–70 | 131–140% |
 | over 70 | 130% |
 
 - **Design for reflow** — no fixed-width containers or tight single-line squeezes for

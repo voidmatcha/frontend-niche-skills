@@ -1,0 +1,4 @@
+interface:
+  display_name: "Constraint Validation Contracts"
+  short_description: "HTML form validation via the Constraint Validation API."
+  default_prompt: "Use $constraint-validation-contracts to review HTML Constraint Validation API flows: :invalid/:user-invalid timing, setCustomValidity lifecycle, checkValidity/reportValidity, novalidate, ValidityState, and accessible native error wiring."

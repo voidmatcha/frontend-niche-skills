@@ -45,12 +45,38 @@ errors use **a11y-contract-testing**; for the *wording* and localization of mess
    *after* interaction/submit — same gate as item 1, since (per MDN) you shouldn't mark an
    untouched `required` field invalid. Associate the message with `aria-errormessage` (MDN's
    purpose-built attribute, paired with `aria-invalid="true"`; `aria-describedby` is the
-   broadly supported alternative, better suited to persistent hints), and focus the first
-   invalid control on a failed submit — while the ARIA role/name contract lives in
-   **a11y-contract-testing** and the message copy in **i18n-copy-and-layout**.
+   broadly supported alternative, better suited to persistent hints) — and clear `aria-invalid`
+   once the field is valid, since `aria-errormessage` is only conveyed while
+   `aria-invalid="true"`. Focus the first invalid control on a failed submit — while the ARIA
+   role/name contract lives in **a11y-contract-testing** and the message copy in
+   **i18n-copy-and-layout**.
 7. **Test the timing, not just the value.** Assert the `ValidityState`, that errors appear
    *after* interaction (not on load), and that custom validity is cleared when the user
    corrects the input.
+
+## PR-worthiness gate
+
+Raw `:invalid` and `setCustomValidity` searches are noisy. Treat a case as PR-worthy only when
+one of these user-visible contracts is violated:
+
+- **Timing contract**: errors appear before interaction/submission, or fail to appear after a
+  failed submit.
+- **Clearing contract**: a field stays invalid after the user changes it to a valid value
+  (`validationMessage`, `checkValidity()`, or disabled-submit state shows it).
+- **Submission contract**: `novalidate`, `checkValidity()`, or `reportValidity()` lets an invalid
+  value through, blocks a valid value, or focuses the wrong field.
+
+Reject likely false positives:
+
+- `:invalid` is scoped under `.submitted`, `.touched`, `:user-invalid`, or equivalent state.
+- Every non-empty `setCustomValidity(...)` path has a paired `setCustomValidity('')` on input or
+  revalidation.
+- A form library owns validity and already has tests verifying native validity is cleared.
+- The only problem is wording/localization of an otherwise correct message; use
+  `i18n-copy-and-layout` instead.
+
+Minimal useful PR: include a failing sequence test such as invalid -> edit valid ->
+`expect(input.validationMessage).toBe('')` -> submit succeeds.
 
 ## References
 

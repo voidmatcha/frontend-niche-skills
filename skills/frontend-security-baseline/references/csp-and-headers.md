@@ -29,12 +29,23 @@ configuration isn't the secure one.**
   commonly used host-allowlist-based CSPs that often leave the page exposed to XSS because
   they can be bypassed in most configurations."*
 - **`'strict-dynamic'` propagates trust** from your nonce/hash-marked script to scripts it
-  loads, so you don't nonce-tag every third-party tag. It also makes the browser **ignore**
-  your host allowlist, `'self'`, and `'unsafe-inline'` in `script-src` — so a long allowlist
-  kept "just in case" is dead weight, not a layer. MDN: *"the trust explicitly given to a
-  script… by accompanying it with a nonce or a hash, shall be propagated to all the scripts
-  loaded by that root script. At the same time, any allowlist or source expressions such as
-  'self' or 'unsafe-inline' will be ignored."*
+  loads, so you don't nonce-tag every third-party tag. In CSP3 browsers it also makes the
+  browser **ignore** your host allowlist, `'self'`, and `'unsafe-inline'` in `script-src`.
+  MDN: *"the trust explicitly given to a script… by accompanying it with a nonce or a hash,
+  shall be propagated to all the scripts loaded by that root script. At the same time, any
+  allowlist or source expressions such as 'self' or 'unsafe-inline' will be ignored."*
+- The trap is a **host allow-list that *substitutes* for** nonce/hash + `'strict-dynamic'`
+  (e.g. `script-src https://cdn… 'unsafe-inline'` with no nonce) — that is the bypassable
+  policy. It is **not** a trap to keep `https:` and `'unsafe-inline'` *after* the nonce +
+  `'strict-dynamic'` tokens: those are an intentional, security-neutral **legacy fallback**
+  that modern (CSP3) engines ignore, and web.dev recommends keeping them. Pre-CSP3 engines
+  (e.g. Safari <15.4) ignore `'strict-dynamic'` and fall back to the source list, so the
+  fallback list is doing real work for them — flagging it as "dead weight" is a false
+  positive. web.dev: *"Using `strict-dynamic` requires adding `https:` as a fallback for
+  earlier versions of Safari… All browsers that support `strict-dynamic` ignore the `https:`
+  fallback, so this won't reduce the strength of the policy"* and *"`https:` and `unsafe-inline`
+  don't make your policy less safe. Any browser that supports `strict-dynamic` knows to ignore
+  them."*
 
 ## Generating the nonce
 
@@ -66,6 +77,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  // 'self' here is the security-neutral legacy fallback (ignored by CSP3 browsers once
+  // 'strict-dynamic' takes effect); nonce + 'strict-dynamic' are what actually enforce.
   const csp = `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'; object-src 'none'; base-uri 'none';`;
 
   const requestHeaders = new Headers(request.headers);
@@ -166,7 +179,8 @@ rg -n 'replace\(.*<script|nonce' . -i
 ## Sources
 
 - web.dev — [Mitigate XSS with a strict CSP](https://web.dev/articles/strict-csp)
-  (nonce/hash over bypassable host allowlists)
+  (nonce/hash over bypassable host allowlists; `https:`/`'unsafe-inline'` after `strict-dynamic`
+  are a security-neutral fallback for Safari <15.4 and other pre-CSP3 browsers)
 - Next.js — [Content Security Policy](https://nextjs.org/docs/app/guides/content-security-policy)
   (per-request nonce in middleware/`proxy`; nonce requires dynamic rendering; `x-nonce` handoff)
 - MDN — [`Content-Security-Policy: script-src`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)

@@ -1,6 +1,6 @@
 ---
 name: cjk-text-and-input
-description: "Use when a page must handle CJK (Korean, Japanese, Chinese) text or input — mid-word line breaks in Korean, word-break/keep-all/line-break decisions, IME composition breaking controlled inputs, Enter firing during composition, duplicate keydown with keyCode 229, or string length counting Hangul wrong."
+description: "Use when CJK (Korean, Japanese, Chinese) line-breaking, IME composition, Enter/keyCode 229 behavior, or grapheme counting is failing — mid-word line breaks in Korean, word-break/keep-all/line-break decisions, IME composition breaking controlled inputs, Enter firing during composition, duplicate keydown with keyCode 229, or string length counting Hangul wrong. East-Asian glyph-rendering & IME-input scope; for translation length, plurals, RTL, and Intl number/date formatting see i18n-copy-and-layout."
 ---
 
 # CJK text & IME input
@@ -56,7 +56,7 @@ number/date/currency formatting, RTL and `lang`/`dir` markup — use
   any spec, but consistently reproducible. Apply sanitization/uppercase/masking on
   `compositionend` or blur, not mid-composition.
 - **Search-as-you-type**: each composition update fires `input` events with partial
-  syllables (ㅅ → 스 → 슽 → 스킬). Debounce alone still queries garbage intermediate
+  syllables (ㅅ → 스 → 슼 → 스키 → 스킬). Debounce alone still queries garbage intermediate
   states; gate dispatch on `compositionend` (plus a normal path for non-IME input).
 - Browser order differences exist between engines for `compositionend` vs the final
   `input` event — never assume one fixed sequence; branch on `event.isComposing`
@@ -77,7 +77,11 @@ number/date/currency formatting, RTL and `lang`/`dir` markup — use
 
 ## Sources
 
-- MDN: `word-break`, `line-break`, `overflow-wrap`, CompositionEvent,
-  `KeyboardEvent.isComposing`, `String.prototype.normalize`, `Intl.Segmenter`
-- W3C UAX #14 (Unicode Line Breaking Algorithm); W3C klreq (Korean Layout Requirements)
-- UI Events spec — `keyCode` 229 / IME composition processing
+- MDN `word-break`: <https://developer.mozilla.org/en-US/docs/Web/CSS/word-break>
+- MDN `line-break`: <https://developer.mozilla.org/en-US/docs/Web/CSS/line-break>
+- MDN `overflow-wrap`: <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap>
+- MDN `CompositionEvent`: <https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent>
+- MDN `KeyboardEvent.isComposing`: <https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/isComposing>
+- Unicode Standard Annex #14, Unicode Line Breaking Algorithm: <https://www.unicode.org/reports/tr14/>
+- W3C Korean Layout Requirements: <https://www.w3.org/TR/klreq/>
+- UI Events spec, keyCode 229 / IME composition processing: <https://www.w3.org/TR/uievents/#determine-keydown-keyup-keyCode>

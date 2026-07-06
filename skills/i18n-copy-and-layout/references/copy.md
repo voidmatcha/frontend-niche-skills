@@ -11,7 +11,7 @@ use different subsets:
 
 - English: `one`, `other`. CJK (Japanese, Korean, Chinese): `other` only (no count
   agreement). Russian/Polish: `one`, `few`, `many`, `other` (by last digits).
-  **Arabic: all six.** `other` is the only category guaranteed to exist.
+  **Arabic: all six.** CLDR requires the `other` category.
 - The category names are **mnemonics, not literal** — selection is defined by which
   numbers force a phrase change (CLDR "minimal pairs"), not by the obvious meaning of
   "two"/"few". Don't reason about them from the English label.
@@ -57,7 +57,9 @@ and article forms differ per language, and the translator can't move the pieces.
 Format with `Intl`, keyed by the user's locale; don't string-build or hardcode symbols.
 
 - **Decimal & grouping separators are locale-specific**: `1,234.56` (en) vs `1.234,56`
-  (de) vs `١٬٢٣٤٫٥٦` (ar); grouping isn't always every 3 digits (India: `1,23,456`).
+  (de) vs `١٬٢٣٤٫٥٦` (`ar-EG`; note bare `ar` now yields Latin digits `1,234.56` — Arabic-Indic
+  digits need a Mashriq locale like `ar-EG` or the `ar-u-nu-arab` extension); grouping isn't always
+  every 3 digits (India: `1,23,456`).
   Use `Intl.NumberFormat`.
 - **Currency**: `Intl.NumberFormat(locale, {style:'currency', currency:'EUR'})` — the
   `currency` is a required **ISO 4217** code; symbol vs code vs name is `currencyDisplay`;

@@ -1,4 +1,4 @@
 interface:
   display_name: "Frontend Auth Flow Contracts"
-  short_description: "Auth flow browser contracts"
-  default_prompt: "Use this skill when implementing or reviewing frontend authentication flows: login/register/password reset, email verification or one-time code entry, passkey/WebAuthn UI, auth callbacks, returnTo handling, autofill/autocomplete, account-enumeration-safe errors, and fresh verification before sensitive account actions."
+  short_description: "Auth flow browser contracts."
+  default_prompt: "Use $frontend-auth-flow-contracts to review frontend auth flows: login/signup/password reset, email verification, OTP, passkeys/WebAuthn, auth callbacks, returnTo, autofill, safe errors, and fresh verification."

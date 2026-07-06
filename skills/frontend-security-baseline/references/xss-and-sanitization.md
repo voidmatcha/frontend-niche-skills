@@ -136,14 +136,17 @@ treat it as defense-in-depth that degrades gracefully — older browsers ignore 
 
 ## Find these in your codebase
 
-A grep is a fast first pass — treat every hit as a review point, not an automatic bug:
+The XSS-sink probes live in the SKILL.md "Quick probes" triage block (the `innerHTML|outerHTML|…` and `dangerouslySetInnerHTML|v-html|bypassSecurityTrust` rows) — kept there as the single source of truth. Treat every hit as a review point, not an automatic bug.
 
-```sh
-# Dangerous HTML sinks + code-execution — each needs a safe sink (textContent) or a sanitizer
-rg -n 'innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function\(' src/
-# Framework escape hatches — each should sit right next to a DOMPurify call
-rg -n 'dangerouslySetInnerHTML|v-html|bypassSecurityTrust' src/
-```
+## Scanner output is a lead, not a verdict
+
+Use existing tools before inventing ad-hoc grep rules:
+
+- `eslint-plugin-no-unsanitized` catches unsafe `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, and related DOM APIs in JavaScript.
+- Semgrep and CodeQL can find broader DOM XSS source/sink patterns when the project already runs them.
+- DOMPurify is sanitizer prior art, not proof every `sanitize()` call is safe. Verify config, patch level, and no code mutates or re-parses sanitized output.
+
+The agent layer adds judgment scanners cannot: whether data attacker-controlled, whether the framework already escapes it, whether sanitizer is last, whether Trusted Types actually gates sinks, and whether finding is exploitable enough to file.
 
 ## Sources
 
@@ -159,3 +162,5 @@ rg -n 'dangerouslySetInnerHTML|v-html|bypassSecurityTrust' src/
 - Angular — [Security](https://angular.dev/best-practices/security) (auto-sanitization;
   `bypassSecurityTrust*`; construct SafeValue close to input; `DomSanitizer.sanitize`)
 - web.dev — [Prevent DOM-based XSS with Trusted Types](https://web.dev/articles/trusted-types)
+- Mozilla — [`eslint-plugin-no-unsanitized`](https://github.com/mozilla/eslint-plugin-no-unsanitized) (unsafe DOM sink lint prior art)
+- GitHub — [CodeQL](https://github.com/github/codeql) and Semgrep — [Semgrep](https://github.com/semgrep/semgrep) (static-analysis candidate generators)

@@ -99,7 +99,7 @@ Set-Cookie: session=<opaque-id>; HttpOnly; Secure; SameSite=Strict; Path=/; Max-
   allows it. Maintain an explicit trusted-origin allowlist; do not infer safety
   from string prefixes.
 - Reject "simple" form/content types on JSON mutation endpoints. Parse
-  `Content-Type` as a media type; a naive string equality check can be bypassed
+  `Content-Type` as a media type; a naive substring/`includes()` check (or a parser that ignores trailing parameters) can be bypassed
   by values such as `text/plain; application/json`.
 - `SameSite=Lax`/`Strict`, Origin checks, and content-type gates are
   defense-in-depth. Keep an anti-CSRF token for high-risk cookie-authenticated
