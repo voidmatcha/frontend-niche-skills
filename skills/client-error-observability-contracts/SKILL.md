@@ -1,6 +1,6 @@
 ---
 name: client-error-observability-contracts
-description: "Use when frontend error capture or an error-monitoring integration misbehaves: production reports show only \"Script error.\" with no stack/line/column (cross-origin blackout), errors thrown in event handlers or setTimeout/promise callbacks never reach the React error boundary or Vue errorHandler and vanish, unhandled promise rejections go unreported, prod stack traces are minified/unreadable or (worse) .map files are served publicly, one noisy error fragments into thousands of issues or distinct bugs merge into one, or PII/tokens/card data leak into the payload before send. Owns the client capture/observability contract (window.onerror + unhandledrejection wiring, crossorigin/CORS for stacks, source-map upload-vs-ship, grouping/fingerprinting, beforeSend scrubbing), not the security policy: for source maps as an info leak and do-not-ship-secrets see frontend-security-baseline; for minified React #418/#425 recoverable hydration errors see ssr-hydration-mismatch; for never logging PAN/CVV see payment-page-client-security."
+description: "Use when frontend error capture or monitoring misbehaves: production reports only Script error, event-handler or async failures bypass framework boundaries, unhandled rejections vanish, minified stacks cannot be symbolicated, one bug fragments into many issues, or PII/tokens/card data leave the browser. Covers global capture wiring, cross-origin stack access, source-map upload versus public shipping, grouping/fingerprinting, and pre-send scrubbing. Use frontend-security-baseline for source-map exposure policy, ssr-hydration-mismatch for recoverable hydration errors, and payment-page-client-security for PAN/CVV logging boundaries."
 ---
 
 # Client error observability contracts
@@ -51,20 +51,21 @@ and scrub it — before deciding it is "reported."
    nothing; a restrictive `Cross-Origin-Resource-Policy` can also block the fetch.
 4. **Ship readable stacks without shipping source.** Minified bundles produce
    unreadable stacks. Upload source maps to the monitoring backend at build time
-   (modern SDKs match them via Debug IDs) rather than deploying `.map` files beside
+   (modern SDKs — Sentry and similar — match them via Debug IDs) rather than deploying `.map` files beside
    the bundle — a public `.map`, or a live `//# sourceMappingURL=` pointing at one,
    hands your original source to anyone. Emit hidden source maps and delete the
    `.map` from the deploy artifact after upload.
 5. **Make grouping deterministic.** Per-request data in the message (ids, URLs,
    timestamps) fragments one bug into thousands of issues; an over-generic message
-   merges distinct bugs into one. Set an explicit `fingerprint` (e.g. error
+   merges distinct bugs into one. Set an explicit grouping key (`fingerprint` in
+   Sentry-style SDKs; other reporters expose equivalents — e.g. error
    type/code plus `{{ default }}`) for known-noisy errors and keep dynamic values in
    structured context, out of the message.
 6. **Scrub PII in the SDK, before send.** Payloads pull in more than the stack:
    request URLs/query strings, breadcrumbs (logged statements, prior network), user
    context, and framework state can carry emails, tokens, auth cookies, or card data.
    Redact in a `beforeSend`/scrubber hook client-side (server-side scrubbing is a
-   backstop, not the boundary), keep `send-default-pii` off unless justified, and
+   backstop, not the boundary), keep `sendDefaultPii` off unless justified, and
    never place PAN/CVV or secrets where the reporter can serialize them.
 7. **Turn framework-caught errors into signal.** React 18 `onRecoverableError` and
    React 19 `onUncaughtError`/`onCaughtError` (options on `createRoot`/`hydrateRoot`)
@@ -80,7 +81,7 @@ and scrub it — before deciding it is "reported."
 | Cross-origin script, no `crossorigin` + ACAO | Every error from it is an opaque `"Script error."` | `crossorigin="anonymous"` on the tag **and** `Access-Control-Allow-Origin` from the asset host |
 | `.map` files deployed next to the bundle | Original source is publicly downloadable | Upload maps to the backend; hidden source maps + delete `.map` from the deploy |
 | Error message embeds request id / URL / timestamp | One bug fragments into thousands of issues | Explicit `fingerprint`; move dynamic values to context |
-| No `beforeSend` scrub; `send-default-pii` on | Emails/tokens/PAN leave in the payload | Redact in `beforeSend` before send; keep PAN out entirely |
+| No `beforeSend` scrub; `sendDefaultPii` on | Emails/tokens/PAN leave in the payload | Redact in `beforeSend` before send; keep PAN out entirely |
 
 ## Quick probes
 
@@ -121,7 +122,7 @@ Reject weak findings:
 
 - A single global handler in an app with no promises/async — confirm the missing
   surface exists; `crossorigin` absent on a **same-origin** script (no blackout).
-- A reporter that already scrubs by default, has `send-default-pii` off, and a
+- A reporter that already scrubs by default, has `sendDefaultPii` off, and a
   `beforeSend`; or hidden source maps uploaded and deleted from the deploy (the
   positive control, not a leak); or `fingerprint` left default when messages are
   already stable.
@@ -154,4 +155,4 @@ Return compact findings:
 - MDN [crossorigin attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/crossorigin) and [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin) — the two coordinated pieces that restore readable cross-origin errors.
 - React [Component](https://react.dev/reference/react/Component) (`componentDidCatch`/`getDerivedStateFromError`, what boundaries do *not* catch) and [createRoot](https://react.dev/reference/react-dom/client/createRoot) (`onUncaughtError`/`onCaughtError`/`onRecoverableError`).
 - Vue [Application API](https://vuejs.org/api/application.html) (`app.config.errorHandler`) and [Composition API lifecycle](https://vuejs.org/api/composition-api-lifecycle.html) (`onErrorCaptured`) — the surfaces Vue does and does not track.
-- Sentry [Upload source maps](https://docs.sentry.io/product/sentry-basics/integrate-frontend/upload-source-maps/) (hidden maps + delete-after-upload), [Fingerprint rules](https://docs.sentry.io/concepts/data-management/event-grouping/fingerprint-rules/) / [Issue grouping](https://docs.sentry.io/concepts/data-management/event-grouping/), and [Scrubbing sensitive data](https://docs.sentry.io/platforms/javascript/data-management/sensitive-data/) (`beforeSend`, `send-default-pii`).
+- Sentry [Upload source maps](https://docs.sentry.io/product/sentry-basics/integrate-frontend/upload-source-maps/) (hidden maps + delete-after-upload), [Fingerprint rules](https://docs.sentry.io/concepts/data-management/event-grouping/fingerprint-rules/) / [Issue grouping](https://docs.sentry.io/concepts/data-management/event-grouping/), and [Scrubbing sensitive data](https://docs.sentry.io/platforms/javascript/data-management/sensitive-data/) (`beforeSend`, `sendDefaultPii`).

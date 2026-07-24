@@ -9,8 +9,7 @@ Server-side rendering only pays off if the client can **hydrate** the server's H
 event handlers to the existing DOM without rebuilding it. The moment the client's first
 render disagrees with what the server sent, the framework throws out the server tree and
 re-renders on the client, and you lose the SSR benefit you paid for (plus a visible flash and,
-on React 18+, an error that is *recovered in production but logged only as an uninformative
-minified error (#418, no diff), so it is easy to miss*). The triggers are almost
+on React 18+, a recoverable error that is easy to miss in production — item 5). The triggers are almost
 all forms of one thing: **the first render is not deterministic across the server/client
 boundary** — it reads the clock, a random value, the timezone, the locale, or `window`.
 
@@ -23,11 +22,10 @@ For first-render **router/query-param readiness** (params empty until hydration)
 → [triggers-and-containment](./references/triggers-and-containment.md)
 
 1. **Render must be deterministic.** No `Date.now()`, `Math.random()`, `new Date()`,
-   locale/timezone formatting, or `if (typeof window !== "undefined")` branching *during
-   render*. Same inputs → same output on server and client.
-2. **Client-only values go after mount.** Read `window`, `localStorage`, media queries, etc.
-   in `useEffect` (a two-pass render: first render matches the server, then update), or via
-   `useSyncExternalStore` with a server snapshot — never inline in the first render.
+   locale/timezone formatting, or `typeof window` branching *during render*.
+2. **Client-only values go after mount** — in `useEffect` (two-pass: first render matches
+   the server) or via `useSyncExternalStore` with a server snapshot, never inline in the
+   first render.
 3. **Keep HTML nesting valid.** `<div>`/`<p>` inside `<p>`, or raw text/`<div>` directly
    under `<table>`/`<tbody>`, gets repaired by the browser's parser, so the client DOM no
    longer matches the string the server emitted — a deterministic mismatch.
@@ -37,7 +35,9 @@ For first-render **router/query-param readiness** (params empty until hydration)
 5. **A React 18+ mismatch is a *recoverable* error.** React logs it in both dev and prod by
    default, but the prod log is a minified error with no server-vs-client diff, so it is easy
    to miss — wire `hydrateRoot`'s `onRecoverableError` into monitoring with source maps to turn
-   it into an actionable signal, not just local dev.
+   it into an actionable signal, not just local dev. React 19 improved the dev-mode diff —
+   one error showing the mismatched node instead of per-node warnings — but the prod log
+   stays minified, so the wiring still matters.
 6. **Bound the blast radius.** For genuinely client-only UI, isolate it behind `<Suspense>`
    or a no-SSR dynamic import (`next/dynamic` `{ ssr: false }`) so a mismatch re-renders that
    island instead of cascading the whole route.

@@ -53,8 +53,8 @@ For detailed checklists, read
 |---|---|
 | Auth redirects | Preserve intended destination, but validate `returnTo`/`next`/callback targets before restoring. |
 | Password forms | Do not silently trim/normalize/sanitize credentials; use correct autocomplete and generic login errors. |
-| Email/code flows | Show expiry/retry/resend state; use one-time-code autofill; avoid account enumeration. |
-| Passkeys/WebAuthn | Use server challenges, feature detection, conditional mediation fallback, and passkey autofill hints. |
+| Email/code flows | Show expiry/retry/resend state; use one-time-code autofill (`autocomplete="one-time-code"` is iOS/macOS Safari — Android Chrome needs the WebOTP API); avoid account enumeration. |
+| Passkeys/WebAuthn | Use server challenges, feature detection, conditional mediation fallback (its promise can stay pending indefinitely — never gate the login UI on awaiting it), and passkey autofill hints. |
 | Sensitive actions | Require fresh identity verification before password/email/passkey/account destructive changes. |
 | Tests | Direct-navigation auth URLs, accessible errors, autocomplete attributes, invalid-return rejection, expired-code and passkey-cancel paths. |
 

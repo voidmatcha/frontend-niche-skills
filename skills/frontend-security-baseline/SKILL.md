@@ -1,6 +1,6 @@
 ---
 name: frontend-security-baseline
-description: "Use when running a trap-first client-side security pass before shipping, focused on non-obvious frontend security traps: unsafe HTML sinks, sanitizer misuse, framework raw-HTML escape hatches, Trusted Types/DOMPurify gaps, host-allowlist CSP silently fails, JWT/localStorage token theft, SameSite/CSRF edge cases, opener leaks/window.open, open-redirect string checks, npm supply-chain footguns. Client-side scope; payment-page/PAN/PCI DSS evidence use payment-page-client-security; native-WebView bridge inbound-origin contracts use webview-bridge-pages."
+description: "Use when running a trap-first client-side security pass before shipping, focused on non-obvious frontend security traps: unsafe HTML sinks, sanitizer misuse, framework raw-HTML escape hatches, Trusted Types/DOMPurify gaps, host-allowlist CSP silently fails, JWT/localStorage token theft, SameSite/CSRF edge cases, opener leaks/window.open, open-redirect string checks, npm supply-chain footguns. Client-side scope; frontend-owned server proxy/SSRF/upload relay boundaries use bff-proxy-security-contracts; payment-page/PAN/PCI DSS evidence use payment-page-client-security; native-WebView bridge inbound-origin contracts use webview-bridge-pages."
 ---
 
 # Frontend security baseline
@@ -18,6 +18,8 @@ redirects, build/install steps, and client-bundled secrets.
 - Covers browser/client-side implementation and frontend-owned build configuration.
 - Does not replace backend authz, server-side input validation, threat modeling, or a full
   application security review.
+- For frontend-owned server routes that proxy targets, headers, bodies, or multipart
+  uploads, use `bff-proxy-security-contracts`.
 - For WebView page ↔ native bridge origin/message contracts, use `webview-bridge-pages`.
 - For login/email-code/passkey browser-flow contracts, use `frontend-auth-flow-contracts`.
 
@@ -38,8 +40,7 @@ redirects, build/install steps, and client-bundled secrets.
 | HTML-encoding before assigning to `innerHTML` | Browser parses in HTML/URL/CSS/JS contexts differently; one wrong encoder is enough. | Safe sinks (`textContent`), DOMPurify for rich HTML, Trusted Types for sink enforcement. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
 | Framework escape hatches (`dangerouslySetInnerHTML`, `v-html`, `bypassSecurityTrust*`) | They bypass the framework's auto-escaping and normalize raw HTML as an app feature. | Trusted + sanitized data only; keep sanitizer last, with no post-sanitize mutation. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
 | Sanitizer output post-processed or re-parsed | Linkifiers, markdown passes, string replaces, DOM mutation, or another library after `sanitize()` can reintroduce dangerous markup. | Put every transform before DOMPurify; insert exact returned string/TrustedHTML into sink. | [xss-and-sanitization](./references/xss-and-sanitization.md) |
-| Host-allowlist CSP (`script-src https://cdn...`) | JSONP, compromised hosts, redirects, and broad CDNs can satisfy the allowlist. | Strict nonce/hash CSP with `strict-dynamic`; roll out in `Report-Only` first. | [csp-and-headers](./references/csp-and-headers.md) |
-| A host allow-list used *instead of* nonce/hash + `'strict-dynamic'` | A bare host allow-list (`script-src https://cdn… 'unsafe-inline'`) with no nonce/hash + `strict-dynamic` is the bypassable kind: JSONP, redirects, and broad CDNs satisfy it. (Note: `https:`/`'unsafe-inline'` placed *after* the nonce + `strict-dynamic` are an intentional, security-neutral legacy fallback CSP3 browsers ignore — not the trap.) | Reason from nonce/hash trust propagation; keep any host/`'unsafe-inline'` tokens only as a post-`strict-dynamic` legacy fallback. | [csp-and-headers](./references/csp-and-headers.md) |
+| A host allow-list used *instead of* nonce/hash + `'strict-dynamic'` | A bare host allow-list (`script-src https://cdn… 'unsafe-inline'`) with no nonce/hash + `strict-dynamic` is the bypassable kind: JSONP, compromised hosts, redirects, and broad CDNs satisfy it. (Note: `https:`/`'unsafe-inline'` placed *after* the nonce + `strict-dynamic` are an intentional, security-neutral legacy fallback CSP3 browsers ignore — not the trap.) | Strict nonce/hash CSP with `strict-dynamic`, rolled out in `Report-Only` first; keep any host/`'unsafe-inline'` tokens only as a post-`strict-dynamic` legacy fallback. | [csp-and-headers](./references/csp-and-headers.md) |
 | Nonce-rewriting middleware | A string-rewriter can stamp the nonce onto attacker-injected `<script>` tags too. | Generate the nonce per response in the template/render path that owns trusted scripts. | [csp-and-headers](./references/csp-and-headers.md) |
 | CSP in `<meta>` or missing framing headers | Some directives are ignored in meta; framing is often left to defaults. | Real HTTP headers: `Content-Security-Policy`, `frame-ancestors`, HSTS, SRI as applicable. | [csp-and-headers](./references/csp-and-headers.md) |
 | Cross-origin SRI without `crossorigin` | The load can fail closed because a `no-cors` response cannot be integrity-checked. | Pin both `integrity` and `crossorigin="anonymous"` for cross-origin static resources. | [csp-and-headers](./references/csp-and-headers.md) |

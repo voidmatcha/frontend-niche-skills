@@ -6,66 +6,41 @@ description: "Use when reviewing or implementing frontend markup structure: clic
 # Semantic markup contracts
 
 Use this skill when the question is **which HTML structure should exist** before
-styling, scripting, or ARIA patches. The goal is not generic accessibility audit;
-it is to choose native elements and document structure that browsers, assistive
-technology, crawlers, forms, and tests can all rely on.
+styling, scripting, or ARIA patches — structure that browsers, assistive
+technology, crawlers, forms, and tests can all rely on. Prefer the native element
+whose built-in contract already matches the user action; add ARIA only when
+native HTML cannot express the pattern, then test the rendered contract.
 
 ## Boundary with sibling skills
 
-- Use **semantic-markup-contracts** for element choice and document structure:
-  buttons vs links, headings, landmarks, labels, tables, lists, nesting, native
-  disclosure/dialog/form semantics.
-- Use **a11y-contract-testing** when the rendered accessibility tree needs tests:
-  role/name/state/focus behavior, `getByRole`, keyboard paths, ARIA state.
-- Use **constraint-validation-contracts** for native validity lifecycle.
-- Use **design-to-code-fidelity** when semantic fixes may alter visual spacing,
-  ordering, or component variants.
-
-## Core rule
-
-Prefer the native element whose built-in contract already matches the user action.
-Add ARIA only when native HTML cannot express the pattern, and then test the
-rendered contract.
+This skill owns element choice and document structure (buttons vs links,
+headings, landmarks, labels, tables, lists, nesting, native
+disclosure/dialog/form semantics). **a11y-contract-testing** owns rendered
+role/name/state/focus tests (`getByRole`, keyboard paths, ARIA state);
+**constraint-validation-contracts** owns the native validity lifecycle;
+**design-to-code-fidelity** owns visual spacing/ordering drift a semantic fix may
+cause.
 
 ## Review checklist
 
-1. **Action semantics**
-   - Navigation uses `<a href>`.
-   - In-page commands, submit actions, toggles, and menu triggers use `<button>`.
-   - Disabled actions use real disabled semantics where possible; avoid fake
-     disabled links that still navigate or fake buttons that remain focusable.
-2. **Interactive nesting**
-   - No `<button><a>`, `<a><button>`, nested buttons, or full-card links that
-     swallow inner controls.
-   - If a card has both navigation and actions, split the hit targets explicitly.
-3. **Headings and heading hierarchy**
-   - Headings describe sections in order; do not choose heading levels for font
-     size.
-   - Repeated cards/lists should not create noisy top-level headings unless they
-     are real navigable sections.
-4. **Landmarks and page shell**
-   - One primary `<main>` per page.
-   - Use `<nav>`, `<header>`, `<footer>`, `<aside>`, and named regions only when
-     they help orientation; avoid landmark spam in every card.
-5. **Forms**
-   - Every control has a programmatic label (`<label for>`, wrapping label,
-     `aria-labelledby`, or equivalent component contract).
-   - Error/help text association is explicit (`aria-describedby`) when users need
-     it to understand or fix input.
-   - Fieldsets/legends group related radios/checkboxes.
-6. **Collections and data**
-   - Use lists for repeated peer items.
-   - Use tables for two-dimensional data with meaningful row/column headers; do
-     not recreate data tables with div grids unless the component supplies the
-     full grid contract and tests.
-7. **Native before ARIA**
-   - Avoid `role="button"` on a `div` when `<button>` is possible.
-   - Avoid `role="heading"` where an `<h*>` element is possible.
-   - Do not add redundant or contradictory roles to native elements.
-8. **Hydration and parser stability**
-   - Check invalid nesting that browsers silently repair before React/Vue/Svelte
-     hydration, especially paragraphs containing block elements and interactive
-     elements nested inside interactive elements.
+1. **Action semantics** — fake-disabled links that still navigate and
+   fake-disabled buttons that remain focusable; the `div`-`onClick` and
+   `href="#"` smells are in the defect table.
+2. **Heading hierarchy** — levels describe section order, never font size;
+   repeated cards must not spawn noisy top-level headings unless they are real
+   navigable sections.
+3. **Landmarks** — one primary `<main>` per page; named regions only where they
+   aid orientation, not landmark spam in every card.
+4. **Forms** — beyond the programmatic label, associate error/help text via
+   `aria-describedby` when users need it to fix input, and group related
+   radios/checkboxes with fieldset/legend.
+5. **Collections and data** — lists for repeated peer items, tables with
+   meaningful row/column headers for two-dimensional data; div grids only when the
+   component supplies the full grid contract and tests.
+6. **Hydration and parser stability** — check invalid nesting that browsers
+   silently repair before React/Vue/Svelte hydration, especially paragraphs
+   containing block elements and interactive elements nested inside interactive
+   elements.
 
 ## Defect patterns
 
@@ -119,13 +94,10 @@ Do not over-file:
 
 ## Output shape
 
-Return compact findings:
-
-- **Markup contract**: expected native structure.
-- **Evidence**: file/line or rendered DOM snippet.
-- **Risk**: user/test/browser behavior that can fail.
-- **Fix**: smallest structural change.
-- **Follow-up**: `a11y-contract-testing`, visual check, or hydration check if needed.
+Per finding: **markup contract** (expected native structure), **evidence**
+(file/line or rendered DOM), **risk** (user/test/browser behavior that can fail),
+**fix** (smallest structural change), **follow-up** (`a11y-contract-testing`,
+visual check, or hydration check if needed).
 
 ## Sources
 

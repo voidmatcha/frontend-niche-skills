@@ -78,6 +78,53 @@ What the web page sees:
   no-op for apps targeting API 33+. The page-side `color-scheme` meta requirement →
   [page-implementation](./page-implementation.md).
 
+## Legacy JavaScript compatibility
+
+If an old Android WebView shows a generic client-side error while modern Chrome
+works, debug the WebView engine, not just the Android OS version. Pull the
+browser console from remote debugging or reproduce with the missing feature
+removed, then separate:
+
+- Syntax support: parse/transpile target issues.
+- Runtime API support: missing globals or methods such as `globalThis`,
+`Array.prototype.at`, `Object.hasOwn`, or `URL.canParse`.
+- Browser-native `window.postMessage(message)` compatibility: affected old engines
+  such as Android 9 WebView 66 may require `targetOrigin`; use
+  `window.postMessage(message, window.location.origin)` for same-page events.
+
+For feature fixes, prefer feature detection over User-Agent gates. In Next.js
+Pages Router, a polyfill required before the app boots should be loaded from
+`pages/_document` with `next/script` `strategy="beforeInteractive"` (App Router:
+same strategy from the root `app/layout`); verify the
+rendered HTML places it before `_next/static/chunks/*` and re-test on the old
+WebView. Do not rely on normal client imports when the failing code can run
+before hydration.
+
+## Legacy CSS fallbacks
+
+Treat old CSS failures like runtime compatibility issues, not design tweaks. Prefer
+feature detection and a narrow marker such as `html[data-legacy-webview='true']` over
+Android-version or User-Agent gates. The marker can cover an old WebView class of
+issues, but each CSS rule under it should still be local to the failing component.
+
+For unsupported layout features such as flex/grid `gap`, `dvh`, or safe-area values,
+show the failure in an affected engine, add the smallest fallback branch, then compare
+against the same viewport without the marker. Playwright can force the marker for fast
+regression coverage; it does not establish old engine parsing/rendering. Use an actual old
+Android WebView/WebView Shell or app WebView for that.
+
+Do not verify legacy support against a dev server (`next dev`/HMR or any bundler dev
+mode). The framework's dev runtime and untranspiled `node_modules` ship modern syntax
+(optional chaining, nullish coalescing) that a `browserslist`/target setting does not
+downlevel — it lowers *your* app code but not the framework's own dev bundle — so a
+legacy WebView parse-errors there even when the production build is clean. In Next.js,
+a live WebView target with `document.readyState === 'complete'` can still stay blank
+because the Pages-Router-dev-only `style[data-next-hide-fouc]` FOUC guard leaves
+`body{display:none}` in old WebView HMR;
+treat that as dev-runtime evidence, not a product CSS regression. Iterate layout on a
+modern WebView (where HMR works); run the engine and app-integration tiers against a
+production build or deployed environment.
+
 ## Legacy engine smoke matrix
 
 Record evidence by **WebView/Chrome engine version**, not OS name alone. Two Android 9

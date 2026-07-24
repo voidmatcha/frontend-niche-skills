@@ -14,10 +14,11 @@ Use this skill for overlays whose runtime behavior depends on focus, background 
 - Use **semantic-markup-contracts** to decide whether trigger/content should use native button, link, dialog, list, heading, or form structure.
 - Use **webview-bridge-pages** when the overlay is inside a native WebView and safe-area, keyboard, host back button, or bridge lifecycle is part of the failure.
 - Use **frontend-security-baseline** for clickjacking, opener, CSP, or XSS traps around overlay content.
+- Use **css-transition-animation-contracts** when a trap or scroll lock stays stuck because cleanup is gated on a `transitionend` that never fires (cancelled or interrupted exit animation).
 
 ## Review workflow
 
-1. **Classify overlay modality** — modal dialog, non-modal popover, menu, drawer, command palette, tooltip, nested overlay, or mobile sheet. Do not impose modal behavior on intentionally non-modal controls.
+1. **Classify overlay modality** — modal dialog, non-modal popover, menu, drawer, command palette, tooltip, nested overlay, or mobile sheet. Do not impose modal behavior on intentionally non-modal controls. Then ask whether a native primitive already covers the contract before wiring a custom trap/`inert` stack: `<dialog>.showModal()` provides top-layer, focus containment, ESC, and `::backdrop` (but **not** body scroll lock); `popover` provides non-modal top-layer with light dismiss.
 2. **Trace open sequence** — trigger activates overlay, focus moves to the right element, background becomes non-interactive if modal, and scroll lock starts only when needed.
 3. **Trace close/unmount sequence** — ESC/backdrop/action closes overlay, focus returns to a sensible target, scroll lock restores prior body styles, listeners detach, and delayed animations do not keep stale traps active.
 4. **Check `aria-hidden`/`inert` timing** — never hide a still-focused descendant from assistive tech. Prefer `inert` or a library-managed modal strategy when supported; if using `aria-hidden`, move focus before applying it and restore carefully.

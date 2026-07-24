@@ -42,10 +42,10 @@ Use these as leads, then verify data flow and runtime behavior:
 
 ```sh
 # Payment surfaces and providers
-rg -n -i 'checkout|payment|billing|card(number)?|pan|cvv|cvc|expiry|stripe|adyen|braintree|paypal|razorpay|square|klarna|checkout\.com' src/ pages/ app/ public/ 2>/dev/null
+rg -n -i 'checkout|payment|billing|card(number)?|\bpan\b|cvv|cvc|expiry|stripe|adyen|braintree|paypal|razorpay|square|klarna|checkout\.com' src/ pages/ app/ public/ 2>/dev/null
 
 # Card data accidentally entering state, logs, storage, URLs, telemetry, replay, or analytics
-rg -n -i 'card(number)?|pan|cvv|cvc|expiry' src/ pages/ app/ public/ 2>/dev/null \
+rg -n -i 'card(number)?|\bpan\b|cvv|cvc|expiry' src/ pages/ app/ public/ 2>/dev/null \
   | rg -i 'useState|store|localStorage|sessionStorage|console\.|logger|sentry|analytics|gtag|dataLayer|hotjar|fullstory|posthog|segment|url|searchParams'
 
 # Runtime-script risk indicators near checkout

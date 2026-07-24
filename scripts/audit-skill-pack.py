@@ -93,8 +93,17 @@ def check_frontmatter(root: Path, result: dict[str, Any], skill_dirs: list[Path]
         frontmatter = "\n".join(lines[1:end])
         if not re.search(rf"^name:\s*{re.escape(skill_name)}\s*$", frontmatter, re.MULTILINE):
             add(result, "errors", rel(skill_file, root), 1, f"frontmatter name must match folder {skill_name}")
-        if not re.search(r"^description:\s*.+", frontmatter, re.MULTILINE):
+        desc_match = re.search(r"^description:\s*(.+)$", frontmatter, re.MULTILINE)
+        if not desc_match:
             add(result, "errors", rel(skill_file, root), 1, "frontmatter description missing")
+        else:
+            description = desc_match.group(1).strip()
+            if description.startswith('"') and description.endswith('"'):
+                description = description[1:-1]
+            if len(description) > 1024:
+                add(result, "errors", rel(skill_file, root), 1, f"description exceeds the 1024-char skill-spec cap ({len(description)} chars)")
+            elif len(description) > 950:
+                add(result, "warnings", rel(skill_file, root), 1, f"description is close to the 1024-char skill-spec cap ({len(description)} chars)")
 
 
 def check_readme(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:

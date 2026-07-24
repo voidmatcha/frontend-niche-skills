@@ -34,10 +34,10 @@ see **ssr-hydration-mismatch**.
    **zone-aware** — never by adding `86_400_000` ms.
 4. Where targetable, reach for **Temporal**: `Instant` (epoch), `PlainDate`/`PlainDateTime`
    (no zone), `ZonedDateTime` (instant + zone) make these distinctions un-skippable.
-   As of 2026-06 Temporal is Stage 4 but not universal across evergreen targets: MDN BCD
-   lists Firefox 139+, Chrome/Edge 144+, and Node 26+, while Safari is still preview/flagged
-   and iOS Safari is not shipped. Feature-detect and polyfill with `@js-temporal/polyfill`,
-   or use Luxon / date-fns-tz with the same discipline.
+   Temporal is Stage 4 but, as of mid-2026, not yet universal across evergreen targets
+   (Firefox, Chromium, and Node ship it; Safari/iOS lag) — check MDN BCD for current
+   support instead of trusting a pinned version matrix. Feature-detect and polyfill with
+   `@js-temporal/polyfill`, or use Luxon / date-fns-tz with the same discipline.
 
 **Display & input** → [display-and-input](./references/display-and-input.md)
 

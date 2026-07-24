@@ -1,74 +1,54 @@
 # Copy: plurals, sentences, formatting
 
-The words and values themselves. Grammar and number/date/currency conventions vary per
-locale — English-only string handling mistranslates or misformats.
+Grammar and number/date/currency conventions vary per locale — English-only string
+handling mistranslates or misformats.
 
 ## Plurals are not singular-vs-plural
 
-`count === 1 ? "item" : "items"` is an English-only assumption. Unicode CLDR defines
-**six** plural categories — `zero`, `one`, `two`, `few`, `many`, `other` — and languages
-use different subsets:
+**`count === 1 ? "item" : "items"` is an English-only assumption** — Unicode CLDR
+defines six plural categories (`zero`/`one`/`two`/`few`/`many`/`other`); languages use
+different subsets, and Arabic uses all six. Category names are mnemonics (CLDR "minimal
+pairs"), not literal meanings. Never branch on the number yourself — select the form at
+runtime with `Intl.PluralRules` or an ICU `plural` message:
 
-- English: `one`, `other`. CJK (Japanese, Korean, Chinese): `other` only (no count
-  agreement). Russian/Polish: `one`, `few`, `many`, `other` (by last digits).
-  **Arabic: all six.** CLDR requires the `other` category.
-- The category names are **mnemonics, not literal** — selection is defined by which
-  numbers force a phrase change (CLDR "minimal pairs"), not by the obvious meaning of
-  "two"/"few". Don't reason about them from the English label.
-- **Never branch on the number yourself.** Select the form at runtime with
-  `Intl.PluralRules` (or an ICU `plural` message that pulls the same CLDR data):
+```js
+new Intl.PluralRules('ru').select(21);   // 'one'  — not what English intuition says
+new Intl.PluralRules('ar').select(0);    // 'zero'
+// ICU: {count, plural, =0 {No files} one {# file} other {# files}}
+```
 
-  ```js
-  new Intl.PluralRules('ru').select(21);   // 'one'  — not what English intuition says
-  new Intl.PluralRules('ar').select(0);    // 'zero'
-  // ICU MessageFormat: the translator supplies the right set of forms per locale
-  // {count, plural, =0 {No files} one {# file} other {# files}}
-  ```
-
-  `=0`/`=1` are exact-value selectors; `#` is the formatted number; the `other` arm is
-  mandatory. The set of arms a translator needs differs per language — let the message
-  format carry that, don't hardcode two branches.
+`=0`/`=1` select exact values; `#` is the formatted number; the `other` arm is
+mandatory — let the translator, not your code, decide which arms a language needs.
 
 ## Don't build sentences by concatenation
 
-`"You have " + count + " new " + type` is untranslatable: word order, gender agreement,
-and article forms differ per language, and the translator can't move the pieces.
+**`"You have " + count + " new " + type` is untranslatable** — word order, gender
+agreement, and article forms differ per language. Use one full-sentence template with
+named placeholders so the translator can move them: OpenStack's I18n guide shows
+`"The %(name)s image is too large for this volume."` becoming
+`"L'image %(name)s est trop volumineuse…"`.
 
-- **Use one full-sentence template with named placeholders** so the translator can
-  reorder the variable to wherever the target grammar needs it. OpenStack's I18n guide
-  gives a concrete example: `"The %(name)s image is too large for this volume."` becomes
-  `"L'image %(name)s est trop volumineuse…"` — the placeholder moved. Concatenation makes
-  that impossible.
-- **Interpolation alone still isn't enough** for words that inflect. Substituting a noun
-  doesn't fix the article/adjective around it (German: the word for "the" before
-  `{paymentType}` changes with the noun's gender). For gendered/variant text use an ICU
-  `select` arm rather than gluing a chosen word in:
-
-  ```
-  {gender, select, female {her} male {his} other {their}} reservation
-  ```
-
-- Placeholders are for **values** (numbers, names, dates) — not for several words of a
-  sentence, and not for adjectives whose form depends on the noun. If concatenation is
-  truly unavoidable, ship rich translator context describing the full sentence.
+- **Interpolation alone doesn't fix words that inflect** (German: "the" before
+  `{paymentType}` changes with the noun's gender) — use an ICU `select` arm:
+  `{gender, select, female {her} male {his} other {their}} reservation`.
+- Placeholders carry **values** (numbers, names, dates), never sentence fragments or
+  inflecting adjectives. If truly unavoidable, ship rich translator context describing
+  the full sentence.
 
 ## Numbers, dates, currency — never hardcode the format
 
-Format with `Intl`, keyed by the user's locale; don't string-build or hardcode symbols.
+**Format with `Intl`, keyed by the user's locale** — separators, grouping, currency
+symbol position/spacing, date order, and calendar all vary; never string-build or
+prepend a hardcoded `$`.
 
-- **Decimal & grouping separators are locale-specific**: `1,234.56` (en) vs `1.234,56`
-  (de) vs `١٬٢٣٤٫٥٦` (`ar-EG`; note bare `ar` now yields Latin digits `1,234.56` — Arabic-Indic
-  digits need a Mashriq locale like `ar-EG` or the `ar-u-nu-arab` extension); grouping isn't always
-  every 3 digits (India: `1,23,456`).
-  Use `Intl.NumberFormat`.
-- **Currency**: `Intl.NumberFormat(locale, {style:'currency', currency:'EUR'})` — the
-  `currency` is a required **ISO 4217** code; symbol vs code vs name is `currencyDisplay`;
-  symbol *position* and spacing are locale-dependent (`$123.46` vs `123,46 €`). Don't
-  prepend a hardcoded `$`.
-- **Dates**: `Intl.DateTimeFormat` — order (MM/DD vs DD.MM.YYYY), month as number vs
-  word, and calendar all vary. Don't template `${m}/${d}/${y}`.
-- `Intl` formats but **does not parse** (ECMA-402 omits parsing by design) — for parsing
-  user-entered numbers/dates you need a separate locale-aware path.
+- **Digits**: `1,234.56` (en) vs `1.234,56` (de) vs `١٬٢٣٤٫٥٦` (`ar-EG`; note bare `ar`
+  now yields Latin digits `1,234.56` — Arabic-Indic digits need a Mashriq locale like
+  `ar-EG` or the `ar-u-nu-arab` extension); grouping isn't always every 3 digits
+  (India: `1,23,456`).
+- **Currency**: `currency` is a required **ISO 4217** code; symbol vs code vs name is
+  `currencyDisplay`.
+- `Intl` formats but **does not parse** (ECMA-402 omits parsing by design) — parsing
+  user-entered numbers/dates needs a separate locale-aware path.
 
 ## Sources
 

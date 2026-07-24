@@ -55,7 +55,8 @@ messages through one transport adapter, let native own lifecycle
 13. Missing/incorrect visuals split DOM/layout/hit-test/paint/compositing before
     height, padding, timeout, or repaint workarounds → [page-implementation](./references/page-implementation.md)
 14. Localized copy containing intentional `\n` line breaks preserves them with
-    `white-space: pre-line`; keep long-token protection such as `overflow-wrap: break-word`
+    `white-space: pre-line` — for line-breaking and long-token overflow rules
+    (`overflow-wrap`, `word-break`, CJK) see cjk-text-and-input
 15. Old Android failures: identify the actual WebView/Chrome engine version, then
     check syntax/API compatibility before treating it as an app or OS regression
 16. Legacy fallback work must include a matrix: affected old WebView engine,
@@ -130,57 +131,22 @@ UAs are Safari-shaped and apps override them) — the same signal gates app-only
 hiding the close chrome. Per-host injection-timing caveats (Android
 `injectedJavaScriptBeforeContentLoaded`) → [react-native](./references/react-native.md).
 
-## Legacy Android WebView JavaScript compatibility
+## Legacy Android WebView compatibility
 
-If an old Android WebView shows a generic client-side error while modern Chrome
-works, debug the WebView engine, not just the Android OS version. Pull the
-browser console from remote debugging or reproduce with the missing feature
-removed, then separate:
-
-- Syntax support: parse/transpile target issues.
-- Runtime API support: missing globals or methods such as `globalThis`,
-`Array.prototype.at`, `Object.hasOwn`, or `URL.canParse`.
-- Browser-native `window.postMessage(message)` compatibility: affected old engines
-  such as Android 9 WebView 66 may require `targetOrigin`; use
-  `window.postMessage(message, window.location.origin)` for same-page events.
-
-For feature fixes, prefer feature detection over User-Agent gates. In Next.js
-Pages Router, a polyfill required before the app boots should be loaded from
-`pages/_document` with `next/script` `strategy="beforeInteractive"` (App Router:
-same strategy from the root `app/layout`); verify the
-rendered HTML places it before `_next/static/chunks/*` and re-test on the old
-WebView. Do not rely on normal client imports when the failing code can run
-before hydration.
-
-## Legacy Android WebView CSS fallbacks
-
-Treat old CSS failures like runtime compatibility issues, not design tweaks. Prefer
-feature detection and a narrow marker such as `html[data-legacy-webview='true']` over
-Android-version or User-Agent gates. The marker can cover an old WebView class of
-issues, but each CSS rule under it should still be local to the failing component.
-
-For unsupported layout features such as flex/grid `gap`, `dvh`, or safe-area values,
-show the failure in an affected engine, add the smallest fallback branch, then compare
-against the same viewport without the marker. Playwright can force the marker for fast
-regression coverage; it does not establish old engine parsing/rendering. Use an actual old
-Android WebView/WebView Shell or app WebView for that.
-
-When the page is blank before the JS framework (React etc.) hydrates, suspect JavaScript syntax/API support
-first. When the page renders but spacing/paint is wrong, suspect CSS feature support,
-viewport/safe-area, or compositing. Keep the two fixes separate so modern browsers do
-not inherit old-engine workarounds.
-
-Do not verify legacy support against a dev server (`next dev`/HMR or any bundler dev
-mode). The framework's dev runtime and untranspiled `node_modules` ship modern syntax
-(optional chaining, nullish coalescing) that a `browserslist`/target setting does not
-downlevel — it lowers *your* app code but not the framework's own dev bundle — so a
-legacy WebView parse-errors there even when the production build is clean. In Next.js,
-a live WebView target with `document.readyState === 'complete'` can still stay blank
-because the Pages-Router-dev-only `style[data-next-hide-fouc]` FOUC guard leaves
-`body{display:none}` in old WebView HMR;
-treat that as dev-runtime evidence, not a product CSS regression. Iterate layout on a
-modern WebView (where HMR works); run the engine and app-integration tiers against a
-production build or deployed environment.
+Split legacy failures into two tracks and keep the fixes separate so modern
+browsers do not inherit old-engine workarounds: a page blank *before* the JS
+framework hydrates is a JavaScript syntax/runtime-API suspect; a page that
+renders with wrong spacing/paint is a CSS feature/viewport/compositing suspect.
+Never verify legacy support against a dev server (`next dev`/HMR or any bundler
+dev mode): the framework's dev runtime and untranspiled `node_modules` ship
+modern syntax your `browserslist` target does not downlevel, and Pages-Router
+dev leaves the `style[data-next-hide-fouc]` `body{display:none}` guard behind in
+old-WebView HMR — treat both as dev-runtime evidence, not a product regression.
+Iterate layout on a modern WebView; run the engine and app-integration tiers
+against a production build or deployed environment. Details (polyfill placement
+via `beforeInteractive`, old-engine `postMessage` `targetOrigin`, the
+`data-legacy-webview` CSS marker discipline):
+[android-webview](./references/android-webview.md).
 
 ## Legacy Android WebView verification matrix
 
