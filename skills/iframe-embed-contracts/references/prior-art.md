@@ -8,7 +8,7 @@ Snapshot date: **2026-07-10**
 
 ## Search procedure
 
-Agent Reach GitHub and web routes were used with these public queries:
+Public GitHub and web searches were used with these queries:
 
 ```sh
 gh search code postMessage --filename SKILL.md --limit 30

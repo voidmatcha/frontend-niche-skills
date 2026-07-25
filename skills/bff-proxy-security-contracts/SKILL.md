@@ -34,9 +34,9 @@ implementations.
    operation. A policy on `/api/request` is not effective if `/api/upload` reaches the same
    action without it.
 2. **Write a capability matrix before changing code.** For each ingress, record:
-   client selector, server-owned target, allowed methods, auth/role requirement, accepted
-   query/body/file shape, forwarded headers, redirect behavior, response handling, timeout,
-   and size/rate budgets.
+   client selector, server-owned target, allowed methods, auth/role requirement, CSRF/origin
+   policy when the route is cookie-authenticated, accepted query/body/file shape, forwarded
+   headers, redirect behavior, response handling, timeout, and size/rate budgets.
 3. **Prefer server-owned routes.** Let the client choose a semantic route name or a
    canonical relative path that must match an anchored positive allowlist. When the
    destination is known in advance, do not accept a complete URL.
@@ -76,8 +76,9 @@ Use this before an external assessment, not only after a finding arrives.
 3. **Block release on missing capability contracts.** A relay is not ready when the
    request can choose a complete destination, an unknown same-origin path, an unsupported
    method, client-supplied auth or identity headers that bypass validation or override
-   server-injected credentials, an unbounded body/file shape, or a redirect hop outside
-   the validated target.
+   server-injected credentials, an unbounded body/file shape, a redirect hop outside
+   the validated target, or a cookie-authenticated mutating route with no CSRF/origin
+   evidence (its own control, or an explicit co-gate with frontend-security-baseline).
 4. **Run negative proof, not source-only review.** Exercise malformed and alternate
    selectors, verify rejection before parser/outbound invocation, use a local OOB listener
    for SSRF, and compare protected state before and after forbidden mutations.

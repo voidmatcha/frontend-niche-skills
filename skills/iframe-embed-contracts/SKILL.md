@@ -91,7 +91,7 @@ unavailable; source/audit checks still run.
 - MDN, CSP `frame-ancestors` — guest-controlled parent allowlist, no `default-src` fallback, HTTP-header-only: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-ancestors>
 - MDN, Storage Access API — embedded access to unpartitioned cookies and its permission/user-activation model: <https://developer.mozilla.org/en-US/docs/Web/API/Storage_Access_API>
 - `ctxr-dev/skill-frontend-excellence`, Embed Patterns (MIT) — prior-art host/guest checklist covering sandboxing, messaging, sizing, storage, CSP, and accessibility: <https://github.com/ctxr-dev/skill-frontend-excellence/blob/bcdd3a5fee4723e8ec1d206a5e3bf1553afa5b53/references/embed-patterns.md>
-- [Prior-art and evidence snapshot](./references/prior-art.md) — bounded Agent Reach queries, overlapping public skills, real issue examples, and the local retention decision.
+- [Prior-art and evidence snapshot](./references/prior-art.md) — bounded public GitHub/web searches, overlapping public skills, real issue examples, and the local retention decision.
 - `davidjbradshaw/iframe-resizer` — maintained cross-domain resize protocol and failure handling prior art: <https://github.com/davidjbradshaw/iframe-resizer>
 - WHATWG HTML issue #555 — long-running platform gap for automatic iframe sizing: <https://github.com/whatwg/html/issues/555>
 - Shopify embedded-app issue #3214 — real postMessage origin mismatch producing a blank iframe: <https://github.com/Shopify/shopify-app-js/issues/3214>

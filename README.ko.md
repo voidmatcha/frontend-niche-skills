@@ -107,7 +107,7 @@ Verification
 
 - **기본 우선순위 검사:** SSR/딥링크 라우팅, 폼 검증, 날짜/시간, 인증/보안, 결제/내보내기 경계, 오버레이, 접근성, 시맨틱 HTML. 흔하거나 릴리스 후 비용이 큰 버그를 잡아냅니다.
 - **호스트/제품 특화 검사:** WebView, 브라우저 iframe/embed, CJK/IME, i18n/RTL, 결제 페이지 증거는 제품이 해당 기능을 실제로 제공할 때 가장 가치가 큽니다.
-- **품질/유지보수 검사:** `design fidelity`와 컴포넌트 추출은 리뷰에서 문제가 되는 것이 런타임 버그가 아니라 `visual drift`, AI 생성 UI, `premature abstraction`일 때 유용합니다.
+- **품질/유지보수 검사:** 디자인 충실도와 컴포넌트 추출 판단은 리뷰에서 문제가 되는 것이 런타임 버그가 아니라 디자인과 어긋난 화면(`visual drift`), AI 생성 UI, 성급한 추상화일 때 유용합니다.
 
 출처 관리 방식: README에는 라우팅 문서와 증거 문서만 나열하고, 상세한 인용은 각 skill의 `## Sources` 블록 또는 `references/*.md` 파일에 둡니다. README에 모든 upstream URL을 중복해서 담지 않기 위해서입니다.
 
@@ -122,7 +122,7 @@ Verification
 | Skill | 사용 시점 |
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | 네이티브 WebView 안에서 로드되는 페이지를 만들거나 디버깅할 때: bridge 계약, safe-area/뷰포트 레이아웃, 생명주기, 히트 테스트 vs 페인트/컴포지팅, 앱 호스트별 특이 동작. |
-| [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | 브라우저 iframe/widget을 만들거나 디버깅할 때: 부모-게스트 메시지, 임베드 허용 헤더, sandbox/Permissions Policy, READY/init 핸드셰이크, 동적 크기, `partitioned storage`, teardown. |
+| [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | 브라우저 iframe/widget을 만들거나 디버깅할 때: 부모-게스트 메시지, 임베드 허용 헤더, sandbox/Permissions Policy, READY/init 핸드셰이크, 동적 크기, 파티션 스토리지(`partitioned storage`), 리스너 정리(teardown). |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | 라우터 하이드레이션이 준비되기 전에 쿼리 파라미터를 잃거나 잘못된 상태에 도달하는 SPA/SSR 딥링크를 디버깅할 때. |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | 로케일/시간/난수/브라우저 전용 API, 스토리지, 인증 상태, 반응형 분기, 데이터 경쟁에서 비롯된 하이드레이션 불일치를 진단할 때. |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | 연결 끊김을 넘나드는 WebSocket/SSE 클라이언트를 디버깅할 때: 재연결 backoff/jitter, SSE Last-Event-ID/커서 재개, delta 순서 뒤바뀜/중복/누락, heartbeat/좀비 감지, `bufferedAmount` backpressure, 열린 소켓에서의 인증 갱신. |
@@ -134,7 +134,7 @@ Verification
 | [`semantic-markup-contracts`](./skills/semantic-markup-contracts/SKILL.md) | 네이티브 HTML 구조를 리뷰할 때: 버튼 vs 링크, 제목(heading), 랜드마크, 레이블, 표/목록, 잘못된 인터랙티브 중첩, ARIA보다 네이티브를 우선하는 수정. |
 | [`overlay-focus-scroll-contracts`](./skills/overlay-focus-scroll-contracts/SKILL.md) | 모달, 드로어, 시트, 팝오버, 메뉴, 커맨드 팔레트의 런타임 계약을 리뷰할 때: 포커스 트랩/복원, inert/aria-hidden 타이밍, 중첩 스택, 스크롤 잠금 정리. |
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | 접근성 시맨틱을 회귀 테스트로 바꿀 때: role, name, state, 포커스, 다이얼로그, 메뉴, 콤보박스, 탭. |
-| [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | `silent abort`, `stale snapshot`, reduced-motion 무시, ghost 잔상이 발생하는 View Transitions API 애니메이션을 리뷰할 때 — 재구현 가이드가 아니라 리뷰/PR-worthiness 판단용입니다. |
+| [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | 조용한 중단(silent abort), 오래된 스냅샷, reduced-motion 무시, 고스트 잔상이 발생하는 View Transitions API 애니메이션을 리뷰할 때 — 재구현 가이드가 아니라 리뷰와 PR 가치 판단용입니다. |
 | [`css-transition-animation-contracts`](./skills/css-transition-animation-contracts/SKILL.md) | 다이얼로그/팝오버/top-layer의 진입/이탈 트랜지션(`@starting-style`, `allow-discrete`, `overlay`)과 트랜지션 완료에 걸어 둔 정리 로직(`transitionend` vs `getAnimations().finished`)을 리뷰할 때. |
 | [`responsive-image-contracts`](./skills/responsive-image-contracts/SKILL.md) | 반응형 이미지 마크업을 리뷰할 때: 실제 레이아웃 대비 `srcset`/`sizes`, 고유 픽셀 너비(`w` descriptor), LCP eager/`fetchpriority`, `picture` 아트 디렉션, CLS를 위한 `width`/`height`. |
 
@@ -155,7 +155,7 @@ Verification
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form, Formik, Final Form, vee-validate, Valibot 또는 커스텀 JS 폼 플로우: `stale` 오류 상태, 비활성화된 제출 버튼, 비동기/서버 경쟁, 서버 필드 오류 매핑. |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 브라우저를 향한 인증을 강화할 때: returnTo 리다이렉트, OAuth/passkey/autocomplete 계약, 토큰 저장 경계, CSRF 엣지. |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | 프론트엔드 XSS, DOM 주입, sanitizer 오용, CSP, 서드파티 스크립트, 스토리지, URL 파싱 기본기를 점검할 때. |
-| [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | 프론트엔드가 소유한 BFF/API 프록시를 점검할 때: 클라이언트 선택 target SSRF, route/method/auth capability allowlist, 우회 ingress, multipart 예산/boundary, redirect/error 처리, upstream business-flow 책임. |
+| [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | 프론트엔드가 소유한 BFF/API 프록시를 점검할 때: 클라이언트가 target을 고르는 SSRF, route/method/auth capability allowlist, 우회 유입 경로(ingress), multipart 예산/boundary, redirect/오류 처리, upstream 비즈니스 플로우 책임 구분. |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | 체크아웃/결제 페이지의 클라이언트 증거를 리뷰할 때: hosted field vs 직접 PAN 처리, 런타임 스크립트 인벤토리, 서드파티 스크립트 위험, CSP/SRI/헤더 증거, PCI DSS 증거 공백. |
 | [`optimistic-update-rollback-contracts`](./skills/optimistic-update-rollback-contracts/SKILL.md) | 낙관적 UI 업데이트: 서버 확인 전에 변경 적용, 임시 ID vs 서버 ID, 실패 시 롤백, refetch/invalidation과의 `reconcile`, 응답과 백그라운드 refetch 사이의 경쟁. |
 | [`file-ingest-contracts`](./skills/file-ingest-contracts/SKILL.md) | 드래그 앤 드롭, 파일 입력, 붙여넣기로 파일을 페이지에 들여올 때: drop 이벤트 취소/`dropEffect`, dragenter/leave 깜빡임, `DataTransfer` items vs files, 디렉터리 업로드, `accept`/`file.type` 신뢰 문제, object URL 미리보기 생명주기. |

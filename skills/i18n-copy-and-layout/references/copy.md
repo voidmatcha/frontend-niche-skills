@@ -45,6 +45,9 @@ prepend a hardcoded `$`.
   now yields Latin digits `1,234.56` — Arabic-Indic digits need a Mashriq locale like
   `ar-EG` or the `ar-u-nu-arab` extension); grouping isn't always every 3 digits
   (India: `1,23,456`).
+- **Dates**: order and calendar vary (`6/14/2026` en-US vs `14.6.2026` de-DE; some
+  locales default to non-Gregorian calendars) — format with `Intl.DateTimeFormat`
+  keyed by the user's locale, never hand-assemble `MM/DD/YYYY`.
 - **Currency**: `currency` is a required **ISO 4217** code; symbol vs code vs name is
   `currencyDisplay`.
 - `Intl` formats but **does not parse** (ECMA-402 omits parsing by design) — parsing

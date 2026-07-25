@@ -29,7 +29,7 @@ Only T1 is implemented as a refactor. T2/T3 become a cleanup plan or TODO with t
    - `logic-reuse`: UI differs; hook/composable/controller/state-machine logic is duplicated.
    - `style-token`: repeated visual treatment belongs in tokens/classes/primitives, not a mega-component.
    - `false-friend`: code looks similar, but semantics, state, accessibility, design variant, or lifecycle differ.
-4. **Choose the boundary.** Apply the decision matrix; reuse behavior via the framework's narrow mechanism (hook/composable/controller/action/store slice), never presentation; keep local helpers/data maps when extraction would blur the public API.
+4. **Choose the boundary.** Apply the decision matrix; reuse behavior via the framework's narrow mechanism (hook/composable/controller/action/store slice) that imports no presentation; keep local helpers/data maps when extraction would blur the public API.
 5. **Lock behavior.** Add the smallest regression: component test for props/states, `getByRole`/accessible-name assertions, visual/story snapshots for design-sensitive variants, or type tests for discriminated unions.
 
 ## Decision matrix
