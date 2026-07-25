@@ -489,6 +489,9 @@ def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None =
     skill_names = [path.name for path in skill_dirs]
     result["summary"]["skill_count"] = len(skill_names)
     result["summary"]["skill_names"] = skill_names
+    # Maintainer-only tooling must not ship as a public skill.
+    if "skill-pack-auditor" in skill_names:
+        add(result, "errors", "skills/skill-pack-auditor", None, "skill-pack-auditor must not be published as a public skill")
     check_frontmatter(root, result, skill_dirs)
     check_readmes(root, result, skill_names)
     check_markdown_links(root, result)
