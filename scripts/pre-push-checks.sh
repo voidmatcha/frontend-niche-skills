@@ -80,8 +80,26 @@ else
   done < <(git diff --name-only --diff-filter=d "$DIFF_RANGE" -- '*.md' 2>/dev/null | sort -u)
   if [ "${#CHANGED_MD[@]}" -eq 0 ]; then
     echo "no changed markdown in $DIFF_RANGE; skipping"
-  else
-    python3 scripts/audit-skill-pack.py --check-links --link-paths "${CHANGED_MD[@]}"
+  elif ! python3 scripts/audit-skill-pack.py --check-links --link-paths "${CHANGED_MD[@]}"; then
+    cat >&2 <<'GUIDE'
+
+A citation above is dead (404/410). Do not push past this and do not delete the
+link to silence it. Triage it, in this order:
+
+  1. Moved, same content   -> swap in the successor URL, keep the annotation.
+  2. Gone but historical   -> pin a commit-SHA permalink (repo files) or a Web
+                              Archive snapshot, and say why in the annotation.
+  3. Source now disagrees  -> this is a claim bug, not a link bug: re-verify the
+                              claim against current primary sources and update
+                              or remove the claim together with its citation.
+  4. No honest replacement -> remove the claim along with the link.
+
+A replacement must resolve AND actually state the claim: open it and read it, a
+200 is not evidence. Then rerun this check and record old -> new in the commit
+message. Full procedure: docs/skill-evidence-coverage.md (Source link
+maintenance). SKIP_LINK_CHECK=1 exists for offline work, not for skipping this.
+GUIDE
+    exit 1
   fi
 fi
 
