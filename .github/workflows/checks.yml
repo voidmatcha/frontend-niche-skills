@@ -1,0 +1,33 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats imagemagick
+          npm install -g playwright
+          playwright install --with-deps chromium
+
+      # Offline audit + manifest/README consistency + Bats suites.
+      # The Bats suites skip themselves when a dependency is missing, so this
+      # step still passes if the installs above change shape upstream.
+      - name: Run pack checks
+        run: ./scripts/pre-push-checks.sh

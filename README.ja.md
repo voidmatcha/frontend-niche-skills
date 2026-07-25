@@ -248,7 +248,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` はリポジトリのスクリプトに委譲するだけなので、コントリビューターは lefthook なしでも同じチェックを実行できます。このスクリプトは、スキルのメタデータ、README のリンク/カウント、プラグインマニフェスト、ローカルの markdown リンク、誇大表現の文言、同梱スクリプトの構文を監査します。あわせて `git diff --check` も実行します。リリース前には、オプトインの `python3 scripts/audit-skill-pack.py --check-links` で外部ソース URL がまだ有効かを確認できます。リンク差し替えの手順は [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md) を参照してください。
+`lefthook.yml` はリポジトリのスクリプトに委譲するだけなので、コントリビューターは lefthook なしでも同じチェックを実行できます。このスクリプトは、スキルのメタデータ、README のリンク/カウント、プラグインマニフェスト、ローカルの markdown リンク、誇大表現の文言、同梱スクリプトの構文を監査します。あわせて `git diff --check` も実行します。オプトインの `python3 scripts/audit-skill-pack.py --check-links` で外部ソース URL がまだ有効かを確認できます。リンク差し替えの手順は [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md) を参照してください。CI では `.github/workflows/checks.yml` が push と pull request のたびに同じスクリプトを実行し、`.github/workflows/link-check.yml` が毎週リンクチェックを実行して、切れた引用が見つかると `link-rot` issue を作成します。
 
 ## FAQ
 

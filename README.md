@@ -246,7 +246,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` only delegates to the repo script, so contributors can run the same checks without lefthook. The script audits skill metadata, README links/counts, plugin manifests, local markdown links, overclaim wording, and bundled script syntax. It also runs `git diff --check`. Before a release, the opt-in `python3 scripts/audit-skill-pack.py --check-links` verifies that external source URLs still resolve; the link-replacement procedure lives in [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md).
+`lefthook.yml` only delegates to the repo script, so contributors can run the same checks without lefthook. The script audits skill metadata, README links/counts, plugin manifests, local markdown links, overclaim wording, and bundled script syntax. It also runs `git diff --check`. The opt-in `python3 scripts/audit-skill-pack.py --check-links` verifies that external source URLs still resolve; the link-replacement procedure lives in [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md). In CI, `.github/workflows/checks.yml` runs the same script on every push and pull request, and `.github/workflows/link-check.yml` runs the link check weekly, filing a `link-rot` issue when a citation dies.
 
 ## FAQ
 

@@ -1,0 +1,51 @@
+name: Source link check
+
+# Link rot is time-driven, not commit-driven, so this runs on a schedule
+# instead of pre-push (which must work offline). Replacement procedure:
+# docs/skill-evidence-coverage.md > Source link maintenance.
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check external source URLs
+        id: check
+        run: |
+          set -o pipefail
+          python3 scripts/audit-skill-pack.py --check-links 2>&1 | tee link-report.txt
+
+      - name: Open or update a dead-link issue
+        if: failure() && steps.check.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Dead source links detected by the scheduled link check"
+          body="$(printf 'The scheduled link check found dead citations.\n\nTriage each one with the procedure in `docs/skill-evidence-coverage.md` (Source link maintenance): successor URL, commit-SHA/Web Archive pin, claim re-verification, or claim removal. A replacement must resolve *and* state the claim.\n\n```\n%s\n```\n\n[Run log](%s/%s/actions/runs/%s)\n' "$(grep -A100 '^Errors:' link-report.txt || tail -40 link-report.txt)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")"
+          gh label create link-rot --description "Dead external source links" --color d93f0b 2>/dev/null || true
+          existing="$(gh issue list --state open --label link-rot --json number --jq '.[0].number' 2>/dev/null || true)"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --label link-rot --body "$body"
+          fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-report
+          path: link-report.txt
