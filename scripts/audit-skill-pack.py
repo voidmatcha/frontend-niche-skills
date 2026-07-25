@@ -396,7 +396,70 @@ def check_script_syntax(root: Path, result: dict[str, Any]) -> None:
     result["summary"]["scripts_syntax_checked"] = checked
 
 
-def audit(root: Path) -> dict[str, Any]:
+def check_external_links(root: Path, result: dict[str, Any]) -> None:
+    """Opt-in network check: external URLs in tracked markdown must still resolve.
+
+    404/410 are errors (dead citation); other failures (timeouts, bot-blocking
+    403/429, DNS) are warnings so flaky hosts do not fail a release run.
+    """
+    import urllib.error
+    import urllib.request
+    from concurrent.futures import ThreadPoolExecutor
+
+    skip_hosts = ("example.com", "example.org", "example.test", "localhost", "127.0.0.1")
+    files: set[Path] = set(root.glob("README*.md"))
+    for extra in (root / "CHANGELOG.md",):
+        if extra.exists():
+            files.add(extra)
+    for tree in (root / "docs", root / "skills"):
+        if tree.exists():
+            files.update(tree.rglob("*.md"))
+    first_seen: dict[str, Path] = {}
+    for path in sorted(files):
+        for match in URL_RE.finditer(path.read_text(encoding="utf-8")):
+            url = match.group(0).split("`")[0].rstrip(".,;:").split("#")[0]
+            host = url.split("://", 1)[-1].split("/", 1)[0]
+            if (
+                "<" in url
+                or "(" in url  # URL_RE stops at ")", truncating paren-bearing URLs
+                or any(ch in url for ch in "…*")
+                or "." not in host
+                or "@" in host
+                or host.endswith((".example", ".test", ".invalid"))
+                or any(skip in url for skip in skip_hosts)
+            ):
+                continue
+            first_seen.setdefault(url, path)
+
+    def status_of(url: str) -> int:
+        headers = {"User-Agent": "Mozilla/5.0 (skill-pack-audit link check)"}
+        for method, timeout in (("HEAD", 10), ("GET", 15)):
+            try:
+                request = urllib.request.Request(url, method=method, headers=headers)
+                with urllib.request.urlopen(request, timeout=timeout) as response:
+                    return response.status
+            except urllib.error.HTTPError as error:
+                # Some hosts (rfc-editor, some CDNs) 404 or block HEAD but serve GET.
+                if method == "GET" or error.code not in (403, 404, 405, 410, 429, 501):
+                    return error.code
+            except Exception:
+                if method == "GET":
+                    return -1
+        return -1
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        statuses = dict(zip(first_seen, pool.map(status_of, first_seen)))
+    for url, status in sorted(statuses.items()):
+        rel_path = rel(first_seen[url], root)
+        if status in (404, 410):
+            add(result, "errors", rel_path, None, f"dead external link ({status}): {url}")
+        elif status == -1 or status >= 400:
+            label = "network/timeout" if status == -1 else f"status {status}"
+            add(result, "warnings", rel_path, None, f"could not verify external link ({label}): {url}")
+    result["summary"]["external_urls_checked"] = len(first_seen)
+
+
+def audit(root: Path, check_links: bool = False) -> dict[str, Any]:
     result: dict[str, Any] = {
         "root": str(root),
         "summary": {},
@@ -423,6 +486,8 @@ def audit(root: Path) -> dict[str, Any]:
     check_agent_metadata(root, result, skill_dirs)
     check_overclaims(root, result)
     check_script_syntax(root, result)
+    if check_links:
+        check_external_links(root, result)
     result["ok"] = not result["errors"] and not result["warnings"]
     return result
 
@@ -435,6 +500,8 @@ def print_text(result: dict[str, Any]) -> None:
     print(f"Sources sections checked: {result['summary'].get('sources_sections_checked', 0)}")
     scripts = result["summary"].get("scripts_syntax_checked", [])
     print(f"Scripts syntax checked: {len(scripts)}")
+    if "external_urls_checked" in result["summary"]:
+        print(f"External URLs checked: {result['summary']['external_urls_checked']}")
     if result["errors"]:
         print("\nErrors:")
         for item in result["errors"]:
@@ -452,10 +519,15 @@ def print_text(result: dict[str, Any]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="print JSON output")
+    parser.add_argument(
+        "--check-links",
+        action="store_true",
+        help="also verify external URLs resolve (network; run before releases)",
+    )
     parser.add_argument("root", nargs="?", default=".")
     args = parser.parse_args()
     root = Path(args.root).resolve()
-    result = audit(root)
+    result = audit(root, check_links=args.check_links)
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:

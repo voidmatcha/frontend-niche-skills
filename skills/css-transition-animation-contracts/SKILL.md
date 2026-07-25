@@ -77,5 +77,5 @@ Return compact findings:
 - [Element: getAnimations() (.finished promise cleanup) - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAnimations)
 - [prefers-reduced-motion media feature - MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion)
 - [Animation.finished - MDN (the promise rejects with AbortError when the animation is cancelled)](https://developer.mozilla.org/en-US/docs/Web/API/Animation/finished)
-- [react-spectrum runAfterTransition.ts (transitioncancel + node-removal handling)](https://github.com/adobe/react-spectrum/blob/main/packages/@react-aria/utils/src/runAfterTransition.ts)
+- [react-spectrum runAfterTransition.ts (transitioncancel + node-removal handling; commit-pinned — the file moved in the #9774 package consolidation)](https://github.com/adobe/react-spectrum/blob/01a53cfa626c8226e71efb07458fd7de5ffc370d/packages/@react-aria/utils/src/runAfterTransition.ts)
 - [react-spectrum #7326: detached nodes retained when a multi-value transition is cancelled](https://github.com/adobe/react-spectrum/issues/7326)

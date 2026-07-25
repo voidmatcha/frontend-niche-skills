@@ -68,7 +68,7 @@ router's state lags the real URL. If this page renders inside a native WebView, 
 
 - Next.js Pages Router `useRouter` docs (`query`, `isReady`): <https://nextjs.org/docs/pages/api-reference/functions/use-router>
 - Next.js Automatic Static Optimization docs (empty `query` during prerender, populated after hydration): <https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization>
-- Vue Router `router.isReady()` API: <https://router.vuejs.org/api/interfaces/Router.html#isReady>
+- Vue Router API reference (`router.isReady()`; the typedoc interface pages were retired): <https://router.vuejs.org/api/>
 - React Router `useLocation`: <https://reactrouter.com/api/hooks/useLocation>
 - React Router `useParams`: <https://reactrouter.com/api/hooks/useParams>
 - React Router data routers/loaders: <https://reactrouter.com/start/data/route-object>
