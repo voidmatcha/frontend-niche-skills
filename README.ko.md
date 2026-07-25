@@ -16,7 +16,7 @@
 <a href="README.md">🇺🇸 English</a> | <strong>🇰🇷 한국어</strong> | <a href="README.ja.md">🇯🇵 日本語</a> | <a href="README.zh-cn.md">🇨🇳 简体中文</a>
 </p>
 
-**광범위한 체크리스트가 자주 놓치는 프론트엔드 엣지 케이스를 위한 Agent Skills — WebView 페이지, 시맨틱 마크업, 오버레이 생명주기, IME/CJK 입력, 하이드레이션, 폼, 인증, 결제 페이지, 내보내기, 날짜, 시각적 충실도, 리포트 트리아지까지.**
+**광범위한 체크리스트가 자주 놓치는 프론트엔드 엣지 케이스를 위한 Agent Skills. WebView 페이지, 시맨틱 마크업, 오버레이 생명주기, IME/CJK 입력, 하이드레이션, 폼, 인증, 결제 페이지, 내보내기, 날짜, 시각적 충실도, 리포트 트리아지까지.**
 
 `frontend-niche-skills`는 Claude Code, Codex를 비롯한 `AGENTS.md` 호환 코딩 에이전트에게, 올바른 수정이 증거 유형의 구분에 달려 있는 버그를 위한 집중된 플레이북을 제공합니다: 레이아웃 vs 페인트, DOM vs 접근성 트리, 브라우저 vs 네이티브 WebView 호스트, 서버 렌더 vs 클라이언트 하이드레이션, 결제 페이지 데이터 경계 vs 런타임 스크립트 표면, 내보내기 파일 vs 스프레드시트/Blob/클립보드 동작.
 
@@ -134,7 +134,7 @@ Verification
 | [`semantic-markup-contracts`](./skills/semantic-markup-contracts/SKILL.md) | 네이티브 HTML 구조를 리뷰할 때: 버튼 vs 링크, 제목(heading), 랜드마크, 레이블, 표/목록, 잘못된 인터랙티브 중첩, ARIA보다 네이티브를 우선하는 수정. |
 | [`overlay-focus-scroll-contracts`](./skills/overlay-focus-scroll-contracts/SKILL.md) | 모달, 드로어, 시트, 팝오버, 메뉴, 커맨드 팔레트의 런타임 계약을 리뷰할 때: 포커스 트랩/복원, inert/aria-hidden 타이밍, 중첩 스택, 스크롤 잠금 정리. |
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | 접근성 시맨틱을 회귀 테스트로 바꿀 때: role, name, state, 포커스, 다이얼로그, 메뉴, 콤보박스, 탭. |
-| [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | 조용한 중단(silent abort), 오래된 스냅샷, reduced-motion 무시, 고스트 잔상이 발생하는 View Transitions API 애니메이션을 리뷰할 때 — 재구현 가이드가 아니라 리뷰와 PR 가치 판단용입니다. |
+| [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | 조용한 중단(silent abort), 오래된 스냅샷, reduced-motion 무시, 고스트 잔상이 발생하는 View Transitions API 애니메이션을 리뷰할 때. 재구현 가이드가 아니라 리뷰와 PR 가치 판단용입니다. |
 | [`css-transition-animation-contracts`](./skills/css-transition-animation-contracts/SKILL.md) | 다이얼로그/팝오버/top-layer의 진입/이탈 트랜지션(`@starting-style`, `allow-discrete`, `overlay`)과 트랜지션 완료에 걸어 둔 정리 로직(`transitionend` vs `getAnimations().finished`)을 리뷰할 때. |
 | [`responsive-image-contracts`](./skills/responsive-image-contracts/SKILL.md) | 반응형 이미지 마크업을 리뷰할 때: 실제 레이아웃 대비 `srcset`/`sizes`, 고유 픽셀 너비(`w` descriptor), LCP eager/`fetchpriority`, `picture` 아트 디렉션, CLS를 위한 `width`/`height`. |
 
@@ -173,7 +173,7 @@ Verification
 
 | Skill | 사용 시점 |
 | --- | --- |
-| [`core-web-vitals-performance-contracts`](./skills/core-web-vitals-performance-contracts/SKILL.md) | Core Web Vitals(LCP, CLS, INP) 또는 TTFB가 나쁠 때, 수정에 앞서 원인을 특정 요소, 레이아웃 이동, 메인 스레드 작업으로 좁힙니다 — 점수 확인이 아니라 페이지 전체 `performance budget`을 관리하기 위한 skill입니다. |
+| [`core-web-vitals-performance-contracts`](./skills/core-web-vitals-performance-contracts/SKILL.md) | Core Web Vitals(LCP, CLS, INP) 또는 TTFB가 나쁠 때, 수정에 앞서 원인을 특정 요소, 레이아웃 이동, 메인 스레드 작업으로 좁힙니다. 점수 확인이 아니라 페이지 전체 `performance budget`을 관리하기 위한 skill입니다. |
 | [`frontend-data-fetching-cache-contracts`](./skills/frontend-data-fetching-cache-contracts/SKILL.md) | 클라이언트 데이터 캐시(React Query, SWR, RTK Query, Apollo)가 뮤테이션 후 오래된 데이터를 보여 주거나, 요청 워터폴, 과다/과소 fetch, 페이지네이션/재검증 캐시 버그가 있을 때. |
 | [`async-effect-race-contracts`](./skills/async-effect-race-contracts/SKILL.md) | 직접 작성한 async Effect가 오동작할 때: 의존성 변경 시 발생하는 fetch 경쟁(오래된 응답이 이기는 경우), 누락된 cleanup/`AbortController`, StrictMode 이중 호출, interval/구독의 `stale closure`. |
 | [`pwa-offline-cache-contracts`](./skills/pwa-offline-cache-contracts/SKILL.md) | Service Worker/오프라인 캐싱이 잘못될 때: 배포 후 오래된 빌드, `ChunkLoadError`, precache 공백, 캐시 버전 관리/축출(cache eviction), SW 업데이트 생명주기, 인증된 응답 캐싱. |
@@ -225,12 +225,12 @@ Verification
 
 증거의 위치:
 
-- [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md) — skill 경계와 PR 형태를 점검(sanity-check)하는 데 사용한 공개 OSS 사례.
-- [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md) — 파일/라인 증거가 있는 공개 OSS 리서치 후보. 제보 전에 현재 기본 브랜치를 다시 확인하고 로컬에서 재현하세요.
-- [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md) — WebView 특화 선행 사례, bridge 라이브러리, 호스트 동작 레퍼런스, 생태계 노트.
-- [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) — skill별로 근거가 검증된 사례, 후보 단서, 1차 출처 레퍼런스, 라우팅 예시 중 어디에서 오는지 보여 주는 맵.
-- [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md) — 통합 리포트 트리아지 계약과 예시.
-- `skills/*/SKILL.md` 및 `skills/*/references/*.md` — skill별 공식 문서, 선행 사례, 예시, 오탐 노트, 구현 특화 증거.
+- [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md): skill 경계와 PR 형태를 점검(sanity-check)하는 데 사용한 공개 OSS 사례.
+- [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md): 파일/라인 증거가 있는 공개 OSS 리서치 후보. 제보 전에 현재 기본 브랜치를 다시 확인하고 로컬에서 재현하세요.
+- [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md): WebView 특화 선행 사례, bridge 라이브러리, 호스트 동작 레퍼런스, 생태계 노트.
+- [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md): skill별로 근거가 검증된 사례, 후보 단서, 1차 출처 레퍼런스, 라우팅 예시 중 어디에서 오는지 보여 주는 맵.
+- [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md): 통합 리포트 트리아지 계약과 예시.
+- `skills/*/SKILL.md` 및 `skills/*/references/*.md`: skill별 공식 문서, 선행 사례, 예시, 오탐 노트, 구현 특화 증거.
 
 후보 OSS 발견은 현재 브랜치를 다시 확인하고, 로컬에서 재현하고, 메인테이너가 수락하거나 실패하는 테스트로 뒷받침되기 전까지는 확인된 upstream 버그가 **아닙니다**.
 
