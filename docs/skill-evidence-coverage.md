@@ -53,7 +53,12 @@ When adding a skill, add at least one row here before promoting it in README. Th
 
 ## Source link maintenance
 
-Run `python3 scripts/audit-skill-pack.py --check-links` before a release. It is opt-in because it needs the network. Treat `404`/`410` errors as release blockers; warnings (bot-blocked hosts, timeouts) are leads to spot-check in a browser once.
+Link checking runs at two scopes, because the two failure modes have different causes:
+
+- **Pre-push (automatic):** `scripts/pre-push-checks.sh` checks only the markdown files you are pushing (`--link-paths`), so a citation you just added is verified before it lands — roughly two seconds. It skips itself when offline, and `SKIP_LINK_CHECK=1` forces a skip.
+- **Weekly (`.github/workflows/link-check.yml`) and before a release:** `python3 scripts/audit-skill-pack.py --check-links` checks all external URLs. This catches rot in files nobody has touched, which no pre-push hook can see.
+
+Only `404`/`410` fail a run — a dead citation is a real defect. Unreachable-but-not-dead URLs (bot-blocked `403`, rate-limited `429`, timeouts) are listed as unverified without failing, because transient failures otherwise make the gate flap between runs; spot-check those in a browser once.
 
 For each dead link, decide in this order:
 

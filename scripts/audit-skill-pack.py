@@ -396,24 +396,32 @@ def check_script_syntax(root: Path, result: dict[str, Any]) -> None:
     result["summary"]["scripts_syntax_checked"] = checked
 
 
-def check_external_links(root: Path, result: dict[str, Any]) -> None:
+def check_external_links(root: Path, result: dict[str, Any], only: list[Path] | None = None) -> None:
     """Opt-in network check: external URLs in tracked markdown must still resolve.
 
-    404/410 are errors (dead citation); other failures (timeouts, bot-blocking
-    403/429, DNS) are warnings so flaky hosts do not fail a release run.
+    Only 404/410 fail the run — a dead citation is a real defect. Everything
+    else (timeouts, DNS, bot-blocking 403/429) is reported as unverified but
+    does not fail, because transient failures are common enough to make a
+    strict gate flap between runs.
+
+    Pass `only` to limit the scan to specific files (pre-push checks the files
+    being pushed; the scheduled job checks everything).
     """
     import urllib.error
     import urllib.request
     from concurrent.futures import ThreadPoolExecutor
 
     skip_hosts = ("example.com", "example.org", "example.test", "localhost", "127.0.0.1")
-    files: set[Path] = set(root.glob("README*.md"))
-    for extra in (root / "CHANGELOG.md",):
-        if extra.exists():
-            files.add(extra)
-    for tree in (root / "docs", root / "skills"):
-        if tree.exists():
-            files.update(tree.rglob("*.md"))
+    if only is not None:
+        files = {path for path in only if path.exists() and path.suffix == ".md"}
+    else:
+        files = set(root.glob("README*.md"))
+        for extra in (root / "CHANGELOG.md",):
+            if extra.exists():
+                files.add(extra)
+        for tree in (root / "docs", root / "skills"):
+            if tree.exists():
+                files.update(tree.rglob("*.md"))
     first_seen: dict[str, Path] = {}
     for path in sorted(files):
         for match in URL_RE.finditer(path.read_text(encoding="utf-8")):
@@ -447,19 +455,25 @@ def check_external_links(root: Path, result: dict[str, Any]) -> None:
                     return -1
         return -1
 
+    if not first_seen:
+        result["summary"]["external_urls_checked"] = 0
+        return
     with ThreadPoolExecutor(max_workers=8) as pool:
         statuses = dict(zip(first_seen, pool.map(status_of, first_seen)))
+    unverified: list[str] = []
     for url, status in sorted(statuses.items()):
         rel_path = rel(first_seen[url], root)
         if status in (404, 410):
             add(result, "errors", rel_path, None, f"dead external link ({status}): {url}")
         elif status == -1 or status >= 400:
             label = "network/timeout" if status == -1 else f"status {status}"
-            add(result, "warnings", rel_path, None, f"could not verify external link ({label}): {url}")
+            unverified.append(f"{rel_path} — {label}: {url}")
     result["summary"]["external_urls_checked"] = len(first_seen)
+    if unverified:
+        result["summary"]["external_urls_unverified"] = unverified
 
 
-def audit(root: Path, check_links: bool = False) -> dict[str, Any]:
+def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None = None) -> dict[str, Any]:
     result: dict[str, Any] = {
         "root": str(root),
         "summary": {},
@@ -487,7 +501,7 @@ def audit(root: Path, check_links: bool = False) -> dict[str, Any]:
     check_overclaims(root, result)
     check_script_syntax(root, result)
     if check_links:
-        check_external_links(root, result)
+        check_external_links(root, result, only=link_paths)
     result["ok"] = not result["errors"] and not result["warnings"]
     return result
 
@@ -502,6 +516,11 @@ def print_text(result: dict[str, Any]) -> None:
     print(f"Scripts syntax checked: {len(scripts)}")
     if "external_urls_checked" in result["summary"]:
         print(f"External URLs checked: {result['summary']['external_urls_checked']}")
+    unverified = result["summary"].get("external_urls_unverified", [])
+    if unverified:
+        print(f"External URLs unverified (not a failure): {len(unverified)}")
+        for item in unverified:
+            print(f"- {item}")
     if result["errors"]:
         print("\nErrors:")
         for item in result["errors"]:
@@ -522,12 +541,19 @@ def main() -> int:
     parser.add_argument(
         "--check-links",
         action="store_true",
-        help="also verify external URLs resolve (network; run before releases)",
+        help="also verify external URLs resolve (network; only 404/410 fail)",
+    )
+    parser.add_argument(
+        "--link-paths",
+        nargs="*",
+        metavar="FILE",
+        help="with --check-links, only check URLs in these files (e.g. the files being pushed)",
     )
     parser.add_argument("root", nargs="?", default=".")
     args = parser.parse_args()
     root = Path(args.root).resolve()
-    result = audit(root, check_links=args.check_links)
+    link_paths = [Path(p).resolve() for p in args.link_paths] if args.link_paths is not None else None
+    result = audit(root, check_links=args.check_links, link_paths=link_paths)
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:

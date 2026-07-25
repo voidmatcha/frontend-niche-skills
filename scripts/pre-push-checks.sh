@@ -57,4 +57,32 @@ fi
 echo "==> Git diff whitespace"
 git diff --check
 
+# Source links in the markdown being pushed. Scoped to changed files so this
+# stays ~2s instead of ~30s for the whole pack, and skipped entirely when
+# offline so a flight or a captive portal cannot block a push. Rot in files you
+# did not touch is the scheduled job's problem (.github/workflows/link-check.yml).
+echo "==> Changed-file source links"
+if [ "${SKIP_LINK_CHECK:-0}" = "1" ]; then
+  echo "SKIP_LINK_CHECK=1; skipping"
+elif ! curl -sS -m 4 -o /dev/null https://www.google.com/generate_204 2>/dev/null; then
+  echo "offline; skipping (run --check-links later)"
+else
+  if RANGE_BASE="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)"; then
+    DIFF_RANGE="$RANGE_BASE...HEAD"
+  else
+    # No upstream yet: fall back to the newest commit so the check still sees
+    # links added in it, instead of diffing the entire history.
+    DIFF_RANGE="HEAD~1...HEAD"
+  fi
+  CHANGED_MD=()
+  while IFS= read -r changed_file; do
+    [ -n "$changed_file" ] && [ -f "$changed_file" ] && CHANGED_MD+=("$changed_file")
+  done < <(git diff --name-only --diff-filter=d "$DIFF_RANGE" -- '*.md' 2>/dev/null | sort -u)
+  if [ "${#CHANGED_MD[@]}" -eq 0 ]; then
+    echo "no changed markdown in $DIFF_RANGE; skipping"
+  else
+    python3 scripts/audit-skill-pack.py --check-links --link-paths "${CHANGED_MD[@]}"
+  fi
+fi
+
 echo "pre-push checks passed"

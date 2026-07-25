@@ -248,7 +248,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`。可运行可选检查 `python3 scripts/audit-skill-pack.py --check-links`，验证外部来源 URL 是否仍然有效；链接替换流程见 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)。在 CI 中，`.github/workflows/checks.yml` 会在每次 push 和 pull request 时运行同一脚本，`.github/workflows/link-check.yml` 每周运行链接检查，发现失效引用时创建 `link-rot` issue。
+`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`，并检查本次 push 涉及的 markdown 中的来源链接（离线时跳过，`SKIP_LINK_CHECK=1` 可强制跳过）。若要检查全部外部 URL，请运行 `python3 scripts/audit-skill-pack.py --check-links`；`.github/workflows/link-check.yml` 每周运行该检查，发现失效引用时创建 `link-rot` issue。链接替换流程见 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)，`.github/workflows/checks.yml` 会在每次 push 和 pull request 时运行打包检查。
 
 ## 常见问题
 
