@@ -79,3 +79,4 @@ Return compact findings:
 - React — You Might Not Need an Effect (effect-based fetching carries race/waterfall boilerplate; prefer a framework/cache; not every side effect needs an effect): <https://react.dev/learn/you-might-not-need-an-effect>
 - MDN — AbortController (`abort()` cancels the fetch and rejects with an `AbortError` DOMException; pass `signal` to the request): <https://developer.mozilla.org/en-US/docs/Web/API/AbortController>
 - MDN — AbortSignal (the signal object that communicates cancellation to an async operation): <https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal>
+- React 18 — the "setState on an unmounted component" warning was removed (false positives outweighed the signal): <https://github.com/facebook/react/pull/22114>

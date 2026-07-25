@@ -76,3 +76,4 @@ state, or test), then gives the minimal fix direction rather than a backend rede
 - NIST SP 800-63B-4: <https://pages.nist.gov/800-63-4/sp800-63b.html>
 - MDN Web Authentication API: <https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API>
 - MDN HTML `autocomplete` attribute: <https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/autocomplete>
+- MDN WebOTP API (Android Chrome SMS one-time-code retrieval, additive to the `autocomplete` hint): <https://developer.mozilla.org/en-US/docs/Web/API/WebOTP_API>

@@ -103,4 +103,5 @@ live-validation triggers are `validateOnChange` and `validateOnModelUpdate` (bot
 - Formik API (`validateOnMount`, `isSubmitting`, `setFieldError`, `setStatus`): <https://formik.org/docs/api/formik>
 - vee-validate form API: <https://vee-validate.logaretm.com/v4/api/form/>
 - Final Form field state: <https://final-form.org/docs/final-form/types/FieldState>
+- TanStack Form (validity-lifecycle mapping for the same contracts): <https://tanstack.com/form/latest/docs/overview>
 - Vercel Web Interface Guidelines, Forms: <https://vercel.com/design/guidelines#forms>

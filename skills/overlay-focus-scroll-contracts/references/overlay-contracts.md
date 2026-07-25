@@ -7,6 +7,8 @@ Use this reference only after `overlay-focus-scroll-contracts` triggers and the 
 - MDN `aria-hidden`: `aria-hidden="true"` removes an element and its children from the accessibility tree and should not be used on focusable elements or ancestors of focusable elements. <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-hidden>
 - MDN `inert`: an inert element and its flat-tree descendants cannot receive focus or be clicked. <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert>
 - WAI-ARIA APG Modal Dialog Pattern: windows under a modal dialog are inert, and modal dialogs contain their own tab sequence. <https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/>
+- MDN `HTMLDialogElement.showModal()`: opens the dialog in the top layer with `::backdrop`, renders content outside it inert, and closes on Esc — it does not lock body scroll. <https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/showModal>
+- MDN Popover API: non-modal top-layer UI with light-dismiss behavior. <https://developer.mozilla.org/en-US/docs/Web/API/Popover_API>
 
 ## Evidence framing
 

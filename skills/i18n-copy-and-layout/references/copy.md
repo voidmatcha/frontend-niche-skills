@@ -67,4 +67,5 @@ prepend a hardcoded `$`.
 - W3C i18n — [ECMAScript Internationalization API guide](https://www.w3.org/International/articles/intl/index);
   ECMA-402 ([spec](https://tc39.es/ecma402/)); MDN
   [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat),
+  [`Intl.DateTimeFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat),
   [`Intl.PluralRules`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/PluralRules)

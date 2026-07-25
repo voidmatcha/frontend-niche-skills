@@ -79,3 +79,4 @@ Minimal useful PR: set HTML to `no-cache` while assets stay immutable; add an `u
 - Chrome for Developers — Strategies for service worker caching (Network First for HTML/API, Cache First for hashed assets, Network Only for authenticated routes): <https://developer.chrome.com/docs/workbox/caching-strategies-overview>
 - Vite PWA — Service Worker Precache (`globPatterns`, `includeAssets`, `maximumFileSizeToCacheInBytes`): <https://vite-pwa-org.netlify.app/guide/service-worker-precache>
 - Vite — Building for Production (`vite:preloadError` on a failed dynamic import after deploy; reload with a retry cap): <https://vite.dev/guide/build>
+- Lighthouse v12.0.0 release notes — the PWA category was removed (do not point probes or CI at it): <https://github.com/GoogleChrome/lighthouse/releases/tag/v12.0.0>
