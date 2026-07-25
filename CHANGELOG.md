@@ -26,6 +26,11 @@ All notable changes to this project are documented here. This project follows th
 - `iframe-embed-contracts` for browser iframe/widget host-guest contracts: embeddability headers, sandbox/Permissions Policy, authenticated postMessage handshakes, dynamic sizing, partitioned storage, and teardown.
 - `bff-proxy-security-contracts` for frontend-owned server proxies: target/path SSRF, route-method-auth capability allowlists, alternate ingress drift, multipart budgets/boundaries, redirect/error handling, and upstream-vs-gateway residual ownership.
 - Repo maintainer checks in `scripts/audit-skill-pack.py`, with `lefthook.yml` delegating pre-push checks to `scripts/pre-push-checks.sh`.
+- `AGENTS.md` repo contract: cite every externally verifiable claim, never cite an unopened page, run the pack checks before finishing even when only committing, keep the pack universal, and preserve each skill's PR-worthiness gate.
+- Source-link checking in `audit-skill-pack.py`: `--check-links` verifies external URLs (only `404`/`410` fail; unreachable-but-not-dead hosts are reported as unverified), and `--link-paths` scopes the check to specific files. `scripts/pre-push-checks.sh` uses it on the markdown being pushed (~2s, skipped offline or with `SKIP_LINK_CHECK=1`) and prints the replacement procedure on failure.
+- Frontmatter description length check: an error above the 1024-character skill-spec cap, a warning at 950.
+- GitHub Actions: `checks.yml` runs the pack checks on push/PR with Bats dependencies installed, and `link-check.yml` runs the full link sweep weekly, filing a `link-rot` issue when a citation dies.
+- "Source link maintenance" procedure in `docs/skill-evidence-coverage.md` for triaging a dead citation: successor URL, commit-SHA/Web Archive pin, claim re-verification, or claim removal.
 
 ### Changed
 
@@ -44,6 +49,10 @@ All notable changes to this project are documented here. This project follows th
 - Added `## Sources` to the webview reference files so the "sources in each reference file" contract holds, and linked a previously orphaned reference.
 - Normalized smart quotes to straight quotes across `SKILL.md` and reference files.
 - Fixed `scripts/pre-push-checks.sh` to invoke `audit-skill-pack.py` without the unsupported `--format` flag.
+- Corrected further errors found by a full-pack audit and an external cross-review: the removed Lighthouse PWA category and the Workbox precache-atomicity framing (`pwa-offline-cache-contracts`), `Animation.finished` rejecting on cancel (`css-transition-animation-contracts`), a `pan` probe matching `span`/`expand` (`payment-page-client-security`), a duplicated host-allowlist CSP trap row (`frontend-security-baseline`), an unreachable references file (`file-ingest-contracts`), an "always regresses LCP" overclaim (`responsive-image-contracts`), the INP long-task phase claim and `scheduler.yield` feature detection (`core-web-vitals-performance-contracts`), missing CSRF/origin evidence in the release gate (`bff-proxy-security-contracts`), the missing-cleanup-versus-late-setState distinction (`async-effect-race-contracts`), one-time-code framed as Safari-only (`frontend-auth-flow-contracts`), and a compressed clause implying presentation is never reusable (`component-extraction-judgment`).
+- Repaired two rotted citations found by the first full link sweep: the moved react-spectrum `runAfterTransition.ts` (now commit-pinned) and the retired Vue Router typedoc page.
+- Replaced pinned version matrices with time-safe phrasing where they rot (React `<ViewTransition>` channel, Temporal support), labelled Sentry-specific options as such, and generalized incident-shaped wording in `bff-proxy-security-contracts`.
+- Trimmed the three longest frontmatter descriptions under the spec cap and compressed generic sections in six skills while leaving their gates intact.
 
 ## [0.1.0] - 2026-06-25
 
