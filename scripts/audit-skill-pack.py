@@ -25,6 +25,7 @@ BADGE_RE = re.compile(r"Agent_Skills-(\d+)")
 URL_RE = re.compile(r"https?://[^\s)>\]\"']+")
 SOURCE_HEADING_RE = re.compile(r"^#{1,3}\s+Sources\b", re.IGNORECASE)
 HEADING_RE = re.compile(r"^#{1,6}\s+")
+WEAK_TRAILING_WORDS = {"a", "an", "and", "at", "for", "in", "of", "on", "or", "the", "to", "with"}
 
 
 def rel(path: Path, root: Path) -> str:
@@ -50,7 +51,7 @@ def markdown_files(root: Path) -> list[Path]:
     return [
         path
         for path in [
-            root / "README.md",
+            *root.glob("README*.md"),
             root / "CHANGELOG.md",
             root / "SECURITY.md",
             *root.glob("docs/**/*.md"),
@@ -106,24 +107,26 @@ def check_frontmatter(root: Path, result: dict[str, Any], skill_dirs: list[Path]
                 add(result, "warnings", rel(skill_file, root), 1, f"description is close to the 1024-char skill-spec cap ({len(description)} chars)")
 
 
-def check_readme(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
-    readme = root / "README.md"
-    if not readme.exists():
+def check_readmes(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
+    readmes = sorted(root.glob("README*.md"))
+    if not readmes:
         add(result, "warnings", "README.md", None, "README.md missing")
         return
-    text = readme.read_text(encoding="utf-8")
-    badge = BADGE_RE.search(text)
-    if badge and int(badge.group(1)) != len(skill_names):
-        add(result, "errors", "README.md", None, f"badge count {badge.group(1)} != skill count {len(skill_names)}")
-    if not badge:
-        add(result, "warnings", "README.md", None, "Agent_Skills badge count not found")
-    links = sorted(set(README_SKILL_RE.findall(text)))
-    missing = sorted(set(skill_names) - set(links))
-    extra = sorted(set(links) - set(skill_names))
-    for name in missing:
-        add(result, "errors", "README.md", None, f"missing README skill link for {name}")
-    for name in extra:
-        add(result, "errors", "README.md", None, f"README links skill without folder: {name}")
+    for readme in readmes:
+        rel_path = rel(readme, root)
+        text = readme.read_text(encoding="utf-8")
+        badge = BADGE_RE.search(text)
+        if badge and int(badge.group(1)) != len(skill_names):
+            add(result, "errors", rel_path, None, f"badge count {badge.group(1)} != skill count {len(skill_names)}")
+        if not badge:
+            add(result, "warnings", rel_path, None, "Agent_Skills badge count not found")
+        links = sorted(set(README_SKILL_RE.findall(text)))
+        missing = sorted(set(skill_names) - set(links))
+        extra = sorted(set(links) - set(skill_names))
+        for name in missing:
+            add(result, "errors", rel_path, None, f"missing README skill link for {name}")
+        for name in extra:
+            add(result, "errors", rel_path, None, f"README links skill without folder: {name}")
 
 
 def check_markdown_links(root: Path, result: dict[str, Any]) -> None:
@@ -196,6 +199,28 @@ def check_manifests(root: Path, result: dict[str, Any], skill_names: list[str]) 
             elif len(prompts) > 3:
                 add(result, "warnings", rel(codex, root), None, "Codex interface.defaultPrompt should stay concise (<= 3 prompts, matching e2e-skills pattern)")
 
+    agents_marketplace = root / ".agents" / "plugins" / "marketplace.json"
+    if agents_marketplace in parsed:
+        data = parsed[agents_marketplace]
+        plugins = data.get("plugins")
+        if data.get("name") != "frontend-niche-skills":
+            add(result, "errors", rel(agents_marketplace, root), None, "Agents marketplace name must be frontend-niche-skills")
+        if not isinstance(plugins, list) or len(plugins) != 1:
+            add(result, "errors", rel(agents_marketplace, root), None, "Agents marketplace must expose exactly one plugin")
+        else:
+            plugin = plugins[0]
+            if plugin.get("name") != "frontend-niche-skills":
+                add(result, "errors", rel(agents_marketplace, root), None, "Agents marketplace plugin name must be frontend-niche-skills")
+            source = plugin.get("source") or {}
+            source_path = source.get("path")
+            if source.get("source") != "local" or not isinstance(source_path, str):
+                add(result, "errors", rel(agents_marketplace, root), None, "Agents marketplace source must be local with a path")
+            else:
+                candidates = [(agents_marketplace.parent / source_path).resolve(), (root / source_path).resolve()]
+                if not any(candidate.exists() for candidate in candidates):
+                    add(result, "errors", rel(agents_marketplace, root), None, f"Agents marketplace source path does not exist: {source_path}")
+        result["summary"]["agents_marketplace_plugin_count"] = len(plugins) if isinstance(plugins, list) else 0
+
     versions: dict[str, str] = {}
     for path, data in parsed.items():
         if path.name == "marketplace.json" and isinstance(data.get("plugins"), list):
@@ -243,6 +268,77 @@ def check_backlog_snapshot(root: Path, result: dict[str, Any]) -> None:
             add(result, "errors", rel(path, root), start + 1, f"section {section} must have 10 numbered candidates; found {nums}")
 
 
+def check_evidence_coverage(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
+    path = root / "docs" / "skill-evidence-coverage.md"
+    if not path.exists():
+        add(result, "warnings", rel(path, root), None, "skill evidence coverage doc missing")
+        return
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    covered = sorted(set(re.findall(r"^\| `([^`]+)` \|", text, re.MULTILINE)))
+    missing = sorted(set(skill_names) - set(covered))
+    extra = sorted(set(covered) - set(skill_names))
+    for name in missing:
+        add(result, "errors", rel(path, root), None, f"missing evidence coverage row for {name}")
+    for name in extra:
+        add(result, "errors", rel(path, root), None, f"evidence coverage row has no skill folder: {name}")
+    result["summary"]["evidence_coverage_rows"] = len(covered)
+
+
+def check_triage_coverage(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
+    path = root / "skills" / "frontend-report-triage" / "SKILL.md"
+    if not path.exists():
+        add(result, "errors", rel(path, root), None, "frontend-report-triage skill missing")
+        return
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    match = re.search(r"^## Failure class map\s*$([\s\S]*?)(?=^## )", text, re.MULTILINE)
+    if not match:
+        add(result, "errors", rel(path, root), None, "Failure class map section missing")
+        return
+    routed: list[str] = []
+    for line in match.group(1).splitlines():
+        columns = line.split("|")
+        if len(columns) < 4:
+            continue
+        skill_match = re.fullmatch(r"\s*`([a-z0-9-]+)`\s*", columns[2])
+        if skill_match:
+            routed.append(skill_match.group(1))
+    routed = sorted(set(routed))
+    expected = sorted(name for name in skill_names if name != "frontend-report-triage")
+    missing = sorted(set(expected) - set(routed))
+    extra = sorted(set(routed) - set(expected))
+    for name in missing:
+        add(result, "errors", rel(path, root), None, f"triage failure map missing route for {name}")
+    for name in extra:
+        add(result, "errors", rel(path, root), None, f"triage failure map routes unknown skill: {name}")
+    result["summary"]["triage_skill_routes"] = len(routed)
+
+
+def quoted_yaml_value(text: str, key: str) -> str | None:
+    match = re.search(rf"^\s*{re.escape(key)}:\s*([\"'])(.*?)\1\s*$", text, re.MULTILINE)
+    return match.group(2) if match else None
+
+
+def check_agent_metadata(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
+    checked = 0
+    for skill_dir in skill_dirs:
+        path = skill_dir / "agents" / "openai.yaml"
+        if not path.exists():
+            continue
+        checked += 1
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        description = quoted_yaml_value(text, "short_description")
+        default_prompt = quoted_yaml_value(text, "default_prompt")
+        if not description:
+            add(result, "errors", rel(path, root), None, "OpenAI metadata short_description missing")
+        else:
+            last_word = re.sub(r"[^a-z]+", "", description.lower().split()[-1])
+            if last_word in WEAK_TRAILING_WORDS:
+                add(result, "warnings", rel(path, root), None, "OpenAI metadata short_description appears truncated")
+        if not default_prompt or f"${skill_dir.name}" not in default_prompt:
+            add(result, "errors", rel(path, root), None, f"OpenAI metadata default_prompt must invoke ${skill_dir.name}")
+    result["summary"]["openai_agent_metadata_checked"] = checked
+
+
 def check_overclaims(root: Path, result: dict[str, Any]) -> None:
     allowed_phrases = (
         "review claims",
@@ -261,9 +357,11 @@ def check_overclaims(root: Path, result: dict[str, Any]) -> None:
         "this site is/is not pci compliant",
     )
     for path in markdown_files(root):
-        for idx, line in enumerate(path.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
-            lowered = line.lower()
-            if any(phrase in lowered for phrase in allowed_phrases):
+        lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        for idx, line in enumerate(lines, 1):
+            context = " ".join(lines[max(0, idx - 2) : min(len(lines), idx + 1)]).lower()
+            context = re.sub(r"\s+", " ", context)
+            if any(phrase in context for phrase in allowed_phrases):
                 continue
             if OVERCLAIM_RE.search(line):
                 add(result, "warnings", rel(path, root), idx, "review strong claim/overclaim wording")
@@ -271,7 +369,11 @@ def check_overclaims(root: Path, result: dict[str, Any]) -> None:
 
 def check_script_syntax(root: Path, result: dict[str, Any]) -> None:
     checked: list[str] = []
-    script_paths = [*root.glob("scripts/*"), *root.glob("skills/**/scripts/*")]
+    script_paths = [
+        *root.glob("scripts/*"),
+        *root.glob("skills/**/scripts/*"),
+        *root.glob("skills/**/tests/*"),
+    ]
     for path in sorted(script_paths):
         if not path.is_file() or "__pycache__" in path.parts:
             continue
@@ -280,7 +382,7 @@ def check_script_syntax(root: Path, result: dict[str, Any]) -> None:
             checked.append(rel(path, root))
             if proc.returncode != 0:
                 add(result, "errors", rel(path, root), None, f"bash -n failed: {proc.stderr.strip()}")
-        elif path.suffix in {".mjs", ".js"}:
+        elif path.suffix in {".cjs", ".mjs", ".js"}:
             proc = subprocess.run(["node", "--check", str(path)], cwd=root, text=True, capture_output=True)
             checked.append(rel(path, root))
             if proc.returncode != 0:
@@ -311,11 +413,14 @@ def audit(root: Path) -> dict[str, Any]:
     result["summary"]["skill_count"] = len(skill_names)
     result["summary"]["skill_names"] = skill_names
     check_frontmatter(root, result, skill_dirs)
-    check_readme(root, result, skill_names)
+    check_readmes(root, result, skill_names)
     check_markdown_links(root, result)
     check_source_urls(root, result)
     check_manifests(root, result, skill_names)
     check_backlog_snapshot(root, result)
+    check_evidence_coverage(root, result, skill_names)
+    check_triage_coverage(root, result, skill_names)
+    check_agent_metadata(root, result, skill_dirs)
     check_overclaims(root, result)
     check_script_syntax(root, result)
     result["ok"] = not result["errors"] and not result["warnings"]

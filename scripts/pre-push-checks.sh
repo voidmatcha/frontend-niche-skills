@@ -44,10 +44,14 @@ print(f"skill_count={len(skills)}")
 PY
 
 echo "==> Optional Bats tests"
-if command -v bats >/dev/null 2>&1 && [ -d skills/design-to-code-fidelity/tests ]; then
-  bats skills/design-to-code-fidelity/tests
+BAT_TESTS=()
+while IFS= read -r test_file; do
+  BAT_TESTS+=("$test_file")
+done < <(find skills -type f -path '*/tests/*.bats' | sort)
+if command -v bats >/dev/null 2>&1 && [ "${#BAT_TESTS[@]}" -gt 0 ]; then
+  bats --print-output-on-failure "${BAT_TESTS[@]}"
 else
-  echo "bats not installed or tests missing; skipping optional Bats tests"
+  echo "bats not installed or no Bats tests found; skipping optional Bats tests"
 fi
 
 echo "==> Git diff whitespace"
