@@ -246,7 +246,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml`은 저장소 스크립트에 위임만 하므로, 기여자는 lefthook 없이도 같은 검사를 실행할 수 있습니다. 이 스크립트는 skill 메타데이터, README 링크/개수, plugin manifest, 로컬 마크다운 링크, 과장 표현, 번들 스크립트 문법을 감사하고 `git diff --check`도 실행합니다.
+`lefthook.yml`은 저장소 스크립트에 위임만 하므로, 기여자는 lefthook 없이도 같은 검사를 실행할 수 있습니다. 이 스크립트는 skill 메타데이터, README 링크/개수, plugin manifest, 로컬 마크다운 링크, 과장 표현, 번들 스크립트 문법을 감사하고 `git diff --check`도 실행합니다. 릴리스 전에는 옵트인 검사인 `python3 scripts/audit-skill-pack.py --check-links`로 외부 출처 URL이 여전히 유효한지 확인할 수 있으며, 링크 교체 절차는 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)에 있습니다.
 
 ## FAQ
 

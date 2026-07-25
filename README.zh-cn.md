@@ -248,7 +248,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`。
+`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`。发布前可运行可选检查 `python3 scripts/audit-skill-pack.py --check-links`，验证外部来源 URL 是否仍然有效；链接替换流程见 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)。
 
 ## 常见问题
 

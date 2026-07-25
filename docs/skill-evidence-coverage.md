@@ -50,3 +50,16 @@ This map shows where each skill gets its supporting evidence. It is not a bug li
 ## Update rule
 
 When adding a skill, add at least one row here before promoting it in README. The row can say `Routing only` or `Candidate backlog only`; do not invent validation cases to make coverage look complete.
+
+## Source link maintenance
+
+Run `python3 scripts/audit-skill-pack.py --check-links` before a release. It is opt-in because it needs the network. Treat `404`/`410` errors as release blockers; warnings (bot-blocked hosts, timeouts) are leads to spot-check in a browser once.
+
+For each dead link, decide in this order:
+
+1. **Moved, same content** — the site restructured but the successor page still states the claim: swap the URL, keep the annotation.
+2. **Content exists only historically** — the file or page was removed upstream: pin what the claim referenced (a commit-SHA permalink for repository files, a Web Archive snapshot for pages) and say why in the link annotation.
+3. **Claim no longer holds** — the source moved *and* its current version says something else: this is not a link fix. Re-verify the claim against current primary sources and update or remove the claim and its citation together.
+4. **No replacement found** — never ship a dead or invented citation: soften or remove the claim along with the link.
+
+A replacement URL must both resolve (rerun `--check-links`) and actually state what the claim needs — read the target, do not trust the status code. Record old → new and the reason in the commit message.
