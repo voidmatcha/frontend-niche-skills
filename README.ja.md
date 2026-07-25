@@ -4,11 +4,13 @@
 
 # Frontend Niche Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent_Skills-31-1FC07C?style=flat-square&labelColor=black)](#skills)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&labelColor=black&logo=anthropic&logoColor=white)](https://claude.com/product/claude-code)
-[![Codex](https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&labelColor=black&logo=openai&logoColor=white)](https://github.com/openai/codex)
-[![Frontend edge cases](https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&labelColor=black)](#skills)
-[![License](https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&labelColor=black)](./LICENSE)
+<p align="center">
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
+<a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
+<a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+<a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+</p>
 
 <p align="center">
 <a href="README.md">🇺🇸 English</a> | <a href="README.ko.md">🇰🇷 한국어</a> | <strong>🇯🇵 日本語</strong> | <a href="README.zh-cn.md">🇨🇳 简体中文</a>
@@ -101,12 +103,12 @@ Verification
 
 ## スキル
 
-対象とするフロントエンドの失敗の種類ごとにグループ化された 31 個のスキルです。レポートが雑多だったり複数のドメインにまたがったりする場合は、`frontend-report-triage` から始めてください。
+対象とするフロントエンドの失敗の種類ごとにグループ化された 33 個のスキルです。レポートが雑多だったり複数のドメインにまたがったりする場合は、`frontend-report-triage` から始めてください。
 
 実践的な優先順位:
 
 - **デフォルトで価値の高いチェック:** SSR/ディープリンクのルーティング、フォームバリデーション、日時、認証/セキュリティ、決済/エクスポートの境界、オーバーレイ、アクセシビリティ、セマンティック HTML。よくあるバグや、リリース後に高くつくバグを捕まえます。
-- **ホスト/プロダクト固有のチェック:** WebView、CJK/IME、i18n/RTL、決済ページのエビデンスは、プロダクトが実際にそれらのサーフェスを出荷している場合に最も価値があります。
+- **ホスト/プロダクト固有のチェック:** WebView、ブラウザの iframe/embed、CJK/IME、i18n/RTL、決済ページのエビデンスは、プロダクトが実際にそれらのサーフェスを出荷している場合に最も価値があります。
 - **品質/メンテナンスのチェック:** デザイン忠実度とコンポーネント抽出は、レビューの悩みがランタイムのバグではなく、ビジュアルのずれ、AI 生成 UI、早すぎる抽象化である場合に役立ちます。
 
 ソースの方針: README にはルーティングとエビデンスのドキュメントを列挙し、詳細な引用は各スキルの `## Sources` ブロックまたは `references/*.md` ファイルに置いています。README がすべてのアップストリーム URL を重複して持たないためです。
@@ -122,6 +124,7 @@ Verification
 | スキル | 使いどころ |
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | ネイティブ WebView 内に読み込まれるページの構築・デバッグ: ブリッジのコントラクト、セーフエリア/ビューポートのレイアウト、ライフサイクル、ヒットテスト vs ペイント/コンポジット、アプリホスト固有の癖。 |
+| [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | ブラウザの iframe/widget の構築・デバッグ: 親-ゲスト間メッセージ、埋め込み許可ヘッダー、sandbox/Permissions Policy、READY/init ハンドシェイク、動的サイズ、分割ストレージ、破棄。 |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | ルーターのハイドレーション準備が整う前にクエリパラメータを失ったり、誤った状態に着地したりする SPA/SSR ディープリンクのデバッグ。 |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | ロケール/時刻/乱数/ブラウザ専用 API、ストレージ、認証状態、レスポンシブ分岐、データレースに起因するハイドレーション不一致の診断。 |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | 接続断をまたぐ WebSocket/SSE クライアントのデバッグ: 再接続のバックオフ/ジッター、SSE の Last-Event-ID/カーソルによる再開、順序乱れ/重複/欠落のあるデルタ、ハートビート/ゾンビ検出、bufferedAmount によるバックプレッシャー、オープン中のソケットでの認証更新。 |
@@ -154,6 +157,7 @@ Verification
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form、Formik、Final Form、vee-validate、Valibot、カスタム JS フォームフロー: 古いエラーの残留、無効化されたままの送信ボタン、非同期/サーバーのレース、サーバーのフィールドエラーのマッピング。 |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | ブラウザ向け認証の堅牢化: returnTo リダイレクト、OAuth/パスキー/autocomplete のコントラクト、トークンストレージの境界、CSRF のエッジケース。 |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | フロントエンドの XSS、DOM インジェクション、サニタイザーの誤用、CSP、サードパーティスクリプト、ストレージ、URL パースの基本のチェック。 |
+| [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | フロントエンド所有の BFF/API プロキシをレビュー: クライアント選択ターゲットの SSRF、route/method/auth capability allowlist、別 ingress のドリフト、multipart の上限と boundary、redirect/error 処理、upstream の business-flow 責任。 |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | チェックアウト/決済ページのクライアントエビデンスのレビュー: ホステッドフィールド vs 直接の PAN 取り扱い、ランタイムスクリプトのインベントリ、サードパーティスクリプトのリスク、CSP/SRI/ヘッダーのエビデンス、PCI DSS エビデンスのギャップ。 |
 | [`optimistic-update-rollback-contracts`](./skills/optimistic-update-rollback-contracts/SKILL.md) | 楽観的 UI ミューテーション: サーバー確認前の変更適用、一時 ID vs サーバー ID、失敗時のロールバック、refetch/invalidation との整合、レスポンスとバックグラウンド refetch のレース。 |
 | [`file-ingest-contracts`](./skills/file-ingest-contracts/SKILL.md) | ドラッグ&ドロップ、ファイル入力、ペーストによるページへのファイル取り込み: drop イベントのキャンセル/`dropEffect`、dragenter/leave のちらつき、`DataTransfer` の items vs files、ディレクトリアップロード、`accept`/`file.type` の信頼、オブジェクト URL プレビューのライフサイクル。 |
@@ -184,6 +188,7 @@ Verification
 | 失敗シグナル | 最初に使うスキル | 最初に問うべきこと |
 | --- | --- | --- |
 | ページが React Native WebView、WKWebView、Android WebView、Flutter WebView、アプリ内ブラウザで動作しており、セーフエリア、キーボード、復帰（resume）、ブリッジ、ペイントがデスクトップ Chrome と異なる。 | `webview-bridge-pages` | これはレイアウト、ヒットテスト、ペイント/コンポジット、ブリッジのタイミング、ホストのライフサイクルのどれか？ |
+| ブラウザの iframe/widget が空になる、偽装メッセージを受ける、READY/init を失う、サイズ変更でちらつく、必要な機能が使えない、または埋め込みログインが消える。 | `iframe-embed-contracts` | 正確な親/ゲスト origin、配信された frame ポリシー、認証済みメッセージのハンドシェイク、サイズプロトコル、ストレージモードは何か？ |
 | HTML 構造そのものが疑わしい: div ボタン、誤ったリンク、ラベル/見出し/リスト、不正なインタラクティブ要素のネスト。 | `semantic-markup-contracts` | ARIA、CSS、JavaScript の前に、ネイティブ HTML でこれを表現できるか？ |
 | モーダル、ドロワー、シート、ポップオーバー、メニュー、コマンドパレットの見た目は正しいのに、フォーカス、背景の操作、Escape/バックドロップ、スクロールロックが機能しない。 | `overlay-focus-scroll-contracts` | 開いたとき、ネストして開いたとき、閉じたとき、アンマウント時、ルート変更時に何が起きるか？ |
 | ダイアログ、メニュー、コンボボックス、タブ、カスタムウィジェットにアクセシビリティのリグレッションカバレッジが必要。 | `a11y-contract-testing` | テストでロール、名前、状態、フォーカスのコントラクトをアサートできるか？ |
@@ -193,6 +198,7 @@ Verification
 | WebSocket または SSE クライアントが接続断をまたいで壊れる: 再接続ストーム、イベントの重複/欠落、順序の乱れたデルタ、OPEN なのに死んでいるソケットで固まる UI、バッファの肥大化、ハンドシェイク後に期限切れになったトークン。 | `realtime-transport-contracts` | これは再接続/バックオフ、再開/カーソル、デルタの畳み込み、生存確認/ハートビート、バックプレッシャー、ソケットの再認証のどれか？ |
 | ブラウザ向け認証 UI に returnTo、OAuth/パスキー、autocomplete、OTP、トークンストレージ、CSRF エッジの問題がある。 | `frontend-auth-flow-contracts` | 認証フローが守るべきブラウザのコントラクトは何か？ |
 | 決済ページの外で、生の HTML、サニタイザー、CSP、opener、ストレージ、URL パース、サードパーティスクリプトのリスクが現れる。 | `frontend-security-baseline` | ブラウザセキュリティ上の具体的な source-to-sink 経路があるか？ |
+| フロントエンド所有のサーバールートがクライアント選択の path、upload、header、business action を upstream API にプロキシする。 | `bff-proxy-security-contracts` | どの route-method-auth capability が公開され、別 ingress から迂回できるか？ |
 | チェックアウト/決済ページにクライアントサイドのエビデンスが必要: ホステッドフィールド、直接の PAN/CVV 取り扱い、ランタイムスクリプト、CSP/SRI/ヘッダーの制御。 | `payment-page-client-security` | 決済データの境界とランタイムスクリプトサーフェスを示すエビデンスは何か？ |
 | CSV/Excel エクスポート、ファイルダウンロード、Blob URL、クリップボード書き込み、生成されるファイル名、エクスポートスキーマが関係している。 | `download-export-safety` | 何がブラウザの外に出るのか、そしてスプレッドシートのセル、オブジェクト URL、クリップボードの失敗、ファイル名はどう処理されているか？ |
 | 日付のずれ、タイムゾーン/DST の問題、日付のみの入力、`datetime-local` のラウンドトリップ、相対時刻、サーバー/クライアントの時計の不一致。 | `datetime-correctness` | その値はインスタント、ローカル日時、日付のみの値、フォーマット済み表示文字列のどれか？ |

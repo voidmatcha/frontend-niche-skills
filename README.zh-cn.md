@@ -4,11 +4,13 @@
 
 # Frontend Niche Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent_Skills-31-1FC07C?style=flat-square&labelColor=black)](#skills)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&labelColor=black&logo=anthropic&logoColor=white)](https://claude.com/product/claude-code)
-[![Codex](https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&labelColor=black&logo=openai&logoColor=white)](https://github.com/openai/codex)
-[![Frontend edge cases](https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&labelColor=black)](#skills)
-[![License](https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&labelColor=black)](./LICENSE)
+<p align="center">
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
+<a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
+<a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+<a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+</p>
 
 <p align="center">
 <a href="README.md">🇺🇸 English</a> | <a href="README.ko.md">🇰🇷 한국어</a> | <a href="README.ja.md">🇯🇵 日本語</a> | <strong>🇨🇳 简体中文</strong>
@@ -101,12 +103,12 @@ Verification
 
 ## 技能
 
-31 个技能，按其针对的前端失败类型分组。如果报告混乱或跨越多个领域，从 `frontend-report-triage` 开始。
+33 个技能，按其针对的前端失败类型分组。如果报告混乱或跨越多个领域，从 `frontend-report-triage` 开始。
 
 实用优先级：
 
 - **默认高价值检查：** SSR/深链接路由、表单校验、日期时间、鉴权/安全、支付/导出边界、浮层、可访问性以及语义化 HTML。这些检查捕捉的缺陷要么常见，要么发布后代价高昂。
-- **宿主/产品特定检查：** WebView、CJK/IME、i18n/RTL 以及支付页面证据，在产品确实交付这些界面时最有价值。
+- **宿主/产品特定检查：** WebView、浏览器 iframe/embed、CJK/IME、i18n/RTL 以及支付页面证据，在产品确实交付这些界面时最有价值。
 - **质量/维护检查：** 设计还原度和组件提取判断适用于审查痛点是视觉漂移、AI 生成的 UI 或过早抽象，而非运行时缺陷的情况。
 
 来源模型：README 列出路由与证据文档；详细引用位于每个技能的 `## Sources` 块或其 `references/*.md` 文件中，因此 README 不会重复每个上游 URL。
@@ -122,6 +124,7 @@ Verification
 | 技能 | 适用场景 |
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | 构建或调试加载在原生 WebView 内的页面：桥接契约、安全区域/视口布局、生命周期、命中测试与绘制/合成的区别、应用宿主的各种怪癖。 |
+| [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | 构建或调试浏览器 iframe/widget：父页-客体消息、可嵌入响应头、sandbox/Permissions Policy、READY/init 握手、动态尺寸、分区存储与销毁。 |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | 调试在路由器水合就绪之前丢失查询参数或落在错误状态的 SPA/SSR 深链接。 |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | 诊断由 locale/时间/随机性/仅浏览器 API、存储、鉴权状态、响应式分支或数据竞态引起的水合不匹配。 |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | 调试经历连接中断的 WebSocket/SSE 客户端：重连退避/抖动、SSE Last-Event-ID/游标续传、乱序/重复/有缺口的增量、心跳/僵尸连接检测、bufferedAmount 背压，以及在已打开的套接字上刷新鉴权。 |
@@ -154,6 +157,7 @@ Verification
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form、Formik、Final Form、vee-validate、Valibot 或自定义 JS 表单流程：陈旧的错误信息、被禁用的提交按钮、异步/服务端竞态、服务端字段错误映射。 |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 加固面向浏览器的鉴权：returnTo 重定向、OAuth/passkey/autocomplete 契约、token 存储边界、CSRF 边缘情况。 |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | 检查前端 XSS、DOM 注入、sanitizer 误用、CSP、第三方脚本、存储以及 URL 解析基础。 |
+| [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | 审查前端拥有的 BFF/API 代理：客户端选择目标造成的 SSRF、route/method/auth capability allowlist、替代 ingress 漂移、multipart 限额与 boundary、redirect/error 处理，以及 upstream business-flow 责任。 |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | 审查结账/支付页面的客户端证据：托管字段与直接处理 PAN 的区别、运行时脚本清单、第三方脚本风险、CSP/SRI/响应头证据、PCI DSS 证据缺口。 |
 | [`optimistic-update-rollback-contracts`](./skills/optimistic-update-rollback-contracts/SKILL.md) | 乐观 UI 变更：在服务器确认前先应用改动、临时 ID 与服务端 ID、失败时回滚、通过重新获取/失效进行协调，以及响应与后台重新获取之间的竞态。 |
 | [`file-ingest-contracts`](./skills/file-ingest-contracts/SKILL.md) | 通过拖放、文件输入框或粘贴把文件带入页面：drop 事件取消/`dropEffect`、dragenter/leave 闪烁、`DataTransfer` 的 items 与 files 之别、目录上传、对 `accept`/`file.type` 的信任问题，以及 Object URL 预览的生命周期。 |
@@ -184,6 +188,7 @@ Verification
 | 失败信号 | 起始技能 | 首先要问的问题 |
 | --- | --- | --- |
 | 页面运行在 React Native WebView、WKWebView、Android WebView、Flutter WebView 或应用内浏览器中；安全区域、键盘、恢复（resume）、桥接或绘制与桌面 Chrome 表现不同。 | `webview-bridge-pages` | 这是布局、命中测试、绘制/合成、桥接时序，还是宿主生命周期问题？ |
+| 浏览器 iframe/widget 为空、接受伪造消息、丢失 READY/init、调整尺寸时闪烁、缺少所需能力，或丢失嵌入式登录状态。 | `iframe-embed-contracts` | 准确的父页/客体 origin、实际下发的 frame 策略、已认证消息握手、尺寸协议和存储模式分别是什么？ |
 | HTML 结构本身可疑：div 按钮、用错的链接、标签/标题/列表问题、非法的交互元素嵌套。 | `semantic-markup-contracts` | 在动用 ARIA、CSS 或 JavaScript 之前，原生 HTML 能否表达这个语义？ |
 | 模态框、抽屉、Sheet、Popover、菜单或命令面板看起来正常，但焦点、背景交互、Escape/遮罩或滚动锁定失效。 | `overlay-focus-scroll-contracts` | 在打开、嵌套打开、关闭、卸载和路由切换时分别发生了什么？ |
 | 对话框、菜单、组合框、标签页或自定义控件需要可访问性回归覆盖。 | `a11y-contract-testing` | 测试能否断言角色、名称、状态和焦点契约？ |
@@ -193,6 +198,7 @@ Verification
 | WebSocket 或 SSE 客户端在连接中断后出问题：重连风暴、事件重复/丢失、乱序增量、套接字状态为 OPEN 实际已死导致 UI 冻结、缓冲区增长，或握手后 token 过期。 | `realtime-transport-contracts` | 这是重连/退避、续传/游标、增量折叠、存活/心跳、背压，还是套接字重新鉴权问题？ |
 | 面向浏览器的鉴权 UI 存在 returnTo、OAuth/passkey、autocomplete、OTP、token 存储或 CSRF 边缘问题。 | `frontend-auth-flow-contracts` | 鉴权流程应当保持哪个浏览器契约？ |
 | 在支付页面之外出现原始 HTML、sanitizer、CSP、opener、存储、URL 解析或第三方脚本风险。 | `frontend-security-baseline` | 是否存在具体的浏览器安全 source-to-sink 路径？ |
+| 前端拥有的服务器路由把客户端选择的 path、upload、header 或 business action 代理到 upstream API。 | `bff-proxy-security-contracts` | 暴露了哪个 route-method-auth capability，其他 ingress 能否绕过它？ |
 | 结账/支付页面需要客户端证据：托管字段、直接处理 PAN/CVV、运行时脚本、CSP/SRI/响应头控制。 | `payment-page-client-security` | 什么证据能展示支付数据边界和运行时脚本暴露面？ |
 | 涉及 CSV/Excel 导出、文件下载、Blob URL、剪贴板写入、生成的文件名或导出模式（schema）。 | `download-export-safety` | 什么数据离开了浏览器？电子表格单元格、Object URL、剪贴板失败和文件名是如何处理的？ |
 | 日期偏移、时区/夏令时问题、仅日期输入、`datetime-local` 往返转换、相对时间，或服务端/客户端时钟不一致。 | `datetime-correctness` | 这个值是时间瞬间（instant）、本地日期时间、仅日期值，还是格式化后的显示字符串？ |

@@ -1,7 +1,7 @@
 {
   "name": "frontend-niche-skills",
   "version": "0.1.0",
-  "description": "Evidence-oriented frontend agent skills for edge cases broad review checklists often miss: WebView pages, semantic HTML, overlays, accessibility tests, CJK/IME input, deep-link hydration, i18n layout, auth flows, frontend security, payment-page evidence, downloads/exports, datetime, SSR hydration, form validation, design fidelity, component extraction, and report triage.",
+  "description": "Evidence-oriented, framework-agnostic frontend skills for recurrent browser and host-edge failures across WebViews/iframes, rendering, interaction, data, accessibility, security, performance, offline, exports, and design verification.",
   "author": {
     "name": "YONGJAE LEE"
   },
@@ -24,6 +24,11 @@
     "visualviewport",
     "webview-compositing",
     "hit-test",
+    "iframe",
+    "embed",
+    "postmessage",
+    "sandbox",
+    "permissions-policy",
     "semantic-html",
     "html-semantics",
     "markup",
@@ -135,7 +140,7 @@
   "interface": {
     "displayName": "Frontend Niche Skills",
     "shortDescription": "Frontend edge-case skills for Codex.",
-    "longDescription": "Evidence-oriented frontend agent skills for edge cases broad review checklists often miss: WebView pages, semantic HTML, overlays, accessibility tests, CJK/IME input, deep-link hydration, i18n layout, auth flows, frontend security, payment-page evidence, downloads/exports, datetime, SSR hydration, form validation, design fidelity, component extraction, and report triage.",
+    "longDescription": "Evidence-oriented, framework-agnostic frontend skills for recurrent browser and host-edge failures across WebViews/iframes, rendering, interaction, data, accessibility, security, performance, offline, exports, and design verification.",
     "developerName": "YONGJAE LEE",
     "category": "Productivity",
     "capabilities": [

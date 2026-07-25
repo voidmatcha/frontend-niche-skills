@@ -47,16 +47,12 @@ fi
 [ -f "$REF" ] || { echo "ERROR: reference not found: $REF" >&2; exit 2; }
 [ -f "$IMPL" ] || { echo "ERROR: render not found: $IMPL" >&2; exit 2; }
 
-TMP_FILES=()
+TMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/visual-diff-XXXXXX") || exit 2
 # shellcheck disable=SC2329 # Invoked indirectly by the EXIT trap.
-cleanup() { [ "${#TMP_FILES[@]}" -eq 0 ] || rm -f "${TMP_FILES[@]}"; }
+cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 mktemp_png() {
-  local p
-  p=$(mktemp "${TMPDIR:-/tmp}/visual-diff-XXXXXX") || exit 2
-  p="${p}.png"
-  TMP_FILES+=("$p")
-  printf '%s' "$p"
+  printf '%s/%s.png' "$TMP_DIR" "$1"
 }
 
 read -r REF_W REF_H <<EOF_SIZE
@@ -82,8 +78,8 @@ if [ "$REF_SIZE" != "$IMPL_SIZE" ]; then
   echo "SIZE_DELTA=${DW}x${DH}px (render-ref; ref=$REF_SIZE render=$IMPL_SIZE)"
   echo "WARN: dimension mismatch — AE/STRUCT are non-strict until framing is fixed"
   echo "NORMALIZE=CROP_COMMON_TOP_LEFT ${CROP_W}x${CROP_H}+0+0"
-  REF_CROP=$(mktemp_png)
-  IMPL_CROP=$(mktemp_png)
+  REF_CROP=$(mktemp_png ref-crop)
+  IMPL_CROP=$(mktemp_png impl-crop)
   if ! "${MAGICK[@]}" "$REF" -crop "${CROP_W}x${CROP_H}+0+0" +repage "$REF_CROP"; then
     echo "ERROR: failed to crop reference image" >&2
     exit 2
@@ -136,8 +132,8 @@ fi
 STRUCT=UNKNOWN
 MAX_BLOCK=0
 MAX_AT=none
-MASK=$(mktemp_png)
-ERODED=$(mktemp_png)
+MASK=$(mktemp_png mask)
+ERODED=$(mktemp_png eroded)
 
 if ! "${MAGICK[@]}" "$REF" "$IMPL" -compose difference -composite \
   -fuzz "$FUZZ" -threshold 0 -alpha off -type bilevel "$MASK"; then

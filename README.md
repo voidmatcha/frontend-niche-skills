@@ -4,11 +4,13 @@
 
 # Frontend Niche Skills
 
-[![Agent Skills](https://img.shields.io/badge/Agent_Skills-31-1FC07C?style=flat-square&labelColor=black)](#skills)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&labelColor=black&logo=anthropic&logoColor=white)](https://claude.com/product/claude-code)
-[![Codex](https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&labelColor=black&logo=openai&logoColor=white)](https://github.com/openai/codex)
-[![Frontend edge cases](https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&labelColor=black)](#skills)
-[![License](https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&labelColor=black)](./LICENSE)
+<p align="center">
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
+<a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
+<a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+<a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache--2.0-37B0E6?style=flat-square&amp;labelColor=black" /></a>
+</p>
 
 <p align="center">
 <strong>🇺🇸 English</strong> | <a href="README.ko.md">🇰🇷 한국어</a> | <a href="README.ja.md">🇯🇵 日本語</a> | <a href="README.zh-cn.md">🇨🇳 简体中文</a>
@@ -99,12 +101,12 @@ Pattern value: make the agent test the right hypothesis before applying another 
 
 ## Skills
 
-31 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
+32 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
 
 Practical priority:
 
 - **Default high-value checks:** SSR/deep-link routing, form validation, datetime, auth/security, payment/export boundaries, overlays, accessibility, and semantic HTML. These catch bugs that are common or expensive after release.
-- **Host/product-specific checks:** WebView, CJK/IME, i18n/RTL, and payment-page evidence are most valuable when the product actually ships those surfaces.
+- **Host/product-specific checks:** WebView, browser iframe/embed, CJK/IME, i18n/RTL, and payment-page evidence are most valuable when the product actually ships those surfaces.
 - **Quality/maintenance checks:** design fidelity and component extraction are useful when review pain is visual drift, AI-generated UI, or premature abstraction rather than a runtime bug.
 
 Source model: README lists routing and evidence documents; detailed citations live in each skill's `## Sources` block or its `references/*.md` files so the README does not duplicate every upstream URL.
@@ -120,6 +122,7 @@ Source model: README lists routing and evidence documents; detailed citations li
 | Skill | Use when |
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | Building or debugging pages loaded inside native WebViews: bridge contracts, safe-area/viewport layout, lifecycle, hit-test vs paint/compositing, app-host quirks. |
+| [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | Building or debugging browser iframe/widgets: parent-guest messaging, embeddability headers, sandbox/Permissions Policy, READY/init handshakes, dynamic sizing, partitioned storage, and teardown. |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | Debugging SPA/SSR deep links that lose query params or land on the wrong state before router hydration is ready. |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | Diagnosing hydration mismatches from locale/time/randomness/browser-only APIs, storage, auth state, responsive branches, or data races. |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | Debugging a WebSocket/SSE client across a connection drop: reconnect backoff/jitter, SSE Last-Event-ID/cursor resume, out-of-order/duplicate/gapped deltas, heartbeat/zombie detection, bufferedAmount backpressure, and refreshing auth on an open socket. |
@@ -152,6 +155,7 @@ Source model: README lists routing and evidence documents; detailed citations li
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form, Formik, Final Form, vee-validate, Valibot, or custom JS form flows: stale errors, disabled submits, async/server races, server field-error mapping. |
 | [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Hardening browser-facing auth: returnTo redirects, OAuth/passkey/autocomplete contracts, token storage boundaries, CSRF edges. |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | Checking frontend XSS, DOM injection, sanitizer misuse, CSP, third-party scripts, storage, and URL parsing basics. |
+| [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | Reviewing frontend-owned BFF/API proxies: client-selected target SSRF, route/method/auth capability allowlists, alternate ingress drift, multipart budgets/boundaries, redirect/error handling, and upstream business-flow ownership. |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | Reviewing checkout/payment page client evidence: hosted-field vs direct PAN handling, runtime script inventory, third-party script risk, CSP/SRI/header evidence, PCI DSS evidence gaps. |
 | [`optimistic-update-rollback-contracts`](./skills/optimistic-update-rollback-contracts/SKILL.md) | Optimistic UI mutations: applying a change before the server confirms, temp vs server IDs, rollback on failure, reconciling with refetch/invalidation, and races between the response and a background refetch. |
 | [`file-ingest-contracts`](./skills/file-ingest-contracts/SKILL.md) | Bringing files into the page via drag-drop, file input, or paste: drop-event cancel/`dropEffect`, dragenter/leave flicker, `DataTransfer` items vs files, directory upload, `accept`/`file.type` trust, and object-URL preview lifecycle. |
@@ -182,6 +186,7 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 | Failure signal | Start with | First question to ask |
 | --- | --- | --- |
 | Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app browser; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
+| A browser iframe/widget is blank, accepts spoofed messages, loses READY/init, flickers while resizing, lacks a required capability, or loses embedded sign-in. | `iframe-embed-contracts` | What are the exact parent/guest origins, delivered frame policies, authenticated message handshake, sizing protocol, and storage mode? |
 | HTML structure itself looks suspect: div buttons, wrong links, labels/headings/lists, invalid interactive nesting. | `semantic-markup-contracts` | Can native HTML express this before ARIA, CSS, or JavaScript? |
 | Modal, drawer, sheet, popover, menu, or command palette looks fine but focus, background interaction, Escape/backdrop, or scroll lock fails. | `overlay-focus-scroll-contracts` | What happens on open, nested open, close, unmount, and route change? |
 | Dialog, menu, combobox, tab, or custom widget needs accessibility regression coverage. | `a11y-contract-testing` | Can a test assert role, name, state, and focus contract? |
@@ -191,6 +196,7 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 | WebSocket or SSE client breaks across a connection drop: reconnect storm, duplicated/missing events, out-of-order deltas, a frozen UI on an OPEN-but-dead socket, buffer growth, or a token that expired after the handshake. | `realtime-transport-contracts` | Is this reconnect/backoff, resume/cursor, delta folding, liveness/heartbeat, backpressure, or socket re-auth? |
 | Browser-facing auth UI has returnTo, OAuth/passkey, autocomplete, OTP, token storage, or CSRF-edge issues. | `frontend-auth-flow-contracts` | What browser contract should the auth flow preserve? |
 | Raw HTML, sanitizer, CSP, opener, storage, URL parsing, or third-party script risk appears outside a payment page. | `frontend-security-baseline` | Is there a concrete browser security source-to-sink path? |
+| A frontend-owned server route proxies client-selected paths, uploads, headers, or business actions to an upstream API. | `bff-proxy-security-contracts` | What route-method-auth capability is exposed, and can another ingress bypass it? |
 | Checkout/payment page needs client-side evidence: hosted fields, direct PAN/CVV handling, runtime scripts, CSP/SRI/header controls. | `payment-page-client-security` | What evidence shows the payment data boundary and runtime script surface? |
 | CSV/Excel export, file download, Blob URL, clipboard write, generated filename, or export schema is involved. | `download-export-safety` | What leaves the browser, and how are spreadsheet cells, Object URLs, clipboard failures, and filenames handled? |
 | Date shifted, timezone/DST issue, date-only input, `datetime-local` round trip, relative time, or server/client clock disagreement. | `datetime-correctness` | Is the value an instant, local date-time, date-only value, or formatted display string? |

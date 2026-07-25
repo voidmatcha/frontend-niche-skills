@@ -4,7 +4,7 @@
 
 ## Why it exists
 
-18 focused skills can feel like too much when a raw user report mentions several domains at once:
+32 focused skills can feel like too much when a raw user report mentions several domains at once:
 
 - "The modal is visible, but keyboard focus is behind it."
 - "Korean users press Enter and search submits too early."

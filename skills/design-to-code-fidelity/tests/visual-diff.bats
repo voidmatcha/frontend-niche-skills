@@ -61,3 +61,9 @@ teardown() {
   [ "$status" -eq 2 ]
   [[ "$output" == *"reference not found"* ]]
 }
+
+@test "visual-diff cleans temporary structural images" {
+  run env TMPDIR="$TMPDIR_TEST" STRUCT_GATE=1 bash "$SCRIPT" "$REF" "$SAME" "$TMPDIR_TEST/diff-cleanup.png"
+  [ "$status" -eq 0 ]
+  [ -z "$(find "$TMPDIR_TEST" -maxdepth 1 -name 'visual-diff-*' -print)" ]
+}

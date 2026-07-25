@@ -1,4 +1,4 @@
 interface:
   display_name: "Core Web Vitals Performance Contracts"
-  short_description: "A page's Core Web Vitals fail in the field or lab and you need to attribute the"
+  short_description: "Attribute failing Core Web Vitals to concrete LCP, CLS, INP, or TTFB causes before fixing."
   default_prompt: "Use $core-web-vitals-performance-contracts to review the code for the failure modes it covers, reporting only PR-worthy findings with file:line evidence and the narrowest fix."

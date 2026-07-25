@@ -12,6 +12,14 @@ Report: "Button still works after app resume, but text disappears in React Nativ
 - Evidence: native WebView video, DOM box metrics, hit-test result, screenshot after resume.
 - First verification: confirm whether box receives taps while child paint disappears.
 
+### Browser iframe handshake and sizing
+
+Report: "Our embedded widget is blank for some partners; when it does load, the iframe height flickers and login disappears in Safari."
+
+- Likely classes: `iframe-embed-contracts` high; `frontend-security-baseline` medium only if the underlying cookie/CSP policy needs a site-wide change.
+- Evidence: parent iframe attributes, guest response headers, exact parent/guest origins, READY/init message trace, height messages, and third-party storage behavior.
+- First verification: reproduce with two real origins and reject a wrong-origin/wrong-source message before changing layout code.
+
 ### Modal warning and scroll leak
 
 Report: "Console says aria-hidden blocked because focused element is hidden; after closing drawer page cannot scroll."

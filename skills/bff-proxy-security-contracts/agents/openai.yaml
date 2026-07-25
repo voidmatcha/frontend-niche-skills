@@ -1,0 +1,4 @@
+interface:
+  display_name: "BFF Proxy Security Contracts"
+  short_description: "Frontend-owned server proxy and upload trust boundaries."
+  default_prompt: "Use $bff-proxy-security-contracts to run a pre-release or remediation review of this frontend-owned API/BFF proxy for target SSRF, route-method-auth capability allowlists, alternate ingress drift, multipart budgets/boundaries, redirect/error leakage, adversarial proof, and code-local vs upstream/operational residual ownership."

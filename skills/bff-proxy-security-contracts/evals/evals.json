@@ -1,0 +1,30 @@
+{
+  "skill_name": "bff-proxy-security-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review a SvelteKit server endpoint that maps `?service=` to one configured API origin. A separate export route can reach the same upstream operation. Determine whether its SSRF and authorization controls are complete without redesigning the whole backend.",
+      "expected_output": "Inventories both ingress paths, prefers a server-owned service map or canonical relative-route allowlist, disables or revalidates redirects, checks policy equivalence, and proposes OOB plus state-invariant tests."
+    },
+    {
+      "id": 2,
+      "prompt": "Our upload proxy already limits files to 5 MB and one file. Is that enough? It parses with Formidable, rebuilds Node form-data, then Axios forwards it.",
+      "expected_output": "Checks max fields and total field bytes, regenerated multipart boundary, minimum header forwarding, temp-file cleanup, and avoids claiming browser MIME/type checks are the server security boundary."
+    },
+    {
+      "id": 3,
+      "prompt": "A coupon endpoint now caps one request at five items, but a user can repeat valid five-item requests. The frontend-owned server route runs across multiple serverless instances. Should we add an in-memory limiter and call the root cause fixed?",
+      "expected_output": "Rejects a process-local limiter as authoritative, distinguishes a per-request cap from repeatable business-flow abuse, and assigns persistent replay/idempotency, account quota, concurrency control, and distributed rate limiting to the shared upstream or store."
+    },
+    {
+      "id": 4,
+      "prompt": "Review a Remix action that accepts a service name, forwards most incoming headers to a configured upstream, and has a separate streaming route for the same operation. Decide what belongs in the frontend-owned server boundary without turning it into a full API gateway.",
+      "expected_output": "Treats both routes as public server ingress, maps them to one capability contract, keeps targets server-owned, minimizes forwarded headers, applies the same auth and method rules across normal and streaming paths, and avoids adding a policy framework without evidence."
+    },
+    {
+      "id": 5,
+      "prompt": "Run a pre-release security gate on a frontend repository that has a JSON BFF route, a multipart upload relay, a value-granting action, and a server credential that may have been exposed in historical logs. No pentest report exists yet. Decide what must block release, what compatibility cases must pass, and what can only be assigned to upstream or operations.",
+      "expected_output": "Traces client-controlled sources to outbound sinks, inventories alternate ingress, blocks arbitrary destinations and missing route-method-auth/body contracts, requires pre-forward/OOB/state-invariant plus positive compatibility proof, and separates repeated valid business-flow abuse, credential rotation, and log investigation from code-local completion."
+    }
+  ]
+}

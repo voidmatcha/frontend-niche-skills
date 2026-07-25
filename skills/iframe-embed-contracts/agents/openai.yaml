@@ -1,0 +1,4 @@
+interface:
+  display_name: "Iframe Embed Contracts"
+  short_description: "Harden browser iframe host-guest contracts."
+  default_prompt: "Use $iframe-embed-contracts to review this iframe integration's embed policy, messaging, capability, sizing, storage, and teardown contracts."

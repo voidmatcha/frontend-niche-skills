@@ -18,13 +18,23 @@ All notable changes to this project are documented here. This project follows th
 - `view-transitions-contracts` (review lens) for View Transitions API bugs: duplicate `view-transition-name` silent aborts, unpainted/stale snapshots (Suspense/decode), `prefers-reduced-motion` not auto-honored, React Transition-wrapping / stray `flushSync`, ghost names, and top-layer overlay stacking.
 - `css-transition-animation-contracts` (review lens) for enter/exit transitions of dialogs/popovers/top-layer (`@starting-style`, `transition-behavior: allow-discrete`, `overlay`, `::backdrop`) and cleanup/focus gated on a transition that never fires (`transitionend` vs `getAnimations().finished`, `transitioncancel`, ESC/Firefox no-event).
 - `responsive-image-contracts` (review lens) for `srcset`/`sizes` vs the real layout, honest intrinsic-width labels, LCP `eager`/`fetchpriority`, `picture` art-direction, and `width`/`height` for CLS (routes mechanical checks to RespImageLint / Markuplint).
+- `core-web-vitals-performance-contracts` for attributing LCP, CLS, INP, and TTFB failures to concrete elements, shifts, and main-thread work before fixing.
+- `frontend-data-fetching-cache-contracts` for client-cache staleness, query-key drift, request waterfalls, refetch storms, and pagination/revalidation bugs.
+- `async-effect-race-contracts` for raw async effect races, missing cleanup/AbortController handling, StrictMode double-invoke traps, and stale closures.
+- `pwa-offline-cache-contracts` for service-worker/offline cache update, stale-build, precache, eviction, navigation fallback, and authenticated-response caching risks.
+- `large-list-data-grid-contracts` for virtualized list/data-grid scroll, accessibility totals, focus, find-in-page, pinned-column/header, and production-vs-test drift.
+- `iframe-embed-contracts` for browser iframe/widget host-guest contracts: embeddability headers, sandbox/Permissions Policy, authenticated postMessage handshakes, dynamic sizing, partitioned storage, and teardown.
+- `bff-proxy-security-contracts` for frontend-owned server proxies: target/path SSRF, route-method-auth capability allowlists, alternate ingress drift, multipart budgets/boundaries, redirect/error handling, and upstream-vs-gateway residual ownership.
 - Repo maintainer checks in `scripts/audit-skill-pack.py`, with `lefthook.yml` delegating pre-push checks to `scripts/pre-push-checks.sh`.
 
 ### Changed
 
 - `a11y-contract-testing` now includes virtualized-widget and reduced-motion contract notes without becoming a broad audit checklist.
 - `i18n-copy-and-layout` clarifies that mixed-direction user text may need `dir="auto"` rather than a standalone RTL skill.
-- README and plugin manifests now document 26 bundled skills, adding realtime transport, money/precision, optimistic-update rollback, client-error observability, file-ingest, and the markup/transition review lenses (view transitions, CSS transition/animation lifecycle, responsive images).
+- `component-extraction-judgment` now applies the same evidence gate to React, Vue, Svelte, Web Components, and similar component systems instead of declaring a React-only scope.
+- `frontend-report-triage` now routes every public sibling skill, with a maintainer audit that fails closed when a new skill is omitted from its failure map.
+- `iframe-embed-contracts` now records the closest public prior art and includes a live two-origin browser fixture for message authentication, replayable init, bounded grow/shrink sizing, teardown, and `frame-ancestors` rejection.
+- README and plugin manifests now document 33 bundled skills, adding BFF/API proxy boundaries and iframe/embed contracts alongside realtime transport, money/precision, optimistic-update rollback, client-error observability, file-ingest, performance/cache/offline/windowing skills, and the markup/transition review lenses.
 - Publication wording stays evidence-framed around risks, candidates, positive controls, and local verification instead of certification or confirmed-bug claims.
 
 ### Fixed

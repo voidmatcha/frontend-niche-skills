@@ -21,6 +21,7 @@
 //   TIMEZONE_ID=Asia/Seoul                Browser timezone.
 //   COLOR_SCHEME=light|dark|no-preference Browser color scheme.
 //   REDUCED_MOTION=reduce|no-preference   Browser reduced motion.
+//   ALLOW_INSECURE_HTTPS=1                Ignore HTTPS certificate errors for local/self-signed captures.
 
 import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
@@ -69,7 +70,7 @@ if (!chromium) {
 const contextOptions = {
   viewport: { width: W, height: H },
   deviceScaleFactor: S,
-  ignoreHTTPSErrors: true,
+  ignoreHTTPSErrors: process.env.ALLOW_INSECURE_HTTPS === '1',
 };
 
 if (process.env.STORAGE_STATE) contextOptions.storageState = process.env.STORAGE_STATE;
@@ -124,7 +125,7 @@ try {
 
   await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
   await page.screenshot({ path: out, fullPage: captureMode === 'fullPage' });
-  console.log(`saved ${out} (${W}x${H}@${S}, mode=${captureMode})`);
+  console.log(`saved ${out} (${W}x${H}@${S}, mode=${captureMode}, https=${contextOptions.ignoreHTTPSErrors ? 'insecure-allowed' : 'strict'})`);
 } finally {
   await browser.close();
 }

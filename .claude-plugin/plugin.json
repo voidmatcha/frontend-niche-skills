@@ -1,7 +1,7 @@
 {
   "name": "frontend-niche-skills",
   "version": "0.1.0",
-  "description": "Evidence-oriented frontend agent skills for edge cases broad review checklists often miss: WebView pages, semantic HTML, overlays, accessibility tests, CJK/IME input, deep-link hydration, i18n layout, auth flows, frontend security, payment-page evidence, downloads/exports, datetime, SSR hydration, form validation, design fidelity, component extraction, and report triage.",
+  "description": "Evidence-oriented, framework-agnostic frontend skills for recurrent browser and host-edge failures across WebViews/iframes, rendering, interaction, data, accessibility, security, performance, offline, exports, and design verification.",
   "license": "Apache-2.0",
   "author": {
     "name": "YONGJAE LEE"
@@ -9,6 +9,7 @@
   "skills": [
     "./skills/frontend-report-triage",
     "./skills/webview-bridge-pages",
+    "./skills/iframe-embed-contracts",
     "./skills/deeplink-hydration",
     "./skills/ssr-hydration-mismatch",
     "./skills/realtime-transport-contracts",
@@ -22,6 +23,7 @@
     "./skills/js-form-validation-contracts",
     "./skills/frontend-auth-flow-contracts",
     "./skills/frontend-security-baseline",
+    "./skills/bff-proxy-security-contracts",
     "./skills/payment-page-client-security",
     "./skills/download-export-safety",
     "./skills/design-to-code-fidelity",
