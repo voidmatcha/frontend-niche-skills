@@ -1,5 +1,14 @@
 # Storage & computation
 
+## Contents
+
+- [Store instants as UTC/epoch (or RFC 3339 with an offset)](#store-instants-as-utcepoch-or-rfc-3339-with-an-offset)
+- [The parsing trap: date-only is UTC, date-time-without-offset is local](#the-parsing-trap-date-only-is-utc-date-time-without-offset-is-local)
+- [A day is not 24 hours: DST gaps and overlaps](#a-day-is-not-24-hours-dst-gaps-and-overlaps)
+- [Mapping the invariants onto Temporal](#mapping-the-invariants-onto-temporal)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 Decide, for every datetime value, which of two kinds it is — and never let the two mix:
 
 - **Instant** — one point on the global timeline (a UTC/epoch moment). "When did this

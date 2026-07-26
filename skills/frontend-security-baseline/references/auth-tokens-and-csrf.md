@@ -1,5 +1,20 @@
 # Auth tokens & CSRF
 
+## Contents
+
+- [Keep the credential out of web storage](#keep-the-credential-out-of-web-storage)
+- [HttpOnly stops theft, not riding](#httponly-stops-theft-not-riding)
+- [SameSite: set it explicitly; defaults are not uniform](#samesite-set-it-explicitly-defaults-are-not-uniform)
+- [CSRF still applies to cookie auth — on top of SameSite](#csrf-still-applies-to-cookie-auth--on-top-of-samesite)
+- [CSRF scope and browser-gate checks](#csrf-scope-and-browser-gate-checks)
+- [Stateless CSRF: signed double-submit, validated from a header — never cookie-vs-cookie](#stateless-csrf-signed-double-submit-validated-from-a-header--never-cookie-vs-cookie)
+- [Bearer-header SPAs and the cookie-to-header pattern](#bearer-header-spas-and-the-cookie-to-header-pattern)
+- [Auth flow boundary](#auth-flow-boundary)
+- [Session fixation: regenerate the session ID on auth](#session-fixation-regenerate-the-session-id-on-auth)
+- [Logout: invalidate server-side, then clear client state](#logout-invalidate-server-side-then-clear-client-state)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 The expensive bugs here come from a false trade-off — *'localStorage risks XSS,
 cookies risk CSRF, pick your poison'* — and from defenses that look complete but
 leave one gap open. The asymmetry the framing hides: a single XSS anywhere on the

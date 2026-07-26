@@ -38,6 +38,8 @@ These skills are not replacements for project conventions, security review, QSA/
 
 Install the [`skills` CLI](https://www.skills.sh/). Skills follow the [`SKILL.md` format](https://agentskills.io/specification).
 
+These skills target Claude Code, Codex, and other agents that honour the specification's 1024-character `description` cap, and they spend that budget on trigger phrases so the right skill fires. The Claude.ai upload path caps `description` at 200 characters instead, so uploading these unchanged will fail there ([Claude docs](https://claude.com/docs/skills/how-to)).
+
 The `voidmatcha/frontend-niche-skills` commands below assume the public repository or plugin marketplace entry is available. For a local or pre-release checkout, use the local checkout commands in this section instead.
 
 ```bash

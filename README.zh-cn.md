@@ -38,6 +38,8 @@
 
 安装 [`skills` CLI](https://www.skills.sh/)。这些技能遵循 [`SKILL.md` 格式](https://agentskills.io/specification)。
 
+这些技能面向遵循规范中 `description` 1024 字符上限的 Claude Code、Codex 等代理，并把这些字符用于触发词，以便正确的技能被激活。Claude.ai 的上传路径将 `description` 限制为 200 字符，因此直接上传会失败([Claude 文档](https://claude.com/docs/skills/how-to))。
+
 下面的 `voidmatcha/frontend-niche-skills` 命令假设公开仓库或插件市场条目已经可用。若使用本地或预发布检出，请改用本节中的本地检出命令。
 
 ```bash

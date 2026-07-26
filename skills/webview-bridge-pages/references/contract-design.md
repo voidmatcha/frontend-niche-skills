@@ -1,5 +1,16 @@
 # Contract design (agree these with the app team)
 
+## Contents
+
+- [Message contract](#message-contract)
+- [Native chrome owns close/back](#native-chrome-owns-closeback)
+- [Actions with unobservable results (purchases etc.)](#actions-with-unobservable-results-purchases-etc)
+- [Loading signal (blank-screen prevention)](#loading-signal-blank-screen-prevention)
+- [Auth & session handoff](#auth--session-handoff)
+- [Navigation & capabilities](#navigation--capabilities)
+- [A/B variants via query params](#ab-variants-via-query-params)
+- [Sources](#sources)
+
 Decisions to settle in the web↔native contract doc before writing page code.
 
 ## Message contract

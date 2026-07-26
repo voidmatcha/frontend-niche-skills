@@ -38,6 +38,8 @@
 
 [`skills` CLI](https://www.skills.sh/) をインストールしてください。スキルは [`SKILL.md` フォーマット](https://agentskills.io/specification)に従っています。
 
+これらのスキルは、仕様の `description` 1024 文字上限に従う Claude Code や Codex などを対象とし、適切なスキルが起動するようその文字数をトリガー表現に使っています。Claude.ai のアップロード経路では `description` が 200 文字に制限されるため、そのままアップロードすると失敗します([Claude ドキュメント](https://claude.com/docs/skills/how-to))。
+
 以下の `voidmatcha/frontend-niche-skills` コマンドは、公開リポジトリまたはプラグインマーケットプレイスのエントリーが利用可能であることを前提としています。ローカルまたはプレリリースのチェックアウトでは、代わりにこのセクションのローカルチェックアウト用コマンドを使ってください。
 
 ```bash

@@ -1,5 +1,15 @@
 # Constraint Validation API & states
 
+## Contents
+
+- [CSS state & timing: `:user-invalid` over `:invalid`](#css-state--timing-user-invalid-over-invalid)
+- [The `ValidityState` object](#the-validitystate-object)
+- [The methods](#the-methods)
+- [The `invalid` event](#the-invalid-event)
+- [Accessibility & i18n boundary](#accessibility--i18n-boundary)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 The browser validates form controls against their constraints (`required`, `type`, `pattern`,
 `min`/`max`, `minlength`/`maxlength`, `step`) and exposes the result three ways: CSS
 pseudo-classes, a per-control `validity` object, and methods on the control and form. Getting

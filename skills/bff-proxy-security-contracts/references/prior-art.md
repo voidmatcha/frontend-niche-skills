@@ -1,5 +1,20 @@
 # BFF proxy security prior art
 
+## Contents
+
+- [Primary guidance](#primary-guidance)
+  - [Next.js Backend for Frontend](#nextjs-backend-for-frontend)
+  - [OWASP SSRF Prevention](#owasp-ssrf-prevention)
+  - [OWASP REST, authorization, and business flows](#owasp-rest-authorization-and-business-flows)
+  - [OWASP upload and resource budgets](#owasp-upload-and-resource-budgets)
+- [Mature open-source patterns](#mature-open-source-patterns)
+  - [Backstage](#backstage)
+  - [Grafana](#grafana)
+  - [Next.js image optimizer](#nextjs-image-optimizer)
+- [Supplemental public proxy implementations](#supplemental-public-proxy-implementations)
+- [Multipart library behavior](#multipart-library-behavior)
+- [Decision rule](#decision-rule)
+
 This is a source comparison, not a claim that every proxy needs the same architecture.
 Use it to justify the narrowest boundary for the actual product flow.
 

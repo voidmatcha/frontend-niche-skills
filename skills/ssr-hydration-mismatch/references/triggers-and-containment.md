@@ -1,5 +1,14 @@
 # Triggers & containment
 
+## Contents
+
+- [What actually diverges (the trigger taxonomy)](#what-actually-diverges-the-trigger-taxonomy)
+- [The fixes](#the-fixes)
+- [Containment & the blast radius](#containment--the-blast-radius)
+- [Diagnosing the diverging node](#diagnosing-the-diverging-node)
+- [Other frameworks (same principle, different escape hatch)](#other-frameworks-same-principle-different-escape-hatch)
+- [Sources](#sources)
+
 Hydration is the client attaching to server HTML in place. React's rule is strict: *"React
 expects that the rendered content is identical between the server and the client."* When it
 isn't, you get a hydration error, the server markup for that tree is discarded, and the

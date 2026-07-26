@@ -1,5 +1,13 @@
 # Display & input
 
+## Contents
+
+- [Pin `Intl.DateTimeFormat`'s `timeZone`](#pin-intldatetimeformats-timezone)
+- [`datetime-local` / `date` / `time` inputs are floating, zoneless](#datetime-local--date--time-inputs-are-floating-zoneless)
+- [Rendering on the server and the client (SSR)](#rendering-on-the-server-and-the-client-ssr)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 Showing a time and reading one back from a form are the two places a correct instant gets
 silently re-zoned. Both hinge on one fact: **the runtime's ambient time zone is not the
 user's intent.**

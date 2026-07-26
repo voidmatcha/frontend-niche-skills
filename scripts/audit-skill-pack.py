@@ -94,6 +94,32 @@ def check_frontmatter(root: Path, result: dict[str, Any], skill_dirs: list[Path]
         frontmatter = "\n".join(lines[1:end])
         if not re.search(rf"^name:\s*{re.escape(skill_name)}\s*$", frontmatter, re.MULTILINE):
             add(result, "errors", rel(skill_file, root), 1, f"frontmatter name must match folder {skill_name}")
+
+        # Spec: name is kebab-case, <=64 chars, and cannot contain the reserved
+        # words "anthropic" or "claude".
+        if len(skill_name) > 64:
+            add(result, "errors", rel(skill_file, root), 1, f"name exceeds the 64-char skill-spec cap ({len(skill_name)} chars)")
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", skill_name):
+            add(result, "errors", rel(skill_file, root), 1, f"name must be kebab-case (lowercase letters, digits, hyphens): {skill_name}")
+        for reserved in ("anthropic", "claude"):
+            if reserved in skill_name:
+                add(result, "errors", rel(skill_file, root), 1, f"name cannot contain the reserved word {reserved!r}")
+
+        # Spec: only these frontmatter keys are read; anything else is ignored
+        # silently, which hides typos like "descripton" behind a passing audit.
+        allowed_keys = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+        for match in re.finditer(r"^([A-Za-z0-9_-]+):", frontmatter, re.MULTILINE):
+            key = match.group(1)
+            if key not in allowed_keys:
+                add(result, "errors", rel(skill_file, root), 1, f"unsupported frontmatter key {key!r} (allowed: {', '.join(sorted(allowed_keys))})")
+
+        # Spec: keep the SKILL.md body under 500 lines; longer bodies belong in
+        # reference files that load only when needed.
+        body_lines = len(lines[end + 1:])
+        if body_lines > 500:
+            add(result, "errors", rel(skill_file, root), 1, f"SKILL.md body exceeds the 500-line guidance ({body_lines} lines); move detail into references/")
+        elif body_lines > 450:
+            add(result, "warnings", rel(skill_file, root), 1, f"SKILL.md body is approaching the 500-line guidance ({body_lines} lines)")
         desc_match = re.search(r"^description:\s*(.+)$", frontmatter, re.MULTILINE)
         if not desc_match:
             add(result, "errors", rel(skill_file, root), 1, "frontmatter description missing")
@@ -105,6 +131,15 @@ def check_frontmatter(root: Path, result: dict[str, Any], skill_dirs: list[Path]
                 add(result, "errors", rel(skill_file, root), 1, f"description exceeds the 1024-char skill-spec cap ({len(description)} chars)")
             elif len(description) > 950:
                 add(result, "warnings", rel(skill_file, root), 1, f"description is close to the 1024-char skill-spec cap ({len(description)} chars)")
+
+            # Spec: the description is injected into the system prompt verbatim,
+            # so it cannot contain XML tags and must stay in third person —
+            # a shifting point of view degrades trigger accuracy.
+            if re.search(r"[<>]", description):
+                add(result, "errors", rel(skill_file, root), 1, "description cannot contain XML tags or angle brackets")
+            person = re.search(r"\b(?:I can|I will|I help|you can use this|use me to)\b", description, re.IGNORECASE)
+            if person:
+                add(result, "errors", rel(skill_file, root), 1, f"description must be third person, found {person.group(0)!r}")
 
 
 def check_readmes(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
@@ -127,6 +162,62 @@ def check_readmes(root: Path, result: dict[str, Any], skill_names: list[str]) ->
             add(result, "errors", rel_path, None, f"missing README skill link for {name}")
         for name in extra:
             add(result, "errors", rel_path, None, f"README links skill without folder: {name}")
+
+
+def check_reference_toc(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
+    """Reference files over 100 lines need a contents list.
+
+    Claude previews long files with partial reads (for example `head -100`), so a
+    long reference with no contents list can be acted on without the agent ever
+    seeing what it missed.
+    """
+    threshold = 100
+    for skill_dir in skill_dirs:
+        for path in sorted(skill_dir.rglob("*.md")):
+            if path.name == "SKILL.md":
+                continue
+            lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            if len(lines) <= threshold:
+                continue
+            head = "\n".join(lines[:40])
+            has_heading = re.search(r"^#{1,3}\s*(?:table of contents|contents)\s*$", head, re.IGNORECASE | re.MULTILINE)
+            has_anchor_list = len(re.findall(r"^\s*-\s*\[[^\]]+\]\(#", head, re.MULTILINE)) >= 3
+            if not has_heading and not has_anchor_list:
+                add(
+                    result,
+                    "errors",
+                    rel(path, root),
+                    1,
+                    f"reference file is {len(lines)} lines and has no contents list; partial reads will miss sections",
+                )
+
+
+def check_reference_anchors(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
+    """Same-page anchor links must resolve to a real heading in that file."""
+    fence = re.compile(r"^\s*(?:```|~~~)")
+    heading = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
+
+    def slug(text: str) -> str:
+        return re.sub(r"[^\w\s-]", "", text.lower()).replace(" ", "-")
+
+    for skill_dir in skill_dirs:
+        for path in sorted(skill_dir.rglob("*.md")):
+            lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+            in_fence = False
+            anchors: set[str] = set()
+            for line in lines:
+                if fence.match(line):
+                    in_fence = not in_fence
+                    continue
+                if in_fence:
+                    continue
+                match = heading.match(line)
+                if match:
+                    anchors.add(slug(match.group(2)))
+            for number, line in enumerate(lines, start=1):
+                for target in re.findall(r"\]\(#([^)]+)\)", line):
+                    if target not in anchors:
+                        add(result, "errors", rel(path, root), number, f"anchor link #{target} has no matching heading")
 
 
 def check_markdown_links(root: Path, result: dict[str, Any]) -> None:
@@ -494,6 +585,8 @@ def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None =
         add(result, "errors", "skills/skill-pack-auditor", None, "skill-pack-auditor must not be published as a public skill")
     check_frontmatter(root, result, skill_dirs)
     check_readmes(root, result, skill_names)
+    check_reference_toc(root, result, skill_dirs)
+    check_reference_anchors(root, result, skill_dirs)
     check_markdown_links(root, result)
     check_source_urls(root, result)
     check_manifests(root, result, skill_names)

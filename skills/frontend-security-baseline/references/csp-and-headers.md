@@ -1,5 +1,17 @@
 # CSP & security headers
 
+## Contents
+
+- [Strict CSP, not host allowlists](#strict-csp-not-host-allowlists)
+- [Generating the nonce](#generating-the-nonce)
+- [Strict CSP in Next.js (App Router)](#strict-csp-in-nextjs-app-router)
+- [Clickjacking: `frame-ancestors`](#clickjacking-frame-ancestors)
+- [Subresource Integrity (SRI)](#subresource-integrity-sri)
+- [HSTS and preload](#hsts-and-preload)
+- [Cross-origin isolation & Referrer-Policy](#cross-origin-isolation--referrer-policy)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 Headers are where security looks done but isn't. A host-allowlist CSP passes review and
 blocks almost nothing; SRI without `crossorigin` silently breaks the load instead of
 protecting it; HSTS `preload` is a one-way door. The theme: **the default-looking

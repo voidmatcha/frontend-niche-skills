@@ -1,5 +1,14 @@
 # Page implementation (parsing, timers, layout)
 
+## Contents
+
+- [Query params on SPA hydration](#query-params-on-spa-hydration)
+- [Back navigation & form state](#back-navigation--form-state)
+- [Layout & viewport inside a WebView](#layout--viewport-inside-a-webview)
+- [Sources](#sources)
+- [Paint / hit-test diagnostics](#paint--hit-test-diagnostics)
+- [Rotation and viewport settling](#rotation-and-viewport-settling)
+
 Web-side implementation rules once the contract is settled.
 
 ## Query params on SPA hydration

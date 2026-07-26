@@ -1,5 +1,19 @@
 # Library validity lifecycle (reference)
 
+## Contents
+
+- [react-hook-form](#react-hook-form)
+  - [`mode` — when the FIRST validation runs (per field)](#mode--when-the-first-validation-runs-per-field)
+  - [`reValidateMode` — when validation runs AFTER the first error](#revalidatemode--when-validation-runs-after-the-first-error)
+  - [`formState` flags](#formstate-flags)
+  - [`setError` / `clearErrors` — manual + server errors](#seterror--clearerrors--manual--server-errors)
+  - [Async resolvers](#async-resolvers)
+- [Formik](#formik)
+- [vee-validate / Final Form](#vee-validate--final-form)
+- [The four user-visible contracts (what a reviewer/test must verify)](#the-four-user-visible-contracts-what-a-reviewertest-must-verify)
+- [Boundary](#boundary)
+- [Sources](#sources)
+
 How JS form libraries expose the validity lifecycle, and where each checklist trap lives. Generic —
 applies to any app using these libraries.
 

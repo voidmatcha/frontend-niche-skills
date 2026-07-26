@@ -1,5 +1,16 @@
 # Navigation & supply chain
 
+## Contents
+
+- [Reverse tabnabbing and the opener reference](#reverse-tabnabbing-and-the-opener-reference)
+- [Open redirects: allow-list, never denylist](#open-redirects-allow-list-never-denylist)
+- [Reproducible installs: `npm ci`, not `npm install`](#reproducible-installs-npm-ci-not-npm-install)
+- [Lifecycle scripts run arbitrary code at install](#lifecycle-scripts-run-arbitrary-code-at-install)
+- [Typosquatting, slopsquatting & dependency confusion](#typosquatting-slopsquatting--dependency-confusion)
+- [Nothing shipped to the browser is secret](#nothing-shipped-to-the-browser-is-secret)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Sources](#sources)
+
 Two classes of "looks handled" bugs. Outbound navigation: browsers fixed the
 anchor default, so teams either cargo-cult the old fix or quietly reopen the hole
 the moment they switch to `window.open`. Supply chain: the dangerous code runs at

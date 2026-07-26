@@ -38,6 +38,8 @@
 
 [`skills` CLI](https://www.skills.sh/)를 설치하세요. skill은 [`SKILL.md` 포맷](https://agentskills.io/specification)을 따릅니다.
 
+이 skill들은 명세의 `description` 1024자 상한을 지키는 Claude Code, Codex 등을 대상으로 하며, 알맞은 skill이 실행되도록 그 분량을 트리거 표현에 씁니다. Claude.ai 업로드 경로는 `description`을 200자로 제한하므로 그대로 올리면 실패합니다 ([Claude 문서](https://claude.com/docs/skills/how-to)).
+
 아래의 `voidmatcha/frontend-niche-skills` 명령은 공개 저장소 또는 plugin marketplace 항목이 있다는 것을 전제합니다. 로컬 또는 사전 릴리스 checkout에서는 이 섹션의 로컬 checkout 명령을 대신 사용하세요.
 
 ```bash

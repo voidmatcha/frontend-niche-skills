@@ -1,5 +1,17 @@
 # Host reference: Android WebView
 
+## Contents
+
+- [Three bridge mechanisms (official comparison)](#three-bridge-mechanisms-official-comparison)
+- [Security notes](#security-notes)
+- [Loading & lifecycle](#loading--lifecycle)
+- [Layout](#layout)
+- [Legacy JavaScript compatibility](#legacy-javascript-compatibility)
+- [Legacy CSS fallbacks](#legacy-css-fallbacks)
+- [Legacy engine smoke matrix](#legacy-engine-smoke-matrix)
+- [Rotation diagnostics](#rotation-diagnostics)
+- [Sources](#sources)
+
 `android.webkit.WebView` (+ Jetpack `WebViewCompat`) — the web page's view of it.
 
 ## Three bridge mechanisms (official comparison)

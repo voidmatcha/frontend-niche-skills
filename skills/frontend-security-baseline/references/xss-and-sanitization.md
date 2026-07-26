@@ -1,5 +1,17 @@
 # XSS & sanitization
 
+## Contents
+
+- [Safe sinks beat encoding](#safe-sinks-beat-encoding)
+- [Encode for the exact context](#encode-for-the-exact-context)
+- [Code-execution sinks](#code-execution-sinks)
+- [Sanitizing rich HTML](#sanitizing-rich-html)
+- [Framework escape hatches](#framework-escape-hatches)
+- [Trusted Types](#trusted-types)
+- [Find these in your codebase](#find-these-in-your-codebase)
+- [Scanner output is a lead, not a verdict](#scanner-output-is-a-lead-not-a-verdict)
+- [Sources](#sources)
+
 XSS is solved by **where you put data**, not by how hard you scrub it. The recurring
 expensive mistake is reaching for an encoder or a sanitizer to make a dangerous
 operation safe, when choosing a safe operation removes the danger entirely.
