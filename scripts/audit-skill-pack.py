@@ -40,6 +40,11 @@ WEAK_TRAILING_WORDS = {"a", "an", "and", "at", "for", "in", "of", "on", "or", "t
 # evaluation contract. The audit also errors if a listed skill has evals.
 LEGACY_EVAL_EXEMPTIONS: frozenset[str] = frozenset()
 
+# Claude.ai caps the frontmatter description at 200 characters while the Agent
+# Skills specification allows 1024. The pack targets the spec limit, so the
+# Claude.ai upload path needs the short variant in docs/.
+CLAUDEAI_DESCRIPTION_LIMIT = 200
+
 
 def rel(path: Path, root: Path) -> str:
     try:
@@ -382,6 +387,39 @@ def check_skill_evals(root: Path, result: dict[str, Any], skill_dirs: list[Path]
                     )
     result["summary"]["eval_files_checked"] = files_checked
     result["summary"]["eval_cases_checked"] = evals_checked
+
+
+def check_claudeai_descriptions(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
+    path = root / "docs" / "claudeai-short-descriptions.json"
+    if not path.exists():
+        add(result, "errors", "docs/claudeai-short-descriptions.json", None, "missing Claude.ai short description map")
+        return
+    try:
+        data = read_json(path)
+    except Exception as exc:  # noqa: BLE001
+        add(result, "errors", rel(path, root), None, f"cannot parse JSON: {exc}")
+        return
+    descriptions = data.get("descriptions") if isinstance(data, dict) else None
+    if not isinstance(descriptions, dict):
+        add(result, "errors", rel(path, root), None, "descriptions must be an object")
+        return
+    names = {skill_dir.name for skill_dir in skill_dirs}
+    for missing in sorted(names - set(descriptions)):
+        add(result, "errors", rel(path, root), None, f"missing short description for {missing}")
+    for extra in sorted(set(descriptions) - names):
+        add(result, "errors", rel(path, root), None, f"short description for unknown skill {extra!r}")
+    seen: dict[str, str] = {}
+    for name, text in sorted(descriptions.items()):
+        if not isinstance(text, str) or not text.strip():
+            add(result, "errors", rel(path, root), None, f"{name} short description must be a non-empty string")
+            continue
+        if len(text) > CLAUDEAI_DESCRIPTION_LIMIT:
+            add(result, "errors", rel(path, root), None, f"{name} short description is {len(text)} chars; Claude.ai limit is {CLAUDEAI_DESCRIPTION_LIMIT}")
+        if text in seen:
+            add(result, "errors", rel(path, root), None, f"{name} short description duplicates {seen[text]}")
+        else:
+            seen[text] = name
+    result["summary"]["claudeai_descriptions_checked"] = len(descriptions)
 
 
 def check_reference_links(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
@@ -902,6 +940,7 @@ def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None =
     check_frontmatter(root, result, skill_dirs)
     check_skill_contracts(root, result, skill_dirs)
     check_skill_evals(root, result, skill_dirs)
+    check_claudeai_descriptions(root, result, skill_dirs)
     check_reference_links(root, result, skill_dirs)
     check_readmes(root, result, skill_names)
     check_reference_toc(root, result, skill_dirs)

@@ -1,5 +1,8 @@
 .serena/
 .omx/
 .claude/
+.impeccable/
+.tokensave/
 .DS_Store
 __pycache__/
+dist/
