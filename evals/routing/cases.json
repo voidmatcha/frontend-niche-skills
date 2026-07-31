@@ -1,0 +1,2265 @@
+{
+  "schema_version": 3,
+  "dataset_id": "frontend-niche-skills-routing-v3",
+  "catalog": {
+    "excluded_skills": [
+      "frontend-report-triage"
+    ]
+  },
+  "clusters": [
+    {
+      "id": "semantics-forms-overlays",
+      "description": "Native semantics, rendered accessibility state, form validity, and overlay lifecycle reports often share the same visible symptom.",
+      "members": [
+        "a11y-contract-testing",
+        "semantic-markup-contracts",
+        "constraint-validation-contracts",
+        "js-form-validation-contracts",
+        "overlay-focus-scroll-contracts",
+        "css-transition-animation-contracts"
+      ]
+    },
+    {
+      "id": "navigation-render-lifecycle",
+      "description": "Cold navigation, hydration, history restoration, document resume, and offline bytes must be separated by lifecycle boundary.",
+      "members": [
+        "browser-page-lifecycle-bfcache-contracts",
+        "history-scroll-restoration-contracts",
+        "deeplink-hydration",
+        "ssr-hydration-mismatch",
+        "pwa-offline-cache-contracts",
+        "browser-storage-durability-contracts"
+      ]
+    },
+    {
+      "id": "async-state-transport",
+      "description": "Raw effects, query caches, optimistic writes, and pushed transport updates all produce stale or out-of-order UI through different owners.",
+      "members": [
+        "async-effect-race-contracts",
+        "frontend-data-fetching-cache-contracts",
+        "optimistic-update-rollback-contracts",
+        "realtime-transport-contracts"
+      ]
+    },
+    {
+      "id": "security-auth-host",
+      "description": "Client security, server proxy, payment, authentication, iframe, WebView, and gesture capability reports have overlapping trust-boundary language.",
+      "members": [
+        "bff-proxy-security-contracts",
+        "frontend-security-baseline",
+        "payment-page-client-security",
+        "frontend-auth-flow-contracts",
+        "iframe-embed-contracts",
+        "webview-bridge-pages",
+        "user-activation-contracts"
+      ]
+    },
+    {
+      "id": "visual-performance-layout",
+      "description": "Visual drift, page metrics, image selection, animation mechanisms, measurement loops, virtualization, and component reuse collide in UI review prompts.",
+      "members": [
+        "core-web-vitals-performance-contracts",
+        "responsive-image-contracts",
+        "design-to-code-fidelity",
+        "view-transitions-contracts",
+        "resize-observer-layout-contracts",
+        "large-list-data-grid-contracts",
+        "component-extraction-judgment"
+      ]
+    },
+    {
+      "id": "files-content-observability",
+      "description": "Inbound files, outbound generated content, and captured error payloads all require direction and data-lifecycle evidence.",
+      "members": [
+        "file-ingest-contracts",
+        "download-export-safety",
+        "client-error-observability-contracts"
+      ]
+    },
+    {
+      "id": "language-values",
+      "description": "CJK input, translated layout, timezone values, and decimal arithmetic can all appear as locale-dependent correctness bugs.",
+      "members": [
+        "cjk-text-and-input",
+        "contenteditable-selection-contracts",
+        "i18n-copy-and-layout",
+        "datetime-correctness",
+        "money-and-precision-contracts"
+      ]
+    },
+    {
+      "id": "pointer-media-devices",
+      "description": "Pointer capture and media device ownership both involve browser-delivered input lifecycles and interruption cleanup.",
+      "members": [
+        "pointer-gesture-contracts",
+        "media-capture-device-contracts"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "a11y-contract-testing--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Our modal has a visible title and selected tab, but Testing Library cannot find the dialog by name and the selected state disappears from the accessibility tree. Add regression coverage for the roles, accessible names, focus, and state.",
+      "expected_skill": "a11y-contract-testing",
+      "confusable_with": [],
+      "rationale": "The request is explicitly about rendered accessibility semantics and role-based regression assertions."
+    },
+    {
+      "id": "a11y-contract-testing--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The checkout error summary is already built with native labels and inputs, but a refactor stopped announcing invalid fields and focus no longer moves to the summary. We need tests that catch the user-observable accessibility regression.",
+      "expected_skill": "a11y-contract-testing",
+      "confusable_with": [
+        "semantic-markup-contracts"
+      ],
+      "rationale": "The native structure exists; the missing contract is observable role, announcement, and focus behavior rather than element selection."
+    },
+    {
+      "id": "async-effect-race-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A search component fetches directly inside an effect. Typing quickly lets the slow response for an older query overwrite the newest results, and navigating away sometimes logs a state update after unmount. Please lock down cancellation and take-latest behavior.",
+      "expected_skill": "async-effect-race-contracts",
+      "confusable_with": [],
+      "rationale": "A raw effect owns request cancellation, stale response suppression, and teardown."
+    },
+    {
+      "id": "async-effect-race-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "This screen does not use a query library: it calls fetch in an effect whenever accountId changes. The previous account can win the race and populate the new account view, even though the HTTP response itself is valid.",
+      "expected_skill": "async-effect-race-contracts",
+      "confusable_with": [
+        "frontend-data-fetching-cache-contracts"
+      ],
+      "rationale": "The failure sits below any managed cache and belongs to effect ownership and request race handling."
+    },
+    {
+      "id": "bff-proxy-security-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Review a Next route handler that accepts a client supplied upstream URL, forwards most request headers, follows redirects, and streams multipart bodies without a size budget. We need a release gate for the server-side proxy boundary.",
+      "expected_skill": "bff-proxy-security-contracts",
+      "confusable_with": [],
+      "rationale": "The repository-owned server relay creates SSRF, capability, redirect, header, and body-budget risks."
+    },
+    {
+      "id": "bff-proxy-security-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The browser calls our own catch-all API endpoint with a target host and method in query parameters. The concern is that the route handler can reach internal services and forward credentials, not that the page has an unsafe DOM sink.",
+      "expected_skill": "bff-proxy-security-contracts",
+      "confusable_with": [
+        "frontend-security-baseline"
+      ],
+      "rationale": "This is a frontend-owned server gateway trust boundary, while the sibling is scoped to client-side traps."
+    },
+    {
+      "id": "browser-page-lifecycle-bfcache-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "After leaving a dashboard and returning with the browser Back button, the old account data is visible and a second socket plus observer starts. A normal reload is fine. Diagnose page freeze and restore without forcing every pageshow to reload.",
+      "expected_skill": "browser-page-lifecycle-bfcache-contracts",
+      "confusable_with": [],
+      "rationale": "The distinguishing evidence is restoration of a previously live top-level document from browser history."
+    },
+    {
+      "id": "browser-page-lifecycle-bfcache-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Back navigation restores the exact scroll offset correctly, but the page resumes with paused polling and duplicate analytics listeners. The bug only occurs when the browser revives the prior document; cold direct navigation is healthy.",
+      "expected_skill": "browser-page-lifecycle-bfcache-contracts",
+      "confusable_with": [
+        "history-scroll-restoration-contracts"
+      ],
+      "rationale": "Scroll restoration is explicitly healthy; the broken boundary is document suspension and resume."
+    },
+    {
+      "id": "cjk-text-and-input--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A controlled Korean search field submits when the user presses Enter to confirm an IME candidate, producing duplicate searches with keyCode 229. The character counter also splits an emoji sequence incorrectly. Add composition-aware input tests.",
+      "expected_skill": "cjk-text-and-input",
+      "confusable_with": [],
+      "rationale": "IME composition and grapheme-aware input are the primary failure mechanisms."
+    },
+    {
+      "id": "cjk-text-and-input--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Japanese translations fit the layout, but entering converted text into the controlled input loses the final composition segment and Enter fires the form too early. The issue reproduces only while the IME is composing.",
+      "expected_skill": "cjk-text-and-input",
+      "confusable_with": [
+        "i18n-copy-and-layout"
+      ],
+      "rationale": "This is input-method event sequencing, not translated-copy length, pluralization, or locale formatting."
+    },
+    {
+      "id": "client-error-observability-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Production monitoring groups one minified frontend crash into hundreds of issues, async rejections are missing, and captured breadcrumbs include email addresses and bearer tokens. Design a regression contract for capture, symbolication, grouping, and scrubbing.",
+      "expected_skill": "client-error-observability-contracts",
+      "confusable_with": [],
+      "rationale": "The task concerns the browser error telemetry pipeline and safe event payload handling."
+    },
+    {
+      "id": "client-error-observability-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Users upload malformed files that trigger a handled parsing exception, but the monitoring event drops the stack and attaches the original filename plus clipboard breadcrumbs. File acceptance is correct; error capture and redaction are not.",
+      "expected_skill": "client-error-observability-contracts",
+      "confusable_with": [
+        "file-ingest-contracts"
+      ],
+      "rationale": "The inbound file behavior is healthy and the defect is in observability fidelity and sensitive-data scrubbing."
+    },
+    {
+      "id": "component-extraction-judgment--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Three product cards share most markup but differ in actions, badges, data loading, and keyboard behavior. A proposed universal component adds twelve boolean props. Decide what to extract, what behavior to share, and what should remain separate.",
+      "expected_skill": "component-extraction-judgment",
+      "confusable_with": [],
+      "rationale": "The central decision is reuse boundary and abstraction shape across near-duplicate components."
+    },
+    {
+      "id": "component-extraction-judgment--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Two implementation variants both match their approved designs, but reviewers want to merge them because their current screenshots look similar. Their data contracts and interaction rules differ, so we need an evidence-based extraction decision rather than pixel fixes.",
+      "expected_skill": "component-extraction-judgment",
+      "confusable_with": [
+        "design-to-code-fidelity"
+      ],
+      "rationale": "Visual fidelity is already established; the unresolved question is whether structural reuse preserves distinct behavior."
+    },
+    {
+      "id": "constraint-validation-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A plain HTML form paints every required field invalid on first render, and a custom server error set with setCustomValidity remains after the user corrects the value. Clarify validity state, reporting, reset timing, and focused regression tests.",
+      "expected_skill": "constraint-validation-contracts",
+      "confusable_with": [],
+      "rationale": "The native browser Constraint Validation API owns the timing and persistent custom validity state."
+    },
+    {
+      "id": "constraint-validation-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "There is no form library on this page. A required email input uses native validity, but calling reportValidity during mount shows errors before interaction and the custom message never clears. Keep the solution in browser form APIs.",
+      "expected_skill": "constraint-validation-contracts",
+      "confusable_with": [
+        "js-form-validation-contracts"
+      ],
+      "rationale": "The prompt excludes library state and names native validity lifecycle behavior."
+    },
+    {
+      "id": "core-web-vitals-performance-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Field data shows worsening LCP, CLS, and INP on the landing page. We need to attribute the late hero discovery, injected banner shift, long click task, and slow document response before choosing fixes or budgets.",
+      "expected_skill": "core-web-vitals-performance-contracts",
+      "confusable_with": [],
+      "rationale": "The request spans page-level user experience metrics and requires evidence-based attribution."
+    },
+    {
+      "id": "core-web-vitals-performance-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The hero image markup selects the intended candidate in every viewport, yet field LCP remains slow because the document response and main-thread work delay painting. Diagnose the whole-page metric instead of rewriting srcset again.",
+      "expected_skill": "core-web-vitals-performance-contracts",
+      "confusable_with": [
+        "responsive-image-contracts"
+      ],
+      "rationale": "Image selection is a verified positive control; remaining evidence points to page-level LCP attribution."
+    },
+    {
+      "id": "css-transition-animation-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A dialog fades in but vanishes immediately on close because it is unmounted before the exit transition ends. Sometimes transitionend never fires and scroll unlock remains stuck. Make cleanup robust to cancellation and reduced motion.",
+      "expected_skill": "css-transition-animation-contracts",
+      "confusable_with": [],
+      "rationale": "CSS transition lifecycle and completion-dependent cleanup are the direct mechanisms."
+    },
+    {
+      "id": "css-transition-animation-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Focus trapping and body scroll lock work while the modal is open, but the backdrop does not fade and close cleanup waits forever when no transition event arrives. The defect begins at animation completion, not focus ownership.",
+      "expected_skill": "css-transition-animation-contracts",
+      "confusable_with": [
+        "overlay-focus-scroll-contracts"
+      ],
+      "rationale": "The overlay contract is healthy until transition completion gates teardown."
+    },
+    {
+      "id": "datetime-correctness--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A date-only booking stored as 2026-06-14 displays as the previous day for users west of UTC, and adding twenty-four hours crosses a daylight-saving boundary incorrectly. Define instant, wall-clock, zone, and date-only storage tests.",
+      "expected_skill": "datetime-correctness",
+      "confusable_with": [],
+      "rationale": "The errors come from temporal value semantics, parsing, timezone, and DST boundaries."
+    },
+    {
+      "id": "datetime-correctness--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The localized date format is approved, but the same saved appointment renders at different clock times between the server and a user in another zone. We need to fix which temporal value is stored, not translate the label.",
+      "expected_skill": "datetime-correctness",
+      "confusable_with": [
+        "i18n-copy-and-layout"
+      ],
+      "rationale": "Display formatting is explicitly correct; instant versus wall-clock semantics are wrong."
+    },
+    {
+      "id": "deeplink-hydration--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Opening a shared URL directly loses its query parameter because the router is not ready and an auth redirect fires to the default page. In-app navigation works. Add direct-navigation tests that preserve the intended destination.",
+      "expected_skill": "deeplink-hydration",
+      "confusable_with": [],
+      "rationale": "Cold router readiness and parameter preservation distinguish this from DOM hydration divergence."
+    },
+    {
+      "id": "deeplink-hydration--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Server and client render identical markup with no hydration warning, but a direct URL containing a filter redirects before router parameters become available. Clicking the same link after the app loads works correctly.",
+      "expected_skill": "deeplink-hydration",
+      "confusable_with": [
+        "ssr-hydration-mismatch"
+      ],
+      "rationale": "The DOM is deterministic; the failure is cold-navigation query readiness and redirect timing."
+    },
+    {
+      "id": "design-to-code-fidelity--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Compare the implemented pricing section with the approved design export. Reviewers report the wrong background, spacing, border radius, ribbon clipping, CTA placement, and copy variant. Establish deterministic captures and evidence-graded visual findings.",
+      "expected_skill": "design-to-code-fidelity",
+      "confusable_with": [],
+      "rationale": "The requested outcome is measured correspondence between a design reference and rendered implementation."
+    },
+    {
+      "id": "design-to-code-fidelity--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The page performs within its metric budgets and reserves image space, but the rendered hero crop, section fill, typography spacing, and badge position differ from the signed-off design. We need reference comparison, not performance tuning.",
+      "expected_skill": "design-to-code-fidelity",
+      "confusable_with": [
+        "core-web-vitals-performance-contracts"
+      ],
+      "rationale": "Performance is a positive control and the remaining defect is visual reference fidelity."
+    },
+    {
+      "id": "download-export-safety--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A client-side CSV export accepts user-controlled spreadsheet cells, generates filenames from account names, creates blob URLs without revoking them, and copies the same data to the clipboard. Review the outbound data and resource lifecycle.",
+      "expected_skill": "download-export-safety",
+      "confusable_with": [],
+      "rationale": "The workflow is browser-generated export, download, clipboard, filename, and object URL safety."
+    },
+    {
+      "id": "download-export-safety--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Uploading the source spreadsheet is already validated correctly. The problem appears after transformation: exported CSV cells beginning with formulas execute when opened, and repeated downloads leak blob URLs. Focus on data leaving the page.",
+      "expected_skill": "download-export-safety",
+      "confusable_with": [
+        "file-ingest-contracts"
+      ],
+      "rationale": "The explicit direction is outbound generated content, not inbound browser file handling."
+    },
+    {
+      "id": "file-ingest-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A drop zone flickers over child elements, dropping a file sometimes navigates the browser away, pasted images are ignored, and preview thumbnails leak blob URLs. Add browser-level contracts for inbound drag, drop, paste, and previews.",
+      "expected_skill": "file-ingest-contracts",
+      "confusable_with": [],
+      "rationale": "All symptoms occur while files enter the page through browser ingest surfaces."
+    },
+    {
+      "id": "file-ingest-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The server upload endpoint enforces its limits, but the browser drop target trusts accept and file.type, opens a dropped document instead of handling it, and never revokes preview URLs. Diagnose the client-side inbound path.",
+      "expected_skill": "file-ingest-contracts",
+      "confusable_with": [
+        "download-export-safety"
+      ],
+      "rationale": "The report is about files entering the browser UI rather than generated files leaving it."
+    },
+    {
+      "id": "frontend-auth-flow-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Review login, password reset, one-time-code, and passkey screens where autofill is unreliable, callback return destinations are dropped, errors reveal whether an account exists, and sensitive actions do not require fresh verification.",
+      "expected_skill": "frontend-auth-flow-contracts",
+      "confusable_with": [],
+      "rationale": "These are user-facing authentication journey and browser form contracts."
+    },
+    {
+      "id": "frontend-auth-flow-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The OAuth popup opens from the click and cookies are configured by the server, but the callback page discards returnTo and exposes different messages for unknown users. Fix the authentication journey rather than gesture timing.",
+      "expected_skill": "frontend-auth-flow-contracts",
+      "confusable_with": [
+        "user-activation-contracts"
+      ],
+      "rationale": "User activation is healthy; callback routing and enumeration-safe auth behavior are not."
+    },
+    {
+      "id": "frontend-data-fetching-cache-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A TanStack Query screen uses incomplete keys, invalidates an unrelated list after mutation, refetches repeatedly on focus, and replaces prior pages during pagination. Add cache-key, invalidation, staleness, and page-growth contracts.",
+      "expected_skill": "frontend-data-fetching-cache-contracts",
+      "confusable_with": [],
+      "rationale": "A data library owns read identity, invalidation, refetch policy, and pagination state."
+    },
+    {
+      "id": "frontend-data-fetching-cache-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The API responses arrive in order and no component fetches inside an effect, but two accounts collide because the query key omits accountId and focus causes a refetch storm. The managed read cache owns the bug.",
+      "expected_skill": "frontend-data-fetching-cache-contracts",
+      "confusable_with": [
+        "async-effect-race-contracts"
+      ],
+      "rationale": "The prompt rules out raw effect races and identifies cache identity and policy errors."
+    },
+    {
+      "id": "frontend-security-baseline--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Run a pre-release client security pass over raw HTML rendering, sanitizer configuration, localStorage bearer tokens, permissive CSP host matching, opener handling, redirect validation, and risky browser dependencies.",
+      "expected_skill": "frontend-security-baseline",
+      "confusable_with": [],
+      "rationale": "The requested scope is a broad trap-first client-side security review."
+    },
+    {
+      "id": "frontend-security-baseline--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The application has no repository-owned API proxy, but a page injects user HTML, stores a bearer token in localStorage, opens untrusted links with an opener, and accepts return URLs with a prefix check. Review browser-side traps.",
+      "expected_skill": "frontend-security-baseline",
+      "confusable_with": [
+        "bff-proxy-security-contracts"
+      ],
+      "rationale": "The server relay boundary is explicitly absent; the risks all execute in the client."
+    },
+    {
+      "id": "history-scroll-restoration-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Using Back returns an SPA list to the top, then jumps twice as asynchronous rows load. Nested panels lose their offsets and hash navigation races manual restoration. Define per-history-entry restoration and layout readiness tests.",
+      "expected_skill": "history-scroll-restoration-contracts",
+      "confusable_with": [],
+      "rationale": "The requested contract is same-document history and scroll position restoration."
+    },
+    {
+      "id": "history-scroll-restoration-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Returning with Back resumes data subscriptions correctly and does not duplicate listeners, but the list restores before enough content exists and lands at the wrong offset. Only scroll position and layout readiness are broken.",
+      "expected_skill": "history-scroll-restoration-contracts",
+      "confusable_with": [
+        "browser-page-lifecycle-bfcache-contracts"
+      ],
+      "rationale": "Document resume behavior is healthy; the failure is the timing and ownership of scroll restoration."
+    },
+    {
+      "id": "i18n-copy-and-layout--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "German labels overflow fixed buttons, Russian plural text uses an English singular check, Arabic layout does not mirror, and currency plus date strings are assembled manually. Review translation-safe layout and locale formatting.",
+      "expected_skill": "i18n-copy-and-layout",
+      "confusable_with": [],
+      "rationale": "The report spans translated copy expansion, plural rules, RTL, and locale presentation."
+    },
+    {
+      "id": "i18n-copy-and-layout--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Korean text input and composition work correctly, but translated German and Finnish labels overflow, Arabic controls keep left-to-right spacing, and pluralized messages use English grammar. Focus on multilingual copy and layout.",
+      "expected_skill": "i18n-copy-and-layout",
+      "confusable_with": [
+        "cjk-text-and-input"
+      ],
+      "rationale": "IME and CJK input are positive controls; translation, pluralization, and RTL layout are failing."
+    },
+    {
+      "id": "iframe-embed-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A third-party widget is blank under frame policy, loses its first READY message, accepts wildcard postMessage traffic, loops while reporting height, and fails camera access under sandbox and permissions policy. Audit the host-guest contract.",
+      "expected_skill": "iframe-embed-contracts",
+      "confusable_with": [],
+      "rationale": "The browser host and embedded document communicate across an iframe boundary."
+    },
+    {
+      "id": "iframe-embed-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "This content runs inside an ordinary browser iframe on a partner website, not a native app shell. READY messages can race initialization, resize messages flicker, and origin validation is missing on both host and guest.",
+      "expected_skill": "iframe-embed-contracts",
+      "confusable_with": [
+        "webview-bridge-pages"
+      ],
+      "rationale": "The prompt explicitly establishes a browser iframe host rather than a native WebView bridge."
+    },
+    {
+      "id": "js-form-validation-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A React Hook Form page shows schema errors before touch, keeps a server uniqueness error after correction, disables submit forever on isValid, and lets async validation race a double click. Lock the library state lifecycle.",
+      "expected_skill": "js-form-validation-contracts",
+      "confusable_with": [],
+      "rationale": "A JavaScript form library and schema resolver own error, validity, and submission state."
+    },
+    {
+      "id": "js-form-validation-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Native required and reportValidity behavior is not involved. Formik plus a schema resolver validates on mount, a root server error survives edits, and an async uniqueness request can re-enable the wrong submit attempt.",
+      "expected_skill": "js-form-validation-contracts",
+      "confusable_with": [
+        "constraint-validation-contracts"
+      ],
+      "rationale": "The prompt excludes browser validity and identifies library-managed validation lifecycle."
+    },
+    {
+      "id": "large-list-data-grid-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A virtualized grid jumps when variable-height rows are measured, blanks during fast scroll, loses keyboard focus when a row unmounts, and drifts between pinned columns and the body. Tests currently disable windowing.",
+      "expected_skill": "large-list-data-grid-contracts",
+      "confusable_with": [],
+      "rationale": "The defects occur specifically at virtualization, measurement, focus, and pinned-region seams."
+    },
+    {
+      "id": "large-list-data-grid-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The container measurement callback is stable and reports the correct box, but variable-height virtual rows re-anchor the scroll position and focused cells disappear when recycled. Keep diagnosis at the windowing layer.",
+      "expected_skill": "large-list-data-grid-contracts",
+      "confusable_with": [
+        "resize-observer-layout-contracts"
+      ],
+      "rationale": "Generic observation is healthy; row virtualization and recycling semantics cause the user-visible failures."
+    },
+    {
+      "id": "media-capture-device-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "After camera denial the page never offers a usable retry, switching devices opens a second stream, unplugging the microphone leaves stale state, and navigation does not stop tracks so the hardware indicator remains on.",
+      "expected_skill": "media-capture-device-contracts",
+      "confusable_with": [],
+      "rationale": "The browser media session, device changes, and MediaStreamTrack ownership are central."
+    },
+    {
+      "id": "media-capture-device-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "An embedded recorder receives camera and microphone streams after the host delegates both features. Switching cameras leaves the old track live, device removal never updates recovery UI, and closing stops only the replacement stream.",
+      "expected_skill": "media-capture-device-contracts",
+      "confusable_with": [
+        "iframe-embed-contracts"
+      ],
+      "rationale": "Embedding and delegated permissions create iframe overlap, while stream replacement, device removal, and complete track teardown define capture ownership."
+    },
+    {
+      "id": "media-capture-device-contracts--activation-collision-smoke",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "A trusted click calls getUserMedia immediately while user activation is active, and the request succeeds. After the microphone is unplugged, the ended track is still shown as live, switching opens a second stream, and unmount stops neither stream.",
+      "expected_skill": "media-capture-device-contracts",
+      "confusable_with": [
+        "user-activation-contracts"
+      ],
+      "rationale": "Gesture timing is a positive control; track state, device replacement, and complete stream teardown make media-capture ownership primary."
+    },
+    {
+      "id": "money-and-precision-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A cart total displays 0.30000000000000004, tax and line items differ by a cent, localized decimal input is parsed incorrectly, and a large minor-unit amount exceeds exact integer range. Define arithmetic and storage invariants.",
+      "expected_skill": "money-and-precision-contracts",
+      "confusable_with": [],
+      "rationale": "Binary floating point, rounding policy, parsing, and exact numeric range drive the defects."
+    },
+    {
+      "id": "money-and-precision-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Currency symbols and grouping are displayed in the approved locale format, but summing line items produces a penny mismatch and parsing a comma decimal changes the numeric value. Fix arithmetic and representation, not presentation.",
+      "expected_skill": "money-and-precision-contracts",
+      "confusable_with": [
+        "i18n-copy-and-layout"
+      ],
+      "rationale": "Locale presentation is correct; exact value parsing, rounding, and reconciliation are wrong."
+    },
+    {
+      "id": "optimistic-update-rollback-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Creating a row optimistically produces both a temporary and server row, failures never roll back, background refetches make the item flicker, and later edits still use the temporary identifier. Test apply, rollback, and reconciliation.",
+      "expected_skill": "optimistic-update-rollback-contracts",
+      "confusable_with": [],
+      "rationale": "The write is intentionally applied before confirmation and fails during rollback and identity reconciliation."
+    },
+    {
+      "id": "optimistic-update-rollback-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Query keys and read invalidation are correct, but a failed optimistic create leaves its temporary row behind and a successful response adds a duplicate because the client id is never replaced. Focus on mutation reconciliation.",
+      "expected_skill": "optimistic-update-rollback-contracts",
+      "confusable_with": [
+        "frontend-data-fetching-cache-contracts"
+      ],
+      "rationale": "The read cache is a positive control; the broken lifecycle is optimistic write rollback and reconciliation."
+    },
+    {
+      "id": "overlay-focus-scroll-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A nested drawer and dialog leak focus into the background, restore focus to a removed trigger, unlock body scrolling in the wrong stack order, and mishandle Escape plus backdrop dismissal. Define the runtime overlay contract.",
+      "expected_skill": "overlay-focus-scroll-contracts",
+      "confusable_with": [],
+      "rationale": "Focus ownership, inert background, dismissal, nesting, and scroll lock define overlay runtime behavior."
+    },
+    {
+      "id": "overlay-focus-scroll-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The dialog enter and exit animations finish reliably, including reduced motion, but focus escapes behind it and closing a nested popover unlocks body scroll while the parent modal remains open. Fix stack ownership, not animation.",
+      "expected_skill": "overlay-focus-scroll-contracts",
+      "confusable_with": [
+        "css-transition-animation-contracts"
+      ],
+      "rationale": "Animation lifecycle is explicitly healthy; focus, nested overlay, and scroll-lock state are broken."
+    },
+    {
+      "id": "payment-page-client-security--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Review a checkout using hosted card fields plus wallets for PAN and CVV exposure in DOM state, analytics, replay, logs, and URLs, along with payment-page script inventory, change detection, and evidence boundaries.",
+      "expected_skill": "payment-page-client-security",
+      "confusable_with": [],
+      "rationale": "The data and runtime controls are specific to frontend payment pages and cardholder-data boundaries."
+    },
+    {
+      "id": "payment-page-client-security--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The site-wide token and CSP review is already complete. We need to know whether hosted payment fields leak card numbers into component state or replay tooling and whether checkout scripts are inventoried and monitored.",
+      "expected_skill": "payment-page-client-security",
+      "confusable_with": [
+        "frontend-security-baseline"
+      ],
+      "rationale": "The remaining evidence is payment-page specific rather than a general client security baseline."
+    },
+    {
+      "id": "pointer-gesture-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A resize handle stops updating when the pointer leaves its hit area, remains active after cancellation, commits on pointercancel, ignores pen input, and blocks page pan because capture and touch-action are mismanaged.",
+      "expected_skill": "pointer-gesture-contracts",
+      "confusable_with": [],
+      "rationale": "Single-pointer direct manipulation, capture, cancellation, and touch behavior are the target contract."
+    },
+    {
+      "id": "pointer-gesture-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Reordering a card by dragging its handle works until the pointer crosses a child image; a native drag starts, pointerup lands outside the handle, and cancellation still commits the reorder.",
+      "expected_skill": "pointer-gesture-contracts",
+      "confusable_with": [
+        "file-ingest-contracts"
+      ],
+      "rationale": "The child image creates native drag-and-drop overlap, while pointer capture, terminal events, cancellation, and commit ownership govern the reorder."
+    },
+    {
+      "id": "pwa-offline-cache-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "After deployment, a waiting service worker leaves users on old HTML that references deleted chunks, failed precache entries abort install, old caches accumulate, and authenticated responses enter shared Cache Storage. Test update and offline lifecycle.",
+      "expected_skill": "pwa-offline-cache-contracts",
+      "confusable_with": [],
+      "rationale": "Service-worker install, activation, asset versioning, navigation fallback, and Cache Storage are central."
+    },
+    {
+      "id": "pwa-offline-cache-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Fresh online navigation renders deterministic server and client markup, but offline or post-deploy visits receive stale HTML that points at purged assets. The wrong bytes come from the service worker cache, not hydration logic.",
+      "expected_skill": "pwa-offline-cache-contracts",
+      "confusable_with": [
+        "ssr-hydration-mismatch"
+      ],
+      "rationale": "The render is deterministic for fresh bytes; service-worker lifecycle serves an incompatible build."
+    },
+    {
+      "id": "realtime-transport-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A WebSocket client reconnects every second without jitter, remains OPEN after the proxy silently drops traffic, reapplies duplicate deltas after reconnect, misses gaps, and lets bufferedAmount grow without a close policy.",
+      "expected_skill": "realtime-transport-contracts",
+      "confusable_with": [],
+      "rationale": "Reconnect, liveness, cursor, ordering, and backpressure are transport-resilience contracts."
+    },
+    {
+      "id": "realtime-transport-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Initial query cache hydration is correct, but after a socket reconnect the client applies duplicate and out-of-order deltas because it has no cursor or gap recovery. The failure begins at transport resumption.",
+      "expected_skill": "realtime-transport-contracts",
+      "confusable_with": [
+        "frontend-data-fetching-cache-contracts"
+      ],
+      "rationale": "The read cache starts correct; pushed stream recovery and ordering corrupt later state."
+    },
+    {
+      "id": "resize-observer-layout-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A measured panel flickers and grows forever because its ResizeObserver callback writes a size-affecting style, reports the wrong box, and keeps observing an element after replacement. Reproduce the loop and cleanup boundary.",
+      "expected_skill": "resize-observer-layout-contracts",
+      "confusable_with": [],
+      "rationale": "Observer measurement, feedback loops, box choice, and element teardown define the failure."
+    },
+    {
+      "id": "resize-observer-layout-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "This ordinary resizable component is not virtualized. Its observer reads content size, writes width back during the callback, triggers an undelivered-notifications warning, and continues watching the detached prior element.",
+      "expected_skill": "resize-observer-layout-contracts",
+      "confusable_with": [
+        "large-list-data-grid-contracts"
+      ],
+      "rationale": "The prompt excludes windowing and identifies a generic observer feedback and cleanup loop."
+    },
+    {
+      "id": "responsive-image-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A responsive hero downloads a much larger candidate because sizes is inaccurate, declared widths do not match files, the LCP image is lazy and low priority, dimensions are missing, and picture art direction lacks media rules.",
+      "expected_skill": "responsive-image-contracts",
+      "confusable_with": [],
+      "rationale": "The report is specifically about responsive candidate selection, intrinsic dimensions, and image priority."
+    },
+    {
+      "id": "responsive-image-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The page-wide LCP investigation points to the hero choosing a 2400-pixel asset for a 640-pixel slot because sizes is wrong, while descriptors disagree with intrinsic widths. Fix selection mechanics before broader performance work.",
+      "expected_skill": "responsive-image-contracts",
+      "confusable_with": [
+        "core-web-vitals-performance-contracts"
+      ],
+      "rationale": "Metric evidence has already isolated incorrect responsive image markup as the actionable boundary."
+    },
+    {
+      "id": "semantic-markup-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Review a page built from clickable divs, links acting as buttons, skipped headings, unlabeled controls, div-based tables, invalid nested interactions, and custom ARIA that replaces available native elements.",
+      "expected_skill": "semantic-markup-contracts",
+      "confusable_with": [],
+      "rationale": "The core task is choosing valid native HTML structure and relationships."
+    },
+    {
+      "id": "semantic-markup-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Before adding role assertions, the component itself uses a clickable div for submit, nests a button inside a link, and renders data rows without table semantics. Correct the native structure that tests should observe.",
+      "expected_skill": "semantic-markup-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "The source markup contract is invalid, so native element and structure choices precede regression assertions."
+    },
+    {
+      "id": "ssr-hydration-mismatch--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A server-rendered page logs text mismatch and silently rebuilds a subtree because the first client render uses Date.now, Math.random, browser locale, and a window check. Make the initial tree deterministic and bound recovery.",
+      "expected_skill": "ssr-hydration-mismatch",
+      "confusable_with": [],
+      "rationale": "Server and first client render produce different DOM and trigger hydration recovery."
+    },
+    {
+      "id": "ssr-hydration-mismatch--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Direct and in-app routes receive the same query parameters, but the server renders one timestamp and the browser immediately renders another locale-dependent value, causing a hydration warning and client subtree replacement.",
+      "expected_skill": "ssr-hydration-mismatch",
+      "confusable_with": [
+        "deeplink-hydration"
+      ],
+      "rationale": "Router inputs are correct; nondeterministic server and client render output causes the failure."
+    },
+    {
+      "id": "user-activation-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "An OAuth popup opens from a direct click but returns null after awaiting configuration, and clipboard plus fullscreen calls reject when another gated call consumed the gesture. Preserve trusted-event timing and design recovery.",
+      "expected_skill": "user-activation-contracts",
+      "confusable_with": [],
+      "rationale": "Transient user activation timing and consumption govern the failing browser capabilities."
+    },
+    {
+      "id": "user-activation-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The return URL and account errors are correct, but window.open succeeds only before an awaited fetch and is blocked when called afterward from the same click handler. Diagnose the gesture-gated timing boundary.",
+      "expected_skill": "user-activation-contracts",
+      "confusable_with": [
+        "frontend-auth-flow-contracts"
+      ],
+      "rationale": "Authentication policy is a positive control; transient activation expires across async work."
+    },
+    {
+      "id": "user-activation-contracts--media-collision-smoke",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "A camera preview starts, switches devices, and stops every track correctly. Clicking a Fullscreen preview button awaits configuration before requestFullscreen; the failing browser reports inactive user activation, while a direct call succeeds.",
+      "expected_skill": "user-activation-contracts",
+      "confusable_with": [
+        "media-capture-device-contracts"
+      ],
+      "rationale": "The capture lifecycle is a positive control; delayed requestFullscreen timing makes transient user activation the failing boundary."
+    },
+    {
+      "id": "view-transitions-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A route animation silently aborts when duplicate view-transition-name values exist, captures a Suspense placeholder instead of final content, mishandles interruption, and ignores reduced motion. Verify DOM update and capture timing.",
+      "expected_skill": "view-transitions-contracts",
+      "confusable_with": [],
+      "rationale": "The failures are specific to the browser View Transitions API capture and update lifecycle."
+    },
+    {
+      "id": "view-transitions-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "This navigation does not rely on transitionend or delayed unmount. It uses the browser page transition API, but duplicate names abort capture and a streaming placeholder becomes the animated snapshot.",
+      "expected_skill": "view-transitions-contracts",
+      "confusable_with": [
+        "core-web-vitals-performance-contracts"
+      ],
+      "rationale": "The named browser transition mechanism and capture state distinguish it from general performance or CSS lifecycle."
+    },
+    {
+      "id": "webview-bridge-pages--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Build the page side of a native in-app browser where the first auth message can arrive before READY, close and Android back need ownership, renderer recovery shows blank content, safe areas are wrong, and bridge input needs validation.",
+      "expected_skill": "webview-bridge-pages",
+      "confusable_with": [],
+      "rationale": "The host is a native app WebView and the page owns bridge readiness, navigation, and layout contracts."
+    },
+    {
+      "id": "webview-bridge-pages--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The page is loaded by WKWebView and Android WebView inside native apps, not embedded by another website. A cold-start native message is missed, hardware Back conflicts with page navigation, and renderer death leaves a blank screen.",
+      "expected_skill": "webview-bridge-pages",
+      "confusable_with": [
+        "iframe-embed-contracts"
+      ],
+      "rationale": "Native host lifecycle and bridge ownership distinguish this from an ordinary browser iframe."
+    },
+    {
+      "id": "browser-storage-durability-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "Users see a saved confirmation for an IndexedDB write that later vanishes, a schema upgrade hangs while another tab stays open, and storage pressure produces quota failures. Define commit evidence, persistence claims, and honest recovery behavior.",
+      "expected_skill": "browser-storage-durability-contracts",
+      "confusable_with": [],
+      "rationale": "The report concerns IndexedDB transaction and upgrade lifecycle plus origin storage durability."
+    },
+    {
+      "id": "browser-storage-durability-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "The service worker serves the current application build correctly, but offline drafts stored in IndexedDB disappear after a transaction request reports success and an upgrade blocks behind another tab. Investigate local commit and durability evidence.",
+      "expected_skill": "browser-storage-durability-contracts",
+      "confusable_with": [
+        "pwa-offline-cache-contracts"
+      ],
+      "rationale": "Cache Storage is a positive control; IndexedDB commit, schema upgrade, quota, and persistence are failing."
+    },
+    {
+      "id": "contenteditable-selection-contracts--representative",
+      "kind": "representative",
+      "difficulty": "smoke",
+      "prompt": "A model-driven rich-text field jumps the caret after rerender, reverses backward selections, inserts pasted text at the old range, duplicates undo entries, and corrupts composition when the DOM is replaced. Define one coherent edit transaction.",
+      "expected_skill": "contenteditable-selection-contracts",
+      "confusable_with": [],
+      "rationale": "Selection ownership, beforeinput, DOM replacement, and native edit history define the editing-host boundary."
+    },
+    {
+      "id": "contenteditable-selection-contracts--collision",
+      "kind": "collision",
+      "difficulty": "smoke",
+      "prompt": "Korean IME key handling is composition-aware, but the rich-text host rerenders during the edit, moves the document selection to a stale node, and creates duplicate undo steps. The failure is editing-host transaction ownership.",
+      "expected_skill": "contenteditable-selection-contracts",
+      "confusable_with": [
+        "cjk-text-and-input"
+      ],
+      "rationale": "Language-specific composition handling is healthy; DOM selection, mutation, and undo ownership are not."
+    },
+    {
+      "id": "a11y-contract-testing--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A command palette opens above the page and keyboard navigation visibly highlights the active result. Screen readers announce only a generic region, selection changes are silent, and the regression suite clicks text labels without querying the exposed state.",
+      "expected_skill": "a11y-contract-testing",
+      "confusable_with": [
+        "overlay-focus-scroll-contracts"
+      ],
+      "rationale": "The overlay context creates a sibling collision, while the requested evidence concerns rendered roles, names, state, and regression assertions."
+    },
+    {
+      "id": "semantic-markup-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A signup form mixes browser validation messages with field captions rendered as separate divs, a clickable span for submit, and a help link wrapped around an icon button. Keyboard and role-based tests disagree across browsers.",
+      "expected_skill": "semantic-markup-contracts",
+      "confusable_with": [
+        "constraint-validation-contracts"
+      ],
+      "rationale": "Validation behavior and exposed semantics overlap here; the repeated evidence centers on invalid native structure, element choice, and relationships."
+    },
+    {
+      "id": "constraint-validation-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "After a username check fails, editing the input removes its visible error while the screen reader repeats the prior message, submission remains blocked, and reportValidity returns the stale server error.",
+      "expected_skill": "constraint-validation-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "Repeated announcements and blocked submission span accessibility and validation boundaries; the persistent custom-validity state drives the stale result."
+    },
+    {
+      "id": "js-form-validation-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A profile form built with a schema resolver marks untouched fields invalid after background defaults load. Correcting one value clears its text error, but isValid remains false and submit focus jumps to a field whose server error was already dismissed.",
+      "expected_skill": "js-form-validation-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "Focus and errors overlap with accessibility, while library-managed touched, resolver, server-error, and isValid state drive the report."
+    },
+    {
+      "id": "overlay-focus-scroll-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Opening a confirmation dialog from a drawer makes the page inert. Closing the inner layer returns focus behind the drawer and restores body scrolling while the drawer is still visible. Escape sometimes dismisses both layers.",
+      "expected_skill": "overlay-focus-scroll-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "Focus is an accessibility concern, but nested overlay stack ownership and scroll cleanup are the decisive runtime contract."
+    },
+    {
+      "id": "css-transition-animation-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A menu fades during unmount, but reduced-motion users can encounter a lingering backdrop and stale accessible items when cleanup never runs; rapid reopen during exit also leaves pointer events on the backdrop.",
+      "expected_skill": "css-transition-animation-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "Reduced-motion and stale accessible content create an accessibility boundary, while completion, interruption, and teardown remain tied to the transition lifecycle."
+    },
+    {
+      "id": "browser-page-lifecycle-bfcache-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "An offline-capable account page shows the previous user after cross-site Back navigation, starts a second analytics listener, and leaves polling paused while cached account data and page state disagree.",
+      "expected_skill": "browser-page-lifecycle-bfcache-contracts",
+      "confusable_with": [
+        "pwa-offline-cache-contracts"
+      ],
+      "rationale": "Cached bytes and restored document state are both plausible; duplicated listeners, paused work, and revived in-memory identity make lifecycle restoration the primary boundary."
+    },
+    {
+      "id": "history-scroll-restoration-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A shared catalog URL includes filters and an anchor, but after opening a product and pressing Back the list appears at the top, jumps near the old item as rows arrive, then shifts again when images finish loading.",
+      "expected_skill": "history-scroll-restoration-contracts",
+      "confusable_with": [
+        "deeplink-hydration"
+      ],
+      "rationale": "URL state and scroll state overlap in the report; repeated movement after history return and progressive layout growth makes restoration timing the primary boundary."
+    },
+    {
+      "id": "deeplink-hydration--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Opening a bookmarked search URL briefly renders the default results, replaces the address with the home route, and loses its filter plus anchor. Clicking the same bookmarked URL from inside the running application preserves both values.",
+      "expected_skill": "deeplink-hydration",
+      "confusable_with": [
+        "history-scroll-restoration-contracts"
+      ],
+      "rationale": "The anchor suggests scroll handling, while cold direct-navigation parameter readiness causes the loss."
+    },
+    {
+      "id": "ssr-hydration-mismatch--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Immediately after a deployment, some first visits report a text mismatch in the price banner. The server response contains a timestamp-derived label, and the browser's first render computes the label again before replacing that subtree.",
+      "expected_skill": "ssr-hydration-mismatch",
+      "confusable_with": [
+        "pwa-offline-cache-contracts"
+      ],
+      "rationale": "Deployment timing makes stale assets plausible, while two computations across server and first client render create deterministic DOM divergence."
+    },
+    {
+      "id": "pwa-offline-cache-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "After a release, an installed app can return to a prior screen and then show a blank page while requesting a removed chunk; offline launches alternate between that stale shell and partially restored page state.",
+      "expected_skill": "pwa-offline-cache-contracts",
+      "confusable_with": [
+        "browser-page-lifecycle-bfcache-contracts"
+      ],
+      "rationale": "Restored page state and cached release assets can both produce the return path; the removed chunk and stale offline shell make service-worker versioning the primary boundary."
+    },
+    {
+      "id": "browser-storage-durability-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A notes edit appears during the session, but Back navigation revives the old note with duplicated listeners and a later browser session also loses the edit; telemetry lacks a transaction completion event.",
+      "expected_skill": "browser-storage-durability-contracts",
+      "confusable_with": [
+        "browser-page-lifecycle-bfcache-contracts"
+      ],
+      "rationale": "History restoration and local persistence can both contribute to the stale note; cross-session loss and missing transaction completion make durability the primary boundary."
+    },
+    {
+      "id": "async-effect-race-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A dashboard effect opens a long-lived event callback for the selected project. Switching projects quickly leaves the callback reading the prior project id, and unmounting during setup can register a listener after cleanup has already run.",
+      "expected_skill": "async-effect-race-contracts",
+      "confusable_with": [
+        "realtime-transport-contracts"
+      ],
+      "rationale": "The long-lived event source resembles transport recovery, while stale closure and setup-cleanup ordering belong to raw effect ownership."
+    },
+    {
+      "id": "frontend-data-fetching-cache-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Saving a renamed team updates the header immediately, but two list views keep the old name until a window focus event triggers several requests. One view uses a key without organization id and the mutation invalidates only the detail key.",
+      "expected_skill": "frontend-data-fetching-cache-contracts",
+      "confusable_with": [
+        "optimistic-update-rollback-contracts"
+      ],
+      "rationale": "The immediate header suggests optimistic state, while incomplete keys and invalidation govern stale managed reads."
+    },
+    {
+      "id": "optimistic-update-rollback-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Sending a chat message inserts a temporary row, then a pushed server event adds the confirmed message before the mutation response arrives. The temporary row remains, and deleting either copy can target the other identifier.",
+      "expected_skill": "optimistic-update-rollback-contracts",
+      "confusable_with": [
+        "realtime-transport-contracts"
+      ],
+      "rationale": "A pushed event creates transport overlap, while temporary identity and mutation reconciliation cause duplication.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "realtime-transport-contracts"
+      ]
+    },
+    {
+      "id": "realtime-transport-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A live order board reconnects after the laptop wakes and begins applying events from the newest sequence number. Several updates that occurred during sleep never appear, while a second reconnect occasionally applies the first new event twice.",
+      "expected_skill": "realtime-transport-contracts",
+      "confusable_with": [
+        "async-effect-race-contracts"
+      ],
+      "rationale": "Duplicate handlers resemble effect cleanup, while cursor continuity, gaps, and reconnect replay are transport protocol concerns."
+    },
+    {
+      "id": "bff-proxy-security-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "An embedded reporting widget uploads a generated file through the host application's API route. The request includes a destination URL chosen by widget data, forwards the session cookie, and follows a redirect before streaming the body.",
+      "expected_skill": "bff-proxy-security-contracts",
+      "confusable_with": [
+        "iframe-embed-contracts"
+      ],
+      "rationale": "Embedding introduces a host-guest boundary, while the repository-owned server relay exposes target, credential, redirect, and body capabilities."
+    },
+    {
+      "id": "frontend-security-baseline--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A client-side integration callback renders response text as HTML, stores its bearer token in localStorage, accepts a return URL by prefix match, and opens a support window without isolating its opener.",
+      "expected_skill": "frontend-security-baseline",
+      "confusable_with": [
+        "frontend-auth-flow-contracts"
+      ],
+      "rationale": "Callback and bearer-token language creates authentication overlap, while unsafe HTML, token storage, redirect validation, and opener handling are client security traps."
+    },
+    {
+      "id": "payment-page-client-security--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Checkout renders card inputs inside a provider frame and listens for completion messages. A replay SDK records the surrounding page, a tag manager reads validation labels, and a newly added analytics script loads only during payment.",
+      "expected_skill": "payment-page-client-security",
+      "confusable_with": [
+        "iframe-embed-contracts"
+      ],
+      "rationale": "The frame messaging is relevant, while checkout script inventory and card-data exposure boundaries make this payment-specific."
+    },
+    {
+      "id": "frontend-auth-flow-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Password reset accepts a return URL, shows different messages for unknown and existing accounts, and sends users directly from an old email link into a sensitive settings action without asking them to verify again.",
+      "expected_skill": "frontend-auth-flow-contracts",
+      "confusable_with": [
+        "frontend-security-baseline"
+      ],
+      "rationale": "Redirect input raises general security concerns, while enumeration, reset journey, and fresh verification are authentication-flow contracts."
+    },
+    {
+      "id": "iframe-embed-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A hosted checkout widget reports READY and height through postMessage. On slow loads the host sends initialization first, the frame stays blank, and repeated resize messages alternate between two heights while camera-based verification remains unavailable.",
+      "expected_skill": "iframe-embed-contracts",
+      "confusable_with": [
+        "payment-page-client-security"
+      ],
+      "rationale": "Checkout makes payment security plausible, while readiness, sizing feedback, and embedded capability delegation define the host-guest failure."
+    },
+    {
+      "id": "webview-bridge-pages--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A native app injects an access token into its web screen and expects a READY reply. Cold starts occasionally miss the token, Android Back exits during an in-page step, and messages arriving after renderer recovery can update the wrong screen.",
+      "expected_skill": "webview-bridge-pages",
+      "confusable_with": [
+        "frontend-security-baseline"
+      ],
+      "rationale": "Token handling raises security overlap, while native bridge readiness, navigation ownership, and renderer lifecycle drive the failures.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "frontend-security-baseline"
+      ]
+    },
+    {
+      "id": "user-activation-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Inside an embedded editor, clicking Share first awaits a generated preview and then calls the Web Share API. It succeeds in one browser, rejects with NotAllowedError in another, and fullscreen requested earlier in the handler changes the outcome.",
+      "expected_skill": "user-activation-contracts",
+      "confusable_with": [
+        "iframe-embed-contracts"
+      ],
+      "rationale": "Embedding makes capability delegation plausible, while async delay and activation consumption determine the gesture-gated calls."
+    },
+    {
+      "id": "core-web-vitals-performance-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A route change uses animated page snapshots and looks smooth in a local recording. Field data shows worse INP and CLS on the same route, with a long click task followed by a late promotional banner that moves the captured content.",
+      "expected_skill": "core-web-vitals-performance-contracts",
+      "confusable_with": [
+        "view-transitions-contracts"
+      ],
+      "rationale": "The animation mechanism is salient, while field metric attribution across interaction and layout shift is the requested evidence.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "view-transitions-contracts"
+      ]
+    },
+    {
+      "id": "responsive-image-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "The approved mobile design shows a tight portrait crop, but devices at the same viewport choose different hero files. The picture sources overlap, sizes describes the full viewport, and one declared width differs from the asset's intrinsic width.",
+      "expected_skill": "responsive-image-contracts",
+      "confusable_with": [
+        "design-to-code-fidelity"
+      ],
+      "rationale": "The reference crop creates fidelity overlap, while browser candidate and art-direction mechanics produce the variance.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "design-to-code-fidelity"
+      ]
+    },
+    {
+      "id": "design-to-code-fidelity--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Two account-card variants share one component and both pass interaction tests. In the premium reference, the badge overlaps the border, spacing differs at tablet width, and the CTA uses copy from the standard variant.",
+      "expected_skill": "design-to-code-fidelity",
+      "confusable_with": [
+        "component-extraction-judgment"
+      ],
+      "rationale": "Shared structure suggests an abstraction question, while concrete rendered deviations from a variant reference are the primary evidence.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "component-extraction-judgment"
+      ]
+    },
+    {
+      "id": "view-transitions-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Navigating from gallery to detail briefly animates a loading skeleton as the hero, then snaps to the final image. Rapidly selecting another item aborts the animation, leaves a transition name on the old card, and the next navigation skips capture.",
+      "expected_skill": "view-transitions-contracts",
+      "confusable_with": [
+        "design-to-code-fidelity"
+      ],
+      "rationale": "The visual snap resembles fidelity drift, while capture readiness, interruption, and stale names are transition lifecycle mechanics."
+    },
+    {
+      "id": "resize-observer-layout-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A responsive summary card contributes repeated layout shifts in field traces. Its observer reads contentRect, writes a matching min-height during the callback, reports an undelivered-notifications warning, and grows by a few pixels on each update.",
+      "expected_skill": "resize-observer-layout-contracts",
+      "confusable_with": [
+        "core-web-vitals-performance-contracts"
+      ],
+      "rationale": "Field CLS creates page-performance overlap, while observer feedback and size-affecting writes are the direct mechanism."
+    },
+    {
+      "id": "large-list-data-grid-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A trading grid has poor interaction latency and flashes blank rows during fast wheel input. Increasing overscan improves the blanks but raises memory, while variable-height updates move the focused row outside the rendered window.",
+      "expected_skill": "large-list-data-grid-contracts",
+      "confusable_with": [
+        "core-web-vitals-performance-contracts"
+      ],
+      "rationale": "INP suggests broad performance work, while overscan, windowing, measurement, and recycled focus define the grid seam.",
+      "routing_mode": "primary-owner",
+      "acceptable_skills": [
+        "core-web-vitals-performance-contracts"
+      ]
+    },
+    {
+      "id": "component-extraction-judgment--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Three article cards use nearly identical picture markup and breakpoints. One has editorial cropping, one reserves a live-status region, and one loads actions from a different data source; a proposal merges them behind nine flags.",
+      "expected_skill": "component-extraction-judgment",
+      "confusable_with": [
+        "responsive-image-contracts"
+      ],
+      "rationale": "Picture markup creates image-contract overlap, while deciding a safe reuse boundary across distinct behaviors is the central job."
+    },
+    {
+      "id": "file-ingest-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Dropping a large image onto an uploader sometimes opens it in the current tab, repeated previews increase memory, folder entries arrive flattened, and rejected items are split across inconsistent correlation IDs.",
+      "expected_skill": "file-ingest-contracts",
+      "confusable_with": [
+        "client-error-observability-contracts"
+      ],
+      "rationale": "Inconsistent diagnostics overlap with observability, while navigation prevention, folder policy, preview URL lifetime, and dropped-item ownership make ingestion the primary boundary."
+    },
+    {
+      "id": "download-export-safety--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Generating a customer CSV can throw after creating the blob URL, monitoring splits one attempt across several job IDs, and downloaded files can execute user-entered spreadsheet formulas while URLs remain allocated.",
+      "expected_skill": "download-export-safety",
+      "confusable_with": [
+        "client-error-observability-contracts"
+      ],
+      "rationale": "Fragmented monitoring and export failures overlap with observability; formula injection, object URL cleanup, and generated-file lifecycle make export safety the primary boundary."
+    },
+    {
+      "id": "client-error-observability-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A report download fails only in production and appears as several unrelated monitoring issues. The stack is minified, an unhandled rejection lacks the export action breadcrumb, and captured context includes the generated file's private contents.",
+      "expected_skill": "client-error-observability-contracts",
+      "confusable_with": [
+        "download-export-safety"
+      ],
+      "rationale": "The download context creates export overlap, while capture coverage, symbolication, grouping, and scrubbing define the failure."
+    },
+    {
+      "id": "cjk-text-and-input--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "In a Korean rich-text comment box, pressing Enter to accept a candidate also submits the form. The editor receives keydown with 229 during composition, and its character limit counts a family emoji as several remaining characters.",
+      "expected_skill": "cjk-text-and-input",
+      "confusable_with": [
+        "contenteditable-selection-contracts"
+      ],
+      "rationale": "The rich-text host creates editing overlap, while composition-key handling and grapheme counting are language-input contracts."
+    },
+    {
+      "id": "contenteditable-selection-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "An Arabic rich-text editor shows inconsistent toolbar direction and placeholder placement; applying bold to a backward selection rerenders the paragraph, collapses the caret, and creates two undo steps for one command.",
+      "expected_skill": "contenteditable-selection-contracts",
+      "confusable_with": [
+        "i18n-copy-and-layout"
+      ],
+      "rationale": "Bidirectional presentation and editing behavior overlap; selection direction, DOM replacement, caret preservation, and undo transaction ownership make the editing boundary primary."
+    },
+    {
+      "id": "i18n-copy-and-layout--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A scheduling summary fits in English, while German text overflows the card, Arabic places the timezone badge on the wrong side, and Polish reminder counts use the singular sentence for several values.",
+      "expected_skill": "i18n-copy-and-layout",
+      "confusable_with": [
+        "datetime-correctness"
+      ],
+      "rationale": "Scheduling suggests temporal correctness, while copy expansion, RTL placement, and plural grammar are localization concerns."
+    },
+    {
+      "id": "datetime-correctness--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A plan change near a daylight-saving transition gives accounts in two zones different service intervals and credit amounts from the same stored local timestamp.",
+      "expected_skill": "datetime-correctness",
+      "confusable_with": [
+        "money-and-precision-contracts"
+      ],
+      "rationale": "Credit arithmetic and temporal interpretation both affect the outcome; zone-dependent interval construction from a floating timestamp makes datetime handling the primary boundary."
+    },
+    {
+      "id": "money-and-precision-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A usage invoice spanning a monthly and daylight-saving boundary produces different cent totals after durations become line items, floats are rounded independently, and intermediate values are reconciled.",
+      "expected_skill": "money-and-precision-contracts",
+      "confusable_with": [
+        "datetime-correctness"
+      ],
+      "rationale": "Calendar boundaries and charge arithmetic overlap in the report; float conversion, independent rounding, and cent reconciliation make precision the primary boundary."
+    },
+    {
+      "id": "pointer-gesture-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A slider announces a stale current value after pen and touch drags stop outside the thumb; pointercancel still saves the value, lost capture leaves dragging active, and keyboard and pointer state diverge.",
+      "expected_skill": "pointer-gesture-contracts",
+      "confusable_with": [
+        "a11y-contract-testing"
+      ],
+      "rationale": "Exposed slider state and input behavior overlap with accessibility; pointer delivery, cancellation, capture loss, and terminal cleanup make gesture ownership primary."
+    },
+    {
+      "id": "media-capture-device-contracts--hard-collision",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Inside a native-hosted camera flow, permission messages can race renderer readiness; reopening creates a second live track, switching devices leaves both indicators active, and teardown stops only the newest stream.",
+      "expected_skill": "media-capture-device-contracts",
+      "confusable_with": [
+        "webview-bridge-pages"
+      ],
+      "rationale": "Bridge readiness and permission delivery overlap with capture lifecycle; repeated acquisition, device replacement, and incomplete track teardown make media ownership primary."
+    },
+    {
+      "id": "a11y-contract-testing--critical-constraint-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "After checkout encounters an empty required field, submission behavior diverges from the rendered state: the error summary has no announced name, focus stays on submit, and the field's exposed invalid state never changes.",
+      "expected_skill": "a11y-contract-testing",
+      "confusable_with": [
+        "constraint-validation-contracts"
+      ],
+      "rationale": "Constraint handling and accessibility feedback overlap; missing naming, focus movement, announcement, and exposed invalid state make the accessibility contract primary."
+    },
+    {
+      "id": "bff-proxy-security-contracts--critical-file-ingest-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A multipart upload from a multi-file picker reaches an application-owned relay with duplicate field entries; the relay accepts a client-selected upstream, forwards session cookies, follows redirects, and streams without a byte budget.",
+      "expected_skill": "bff-proxy-security-contracts",
+      "confusable_with": [
+        "file-ingest-contracts"
+      ],
+      "rationale": "Multipart field handling and file selection overlap with ingestion; destination control, credential forwarding, redirects, and body budgets make the owned relay boundary primary."
+    },
+    {
+      "id": "datetime-correctness--critical-ssr-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A server-rendered datetime-local appointment moves the stored instant by an hour when users in two zones save it around a daylight-saving transition.",
+      "expected_skill": "datetime-correctness",
+      "confusable_with": [
+        "ssr-hydration-mismatch"
+      ],
+      "rationale": "Initial rendering creates hydration overlap, while floating local input, zone interpretation, DST disambiguation, and instant preservation define temporal correctness."
+    },
+    {
+      "id": "design-to-code-fidelity--critical-i18n-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Approved localized reference captures show different badge positions, CTA treatments, and breakpoint spacing from the implementation across both long-copy and RTL variants.",
+      "expected_skill": "design-to-code-fidelity",
+      "confusable_with": [
+        "i18n-copy-and-layout"
+      ],
+      "rationale": "Localized content creates i18n overlap, while measured differences against approved references across variants and breakpoints are fidelity defects."
+    },
+    {
+      "id": "file-ingest-contracts--critical-bff-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Picker uploads complete through the existing relay, while folder drops navigate the tab, discard nested entry paths, accept duplicate items, and leave every generated preview URL allocated.",
+      "expected_skill": "file-ingest-contracts",
+      "confusable_with": [
+        "bff-proxy-security-contracts"
+      ],
+      "rationale": "The upload relay creates proxy overlap, while native drop prevention, directory policy, deduplication, and preview lifetime belong to browser file ingestion."
+    },
+    {
+      "id": "frontend-security-baseline--critical-payment-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A checkout using hosted fields also exposes validation labels to analytics, stores a bearer token in localStorage, renders provider status through an HTML sink, and accepts opener and return URLs with prefix checks.",
+      "expected_skill": "frontend-security-baseline",
+      "confusable_with": [
+        "payment-page-client-security"
+      ],
+      "rationale": "Hosted checkout data and surrounding-page instrumentation overlap with payment security; token storage, unsafe HTML, opener isolation, and redirect validation make the broader browser-security boundary primary."
+    },
+    {
+      "id": "frontend-security-baseline--critical-webview-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A native-hosted bridge flow coordinates READY, hardware Back, renderer recovery, bridge-supplied HTML, token persistence, and return URLs; the HTML reaches an unsafe sink and browser credentials become exposed.",
+      "expected_skill": "frontend-security-baseline",
+      "confusable_with": [
+        "webview-bridge-pages"
+      ],
+      "rationale": "Bridge context creates WebView overlap, while unsafe HTML, credential persistence, and redirect validation remain browser-side security defects."
+    },
+    {
+      "id": "i18n-copy-and-layout--critical-fidelity-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "English matches the approved reference at every breakpoint. Real German, Arabic, and Polish content causes clipping, reversed control order, misplaced directional icons, and singular copy for plural values.",
+      "expected_skill": "i18n-copy-and-layout",
+      "confusable_with": [
+        "design-to-code-fidelity"
+      ],
+      "rationale": "Reference comparison creates fidelity overlap, while translation expansion, RTL semantics, directional assets, and plural grammar are localization contracts."
+    },
+    {
+      "id": "ssr-hydration-mismatch--critical-datetime-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A zoned appointment shows one timestamp in server HTML and another during the first browser render because the two sides receive different locale and timezone inputs; hydration replaces the subtree before any user interaction.",
+      "expected_skill": "ssr-hydration-mismatch",
+      "confusable_with": [
+        "datetime-correctness"
+      ],
+      "rationale": "Temporal formatting creates datetime overlap, while divergent server and first-browser inputs replace the hydration snapshot before interaction."
+    },
+    {
+      "id": "css-transition-animation-contracts--critical-view-transition-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A drawer exit waits for transitionend, rapid reopen preserves its exit class, cancellation skips cleanup, and the route-level snapshot briefly captures stale drawer content during the same navigation.",
+      "expected_skill": "css-transition-animation-contracts",
+      "confusable_with": [
+        "view-transitions-contracts"
+      ],
+      "rationale": "Route snapshots and component exit state both misbehave; class state, transition events, cancellation, and teardown make the component animation lifecycle primary."
+    },
+    {
+      "id": "view-transitions-contracts--critical-css-transition-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "During rapid navigation, duplicate transition names, changing CSS durations, and overlapping exit classes coincide with aborted capture, stale names on old cards, and a skipped next snapshot.",
+      "expected_skill": "view-transitions-contracts",
+      "confusable_with": [
+        "css-transition-animation-contracts"
+      ],
+      "rationale": "CSS lifecycle and snapshot lifecycle overlap during rapid navigation; duplicate names, capture aborts, and stale transition identity make the View Transitions boundary primary."
+    },
+    {
+      "id": "pwa-offline-cache-contracts--critical-storage-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "After deployment, an installed app reopens offline with old HTML that requests a removed chunk, while recently edited IndexedDB records appear under inconsistent versions across launches.",
+      "expected_skill": "pwa-offline-cache-contracts",
+      "confusable_with": [
+        "browser-storage-durability-contracts"
+      ],
+      "rationale": "Stored-record versioning and cached application assets both appear stale; old shell HTML, removed chunks, and deployment skew make the service-worker lifecycle primary."
+    },
+    {
+      "id": "browser-page-lifecycle-bfcache-contracts--critical-storage-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "Pressing Back revives stale in-memory data, duplicates observers, and leaves polling paused after visibility returns; a later reload also briefly surfaces an older saved record before reconciliation.",
+      "expected_skill": "browser-page-lifecycle-bfcache-contracts",
+      "confusable_with": [
+        "browser-storage-durability-contracts"
+      ],
+      "rationale": "Saved-record staleness and restored in-memory state overlap; document resurrection, duplicated observers, and paused work after traversal make lifecycle resume handling primary."
+    },
+    {
+      "id": "download-export-safety--critical-user-activation-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "After a click, a Copy report button awaits formatting before attempting the clipboard write, and some sessions request fullscreen first. The UI announces success before either the clipboard promise or fallback settles, the fallback copies stale text, and hidden private columns enter the payload.",
+      "expected_skill": "download-export-safety",
+      "confusable_with": [
+        "user-activation-contracts"
+      ],
+      "rationale": "Activation timing remains plausible, but the observed payload disclosure, stale fallback, and premature success state make export safety the primary boundary."
+    },
+    {
+      "id": "user-activation-contracts--critical-download-export-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A Copy button awaits a preview before calling the clipboard API. Failures cluster after that await and after an earlier fullscreen request, and the browser reports inactive user activation; some traces also show payload reconstruction and rejection-state changes.",
+      "expected_skill": "user-activation-contracts",
+      "confusable_with": [
+        "download-export-safety"
+      ],
+      "rationale": "Export-state symptoms remain plausible, but the async boundary, inactive-activation evidence, and earlier consuming gated call make transient activation timing primary."
+    },
+    {
+      "id": "webview-bridge-pages--critical-media-hard",
+      "kind": "collision",
+      "difficulty": "hard",
+      "prompt": "A camera flow runs inside a native host where permission can arrive before READY, recovery can target an old renderer, and hardware Back exits while capture resources are being replaced.",
+      "expected_skill": "webview-bridge-pages",
+      "confusable_with": [
+        "media-capture-device-contracts"
+      ],
+      "rationale": "Camera context creates media overlap, while bridge readiness, renderer identity, message ordering, and native Back ownership define the WebView failure."
+    }
+  ],
+  "plausible_edges": [
+    {
+      "from": "a11y-contract-testing",
+      "to": "constraint-validation-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Constraint handling and accessibility feedback overlap; missing naming, focus movement, announcement, and exposed invalid state make the accessibility contract primary."
+    },
+    {
+      "from": "a11y-contract-testing",
+      "to": "js-form-validation-contracts",
+      "priority": "standard",
+      "basis": "curated-untested-edge",
+      "review_note": "Library-rendered errors can plausibly be reported as an accessibility regression when naming, announcement, focus, or exposed state is the user-observable concern."
+    },
+    {
+      "from": "a11y-contract-testing",
+      "to": "overlay-focus-scroll-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The overlay context creates a sibling collision, while the requested evidence concerns rendered roles, names, state, and regression assertions."
+    },
+    {
+      "from": "a11y-contract-testing",
+      "to": "semantic-markup-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The native structure exists; the missing contract is observable role, announcement, and focus behavior rather than element selection."
+    },
+    {
+      "from": "async-effect-race-contracts",
+      "to": "frontend-data-fetching-cache-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The failure sits below any managed cache and belongs to effect ownership and request race handling."
+    },
+    {
+      "from": "async-effect-race-contracts",
+      "to": "realtime-transport-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The long-lived event source resembles transport recovery, while stale closure and setup-cleanup ordering belong to raw effect ownership."
+    },
+    {
+      "from": "bff-proxy-security-contracts",
+      "to": "file-ingest-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Multipart field handling and file selection overlap with ingestion; destination control, credential forwarding, redirects, and body budgets make the owned relay boundary primary."
+    },
+    {
+      "from": "bff-proxy-security-contracts",
+      "to": "frontend-security-baseline",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "This is a frontend-owned server gateway trust boundary, while the sibling is scoped to client-side traps."
+    },
+    {
+      "from": "bff-proxy-security-contracts",
+      "to": "iframe-embed-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Embedding introduces a host-guest boundary, while the repository-owned server relay exposes target, credential, redirect, and body capabilities."
+    },
+    {
+      "from": "browser-page-lifecycle-bfcache-contracts",
+      "to": "browser-storage-durability-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Saved-record staleness and restored in-memory state overlap; document resurrection, duplicated observers, and paused work after traversal make lifecycle resume handling primary."
+    },
+    {
+      "from": "browser-page-lifecycle-bfcache-contracts",
+      "to": "history-scroll-restoration-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Scroll restoration is explicitly healthy; the broken boundary is document suspension and resume."
+    },
+    {
+      "from": "browser-page-lifecycle-bfcache-contracts",
+      "to": "pwa-offline-cache-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Cached bytes and restored document state are both plausible; duplicated listeners, paused work, and revived in-memory identity make lifecycle restoration the primary boundary."
+    },
+    {
+      "from": "browser-storage-durability-contracts",
+      "to": "browser-page-lifecycle-bfcache-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "History restoration and local persistence can both contribute to the stale note; cross-session loss and missing transaction completion make durability the primary boundary."
+    },
+    {
+      "from": "browser-storage-durability-contracts",
+      "to": "pwa-offline-cache-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Cache Storage is a positive control; IndexedDB commit, schema upgrade, quota, and persistence are failing."
+    },
+    {
+      "from": "cjk-text-and-input",
+      "to": "contenteditable-selection-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The rich-text host creates editing overlap, while composition-key handling and grapheme counting are language-input contracts."
+    },
+    {
+      "from": "cjk-text-and-input",
+      "to": "i18n-copy-and-layout",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "This is input-method event sequencing, not translated-copy length, pluralization, or locale formatting."
+    },
+    {
+      "from": "client-error-observability-contracts",
+      "to": "download-export-safety",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The download context creates export overlap, while capture coverage, symbolication, grouping, and scrubbing define the failure."
+    },
+    {
+      "from": "client-error-observability-contracts",
+      "to": "file-ingest-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The inbound file behavior is healthy and the defect is in observability fidelity and sensitive-data scrubbing."
+    },
+    {
+      "from": "component-extraction-judgment",
+      "to": "design-to-code-fidelity",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Visual fidelity is already established; the unresolved question is whether structural reuse preserves distinct behavior."
+    },
+    {
+      "from": "component-extraction-judgment",
+      "to": "responsive-image-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Picture markup creates image-contract overlap, while deciding a safe reuse boundary across distinct behaviors is the central job."
+    },
+    {
+      "from": "constraint-validation-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Repeated announcements and blocked submission span accessibility and validation boundaries; the persistent custom-validity state drives the stale result."
+    },
+    {
+      "from": "constraint-validation-contracts",
+      "to": "js-form-validation-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The prompt excludes library state and names native validity lifecycle behavior."
+    },
+    {
+      "from": "contenteditable-selection-contracts",
+      "to": "cjk-text-and-input",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Language-specific composition handling is healthy; DOM selection, mutation, and undo ownership are not."
+    },
+    {
+      "from": "contenteditable-selection-contracts",
+      "to": "i18n-copy-and-layout",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Bidirectional presentation and editing behavior overlap; selection direction, DOM replacement, caret preservation, and undo transaction ownership make the editing boundary primary."
+    },
+    {
+      "from": "core-web-vitals-performance-contracts",
+      "to": "responsive-image-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Image selection is a verified positive control; remaining evidence points to page-level LCP attribution."
+    },
+    {
+      "from": "core-web-vitals-performance-contracts",
+      "to": "view-transitions-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The animation mechanism is salient, while field metric attribution across interaction and layout shift is the requested evidence."
+    },
+    {
+      "from": "css-transition-animation-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Reduced-motion and stale accessible content create an accessibility boundary, while completion, interruption, and teardown remain tied to the transition lifecycle."
+    },
+    {
+      "from": "css-transition-animation-contracts",
+      "to": "overlay-focus-scroll-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The overlay contract is healthy until transition completion gates teardown."
+    },
+    {
+      "from": "css-transition-animation-contracts",
+      "to": "view-transitions-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Route snapshots and component exit state both misbehave; class state, transition events, cancellation, and teardown make the component animation lifecycle primary."
+    },
+    {
+      "from": "datetime-correctness",
+      "to": "i18n-copy-and-layout",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Display formatting is explicitly correct; instant versus wall-clock semantics are wrong."
+    },
+    {
+      "from": "datetime-correctness",
+      "to": "money-and-precision-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Credit arithmetic and temporal interpretation both affect the outcome; zone-dependent interval construction from a floating timestamp makes datetime handling the primary boundary."
+    },
+    {
+      "from": "datetime-correctness",
+      "to": "ssr-hydration-mismatch",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Initial rendering creates hydration overlap, while floating local input, zone interpretation, DST disambiguation, and instant preservation define temporal correctness."
+    },
+    {
+      "from": "deeplink-hydration",
+      "to": "history-scroll-restoration-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The anchor suggests scroll handling, while cold direct-navigation parameter readiness causes the loss."
+    },
+    {
+      "from": "deeplink-hydration",
+      "to": "ssr-hydration-mismatch",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The DOM is deterministic; the failure is cold-navigation query readiness and redirect timing."
+    },
+    {
+      "from": "design-to-code-fidelity",
+      "to": "component-extraction-judgment",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Shared structure suggests an abstraction question, while concrete rendered deviations from a variant reference are the primary evidence."
+    },
+    {
+      "from": "design-to-code-fidelity",
+      "to": "core-web-vitals-performance-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Performance is a positive control and the remaining defect is visual reference fidelity."
+    },
+    {
+      "from": "design-to-code-fidelity",
+      "to": "i18n-copy-and-layout",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Localized content creates i18n overlap, while measured differences against approved references across variants and breakpoints are fidelity defects."
+    },
+    {
+      "from": "download-export-safety",
+      "to": "client-error-observability-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Fragmented monitoring and export failures overlap with observability; formula injection, object URL cleanup, and generated-file lifecycle make export safety the primary boundary."
+    },
+    {
+      "from": "download-export-safety",
+      "to": "file-ingest-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The explicit direction is outbound generated content, not inbound browser file handling."
+    },
+    {
+      "from": "download-export-safety",
+      "to": "user-activation-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Trusted-event timing is a positive control; outbound payload selection, rejected-call UI, fallback correctness, and false success make export safety the primary boundary."
+    },
+    {
+      "from": "file-ingest-contracts",
+      "to": "bff-proxy-security-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The upload relay creates proxy overlap, while native drop prevention, directory policy, deduplication, and preview lifetime belong to browser file ingestion."
+    },
+    {
+      "from": "file-ingest-contracts",
+      "to": "client-error-observability-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Inconsistent diagnostics overlap with observability, while navigation prevention, folder policy, preview URL lifetime, and dropped-item ownership make ingestion the primary boundary."
+    },
+    {
+      "from": "file-ingest-contracts",
+      "to": "download-export-safety",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The report is about files entering the browser UI rather than generated files leaving it."
+    },
+    {
+      "from": "frontend-auth-flow-contracts",
+      "to": "frontend-security-baseline",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Redirect input raises general security concerns, while enumeration, reset journey, and fresh verification are authentication-flow contracts."
+    },
+    {
+      "from": "frontend-auth-flow-contracts",
+      "to": "user-activation-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "User activation is healthy; callback routing and enumeration-safe auth behavior are not."
+    },
+    {
+      "from": "frontend-data-fetching-cache-contracts",
+      "to": "async-effect-race-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The prompt rules out raw effect races and identifies cache identity and policy errors."
+    },
+    {
+      "from": "frontend-data-fetching-cache-contracts",
+      "to": "optimistic-update-rollback-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The immediate header suggests optimistic state, while incomplete keys and invalidation govern stale managed reads."
+    },
+    {
+      "from": "frontend-security-baseline",
+      "to": "bff-proxy-security-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The server relay boundary is explicitly absent; the risks all execute in the client."
+    },
+    {
+      "from": "frontend-security-baseline",
+      "to": "frontend-auth-flow-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Callback and bearer-token language creates authentication overlap, while unsafe HTML, token storage, redirect validation, and opener handling are client security traps."
+    },
+    {
+      "from": "frontend-security-baseline",
+      "to": "payment-page-client-security",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Hosted checkout data and surrounding-page instrumentation overlap with payment security; token storage, unsafe HTML, opener isolation, and redirect validation make the broader browser-security boundary primary."
+    },
+    {
+      "from": "frontend-security-baseline",
+      "to": "webview-bridge-pages",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Bridge context creates WebView overlap, while unsafe HTML, credential persistence, and redirect validation remain browser-side security defects."
+    },
+    {
+      "from": "history-scroll-restoration-contracts",
+      "to": "browser-page-lifecycle-bfcache-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Document resume behavior is healthy; the failure is the timing and ownership of scroll restoration."
+    },
+    {
+      "from": "history-scroll-restoration-contracts",
+      "to": "deeplink-hydration",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "URL state and scroll state overlap in the report; repeated movement after history return and progressive layout growth makes restoration timing the primary boundary."
+    },
+    {
+      "from": "i18n-copy-and-layout",
+      "to": "cjk-text-and-input",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "IME and CJK input are positive controls; translation, pluralization, and RTL layout are failing."
+    },
+    {
+      "from": "i18n-copy-and-layout",
+      "to": "datetime-correctness",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Scheduling suggests temporal correctness, while copy expansion, RTL placement, and plural grammar are localization concerns."
+    },
+    {
+      "from": "i18n-copy-and-layout",
+      "to": "design-to-code-fidelity",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Reference comparison creates fidelity overlap, while translation expansion, RTL semantics, directional assets, and plural grammar are localization contracts."
+    },
+    {
+      "from": "iframe-embed-contracts",
+      "to": "payment-page-client-security",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Checkout makes payment security plausible, while readiness, sizing feedback, and embedded capability delegation define the host-guest failure."
+    },
+    {
+      "from": "iframe-embed-contracts",
+      "to": "user-activation-contracts",
+      "priority": "standard",
+      "basis": "curated-untested-edge",
+      "review_note": "Gesture-gated APIs inside an embedded document create a plausible boundary where iframe capability delegation and transient activation timing may both appear causal."
+    },
+    {
+      "from": "iframe-embed-contracts",
+      "to": "webview-bridge-pages",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The prompt explicitly establishes a browser iframe host rather than a native WebView bridge."
+    },
+    {
+      "from": "js-form-validation-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Focus and errors overlap with accessibility, while library-managed touched, resolver, server-error, and isValid state drive the report."
+    },
+    {
+      "from": "js-form-validation-contracts",
+      "to": "constraint-validation-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The prompt excludes browser validity and identifies library-managed validation lifecycle."
+    },
+    {
+      "from": "large-list-data-grid-contracts",
+      "to": "core-web-vitals-performance-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "INP suggests broad performance work, while overscan, windowing, measurement, and recycled focus define the grid seam."
+    },
+    {
+      "from": "large-list-data-grid-contracts",
+      "to": "resize-observer-layout-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Generic observation is healthy; row virtualization and recycling semantics cause the user-visible failures."
+    },
+    {
+      "from": "media-capture-device-contracts",
+      "to": "iframe-embed-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Embedding and delegated permissions create iframe overlap, while stream replacement, device removal, and complete track teardown define capture ownership."
+    },
+    {
+      "from": "media-capture-device-contracts",
+      "to": "user-activation-contracts",
+      "priority": "standard",
+      "basis": "reviewed-smoke-case",
+      "review_note": "Gesture timing is a positive control; track state, device replacement, and complete stream teardown make media-capture ownership primary."
+    },
+    {
+      "from": "media-capture-device-contracts",
+      "to": "webview-bridge-pages",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Bridge readiness and permission delivery overlap with capture lifecycle; repeated acquisition, device replacement, and incomplete track teardown make media ownership primary."
+    },
+    {
+      "from": "money-and-precision-contracts",
+      "to": "datetime-correctness",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Calendar boundaries and charge arithmetic overlap in the report; float conversion, independent rounding, and cent reconciliation make precision the primary boundary."
+    },
+    {
+      "from": "money-and-precision-contracts",
+      "to": "i18n-copy-and-layout",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Locale presentation is correct; exact value parsing, rounding, and reconciliation are wrong."
+    },
+    {
+      "from": "optimistic-update-rollback-contracts",
+      "to": "frontend-data-fetching-cache-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The read cache is a positive control; the broken lifecycle is optimistic write rollback and reconciliation."
+    },
+    {
+      "from": "optimistic-update-rollback-contracts",
+      "to": "realtime-transport-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "A pushed event creates transport overlap, while temporary identity and mutation reconciliation cause duplication."
+    },
+    {
+      "from": "overlay-focus-scroll-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Focus is an accessibility concern, but nested overlay stack ownership and scroll cleanup are the decisive runtime contract."
+    },
+    {
+      "from": "overlay-focus-scroll-contracts",
+      "to": "css-transition-animation-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Animation lifecycle is explicitly healthy; focus, nested overlay, and scroll-lock state are broken."
+    },
+    {
+      "from": "payment-page-client-security",
+      "to": "frontend-security-baseline",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The remaining evidence is payment-page specific rather than a general client security baseline."
+    },
+    {
+      "from": "payment-page-client-security",
+      "to": "iframe-embed-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The frame messaging is relevant, while checkout script inventory and card-data exposure boundaries make this payment-specific."
+    },
+    {
+      "from": "pointer-gesture-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Exposed slider state and input behavior overlap with accessibility; pointer delivery, cancellation, capture loss, and terminal cleanup make gesture ownership primary."
+    },
+    {
+      "from": "pointer-gesture-contracts",
+      "to": "file-ingest-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The child image creates native drag-and-drop overlap, while pointer capture, terminal events, cancellation, and commit ownership govern the reorder."
+    },
+    {
+      "from": "pwa-offline-cache-contracts",
+      "to": "browser-page-lifecycle-bfcache-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Restored page state and cached release assets can both produce the return path; the removed chunk and stale offline shell make service-worker versioning the primary boundary."
+    },
+    {
+      "from": "pwa-offline-cache-contracts",
+      "to": "browser-storage-durability-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Stored-record versioning and cached application assets both appear stale; old shell HTML, removed chunks, and deployment skew make the service-worker lifecycle primary."
+    },
+    {
+      "from": "pwa-offline-cache-contracts",
+      "to": "ssr-hydration-mismatch",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The render is deterministic for fresh bytes; service-worker lifecycle serves an incompatible build."
+    },
+    {
+      "from": "realtime-transport-contracts",
+      "to": "async-effect-race-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Duplicate handlers resemble effect cleanup, while cursor continuity, gaps, and reconnect replay are transport protocol concerns."
+    },
+    {
+      "from": "realtime-transport-contracts",
+      "to": "frontend-data-fetching-cache-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The read cache starts correct; pushed stream recovery and ordering corrupt later state."
+    },
+    {
+      "from": "resize-observer-layout-contracts",
+      "to": "core-web-vitals-performance-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Field CLS creates page-performance overlap, while observer feedback and size-affecting writes are the direct mechanism."
+    },
+    {
+      "from": "resize-observer-layout-contracts",
+      "to": "large-list-data-grid-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The prompt excludes windowing and identifies a generic observer feedback and cleanup loop."
+    },
+    {
+      "from": "responsive-image-contracts",
+      "to": "core-web-vitals-performance-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Metric evidence has already isolated incorrect responsive image markup as the actionable boundary."
+    },
+    {
+      "from": "responsive-image-contracts",
+      "to": "design-to-code-fidelity",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The reference crop creates fidelity overlap, while browser candidate and art-direction mechanics produce the variance."
+    },
+    {
+      "from": "semantic-markup-contracts",
+      "to": "a11y-contract-testing",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The source markup contract is invalid, so native element and structure choices precede regression assertions."
+    },
+    {
+      "from": "semantic-markup-contracts",
+      "to": "constraint-validation-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Validation behavior and exposed semantics overlap here; the repeated evidence centers on invalid native structure, element choice, and relationships."
+    },
+    {
+      "from": "ssr-hydration-mismatch",
+      "to": "datetime-correctness",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Temporal formatting creates datetime overlap, while divergent server and first-browser inputs replace the hydration snapshot before interaction."
+    },
+    {
+      "from": "ssr-hydration-mismatch",
+      "to": "deeplink-hydration",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Router inputs are correct; nondeterministic server and client render output causes the failure."
+    },
+    {
+      "from": "ssr-hydration-mismatch",
+      "to": "pwa-offline-cache-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Deployment timing makes stale assets plausible, while two computations across server and first client render create deterministic DOM divergence."
+    },
+    {
+      "from": "user-activation-contracts",
+      "to": "frontend-auth-flow-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Authentication policy is a positive control; transient activation expires across async work."
+    },
+    {
+      "from": "user-activation-contracts",
+      "to": "iframe-embed-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Embedding makes capability delegation plausible, while async delay and activation consumption determine the gesture-gated calls."
+    },
+    {
+      "from": "user-activation-contracts",
+      "to": "media-capture-device-contracts",
+      "priority": "standard",
+      "basis": "reviewed-smoke-case",
+      "review_note": "The capture lifecycle is a positive control; delayed requestFullscreen timing makes transient user activation the failing boundary."
+    },
+    {
+      "from": "user-activation-contracts",
+      "to": "download-export-safety",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Payload and failure UI are positive controls; async delay and a consuming gated call make transient activation timing the primary boundary."
+    },
+    {
+      "from": "view-transitions-contracts",
+      "to": "core-web-vitals-performance-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "The named browser transition mechanism and capture state distinguish it from general performance or CSS lifecycle."
+    },
+    {
+      "from": "view-transitions-contracts",
+      "to": "css-transition-animation-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "CSS lifecycle and snapshot lifecycle overlap during rapid navigation; duplicate names, capture aborts, and stale transition identity make the View Transitions boundary primary."
+    },
+    {
+      "from": "view-transitions-contracts",
+      "to": "design-to-code-fidelity",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "The visual snap resembles fidelity drift, while capture readiness, interruption, and stale names are transition lifecycle mechanics."
+    },
+    {
+      "from": "webview-bridge-pages",
+      "to": "frontend-security-baseline",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Token handling raises security overlap, while native bridge readiness, navigation ownership, and renderer lifecycle drive the failures."
+    },
+    {
+      "from": "webview-bridge-pages",
+      "to": "iframe-embed-contracts",
+      "priority": "standard",
+      "basis": "reviewed-metadata-boundary",
+      "review_note": "Native host lifecycle and bridge ownership distinguish this from an ordinary browser iframe."
+    },
+    {
+      "from": "webview-bridge-pages",
+      "to": "media-capture-device-contracts",
+      "priority": "critical",
+      "basis": "reviewed-hard-case",
+      "review_note": "Camera context creates media overlap, while bridge readiness, renderer identity, message ordering, and native Back ownership define the WebView failure."
+    }
+  ]
+}

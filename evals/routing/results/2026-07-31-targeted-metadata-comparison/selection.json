@@ -1,0 +1,82 @@
+[
+  {
+    "internal_id": "browser-page-lifecycle-bfcache-contracts--representative",
+    "case_id": "route-065",
+    "prompt": "After leaving a dashboard and returning with the browser Back button, the old account data is visible and a second socket plus observer starts. A normal reload is fine. Diagnose page freeze and restore without forcing every pageshow to reload."
+  },
+  {
+    "internal_id": "browser-storage-durability-contracts--representative",
+    "case_id": "route-101",
+    "prompt": "Users see a saved confirmation for an IndexedDB write that later vanishes, a schema upgrade hangs while another tab stays open, and storage pressure produces quota failures. Define commit evidence, persistence claims, and honest recovery behavior."
+  },
+  {
+    "internal_id": "contenteditable-selection-contracts--representative",
+    "case_id": "route-003",
+    "prompt": "A model-driven rich-text field jumps the caret after rerender, reverses backward selections, inserts pasted text at the old range, duplicates undo entries, and corrupts composition when the DOM is replaced. Define one coherent edit transaction."
+  },
+  {
+    "internal_id": "history-scroll-restoration-contracts--representative",
+    "case_id": "route-078",
+    "prompt": "Using Back returns an SPA list to the top, then jumps twice as asynchronous rows load. Nested panels lose their offsets and hash navigation races manual restoration. Define per-history-entry restoration and layout readiness tests."
+  },
+  {
+    "internal_id": "media-capture-device-contracts--representative",
+    "case_id": "route-137",
+    "prompt": "After camera denial the page never offers a usable retry, switching devices opens a second stream, unplugging the microphone leaves stale state, and navigation does not stop tracks so the hardware indicator remains on."
+  },
+  {
+    "internal_id": "pointer-gesture-contracts--representative",
+    "case_id": "route-060",
+    "prompt": "A resize handle stops updating when the pointer leaves its hit area, remains active after cancellation, commits on pointercancel, ignores pen input, and blocks page pan because capture and touch-action are mismanaged."
+  },
+  {
+    "internal_id": "resize-observer-layout-contracts--representative",
+    "case_id": "route-085",
+    "prompt": "A measured panel flickers and grows forever because its ResizeObserver callback writes a size-affecting style, reports the wrong box, and keeps observing an element after replacement. Reproduce the loop and cleanup boundary."
+  },
+  {
+    "internal_id": "user-activation-contracts--representative",
+    "case_id": "route-018",
+    "prompt": "An OAuth popup opens from a direct click but returns null after awaiting configuration, and clipboard plus fullscreen calls reject when another gated call consumed the gesture. Preserve trusted-event timing and design recovery."
+  },
+  {
+    "internal_id": "browser-page-lifecycle-bfcache-contracts--critical-storage-hard",
+    "case_id": "route-006",
+    "prompt": "Pressing Back revives stale in-memory data, duplicates observers, and leaves polling paused after visibility returns; a later reload also briefly surfaces an older saved record before reconciliation."
+  },
+  {
+    "internal_id": "browser-storage-durability-contracts--hard-collision",
+    "case_id": "route-017",
+    "prompt": "A notes edit appears during the session, but Back navigation revives the old note with duplicated listeners and a later browser session also loses the edit; telemetry lacks a transaction completion event."
+  },
+  {
+    "internal_id": "contenteditable-selection-contracts--hard-collision",
+    "case_id": "route-033",
+    "prompt": "An Arabic rich-text editor shows inconsistent toolbar direction and placeholder placement; applying bold to a backward selection rerenders the paragraph, collapses the caret, and creates two undo steps for one command."
+  },
+  {
+    "internal_id": "cjk-text-and-input--hard-collision",
+    "case_id": "route-118",
+    "prompt": "In a Korean rich-text comment box, pressing Enter to accept a candidate also submits the form. The editor receives keydown with 229 during composition, and its character limit counts a family emoji as several remaining characters."
+  },
+  {
+    "internal_id": "download-export-safety--critical-user-activation-hard",
+    "case_id": "route-016",
+    "prompt": "After a click, a Copy report button awaits formatting before attempting the clipboard write, and some sessions request fullscreen first. The UI announces success before either the clipboard promise or fallback settles, the fallback copies stale text, and hidden private columns enter the payload."
+  },
+  {
+    "internal_id": "user-activation-contracts--critical-download-export-hard",
+    "case_id": "route-032",
+    "prompt": "A Copy button awaits a preview before calling the clipboard API. Failures cluster after that await and after an earlier fullscreen request, and the browser reports inactive user activation; some traces also show payload reconstruction and rejection-state changes."
+  },
+  {
+    "internal_id": "resize-observer-layout-contracts--hard-collision",
+    "case_id": "route-073",
+    "prompt": "A responsive summary card contributes repeated layout shifts in field traces. Its observer reads contentRect, writes a matching min-height during the callback, reports an undelivered-notifications warning, and grows by a few pixels on each update."
+  },
+  {
+    "internal_id": "media-capture-device-contracts--hard-collision",
+    "case_id": "route-122",
+    "prompt": "Inside a native-hosted camera flow, permission messages can race renderer readiness; reopening creates a second live track, switching devices leaves both indicators active, and teardown stops only the newest stream."
+  }
+]

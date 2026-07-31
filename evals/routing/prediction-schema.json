@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:frontend-niche-skills:routing-predictions:v4",
+  "title": "Frontend niche skill routing predictions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "dataset_sha256",
+    "metadata_catalog_sha256",
+    "predictions"
+  ],
+  "properties": {
+    "schema_version": {"const": 4},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "dataset_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "metadata_catalog_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "predictions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "predicted_skill"],
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "pattern": "^route-[0-9]{3,}$"
+          },
+          "predicted_skill": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

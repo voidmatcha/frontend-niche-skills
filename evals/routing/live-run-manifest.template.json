@@ -1,0 +1,33 @@
+{
+  "benchmark_schema_version": 4,
+  "dataset_id": "",
+  "dataset_sha256": "",
+  "metadata_catalog_sha256": "",
+  "run_id": "",
+  "created_at_utc": "not_captured",
+  "model": {
+    "provider": "",
+    "name": "",
+    "version": "",
+    "role": ""
+  },
+  "prompt_protocol": {
+    "metadata_source": "installed_skill_metadata",
+    "selection_instruction": "Select exactly one allowed skill slug for each case.",
+    "case_isolation": true,
+    "context_reset_between_cases": true,
+    "model_repo_access": false,
+    "temperature": null,
+    "notes": ""
+  },
+  "batches": [
+    {
+      "id": "batch-001",
+      "case_ids": [],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    }
+  ],
+  "predictions_path": "predictions.json",
+  "independence_caveat": ""
+}

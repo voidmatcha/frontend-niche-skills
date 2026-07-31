@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:frontend-niche-skills:routing-benchmark:v3",
+  "title": "Frontend niche skill routing benchmark",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset_id", "catalog", "clusters", "plausible_edges", "cases"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["excluded_skills"],
+      "properties": {
+        "excluded_skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "clusters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "members"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "members": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "plausible_edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "priority", "basis", "review_note"],
+        "properties": {
+          "from": {"type": "string", "minLength": 1},
+          "to": {"type": "string", "minLength": 1},
+          "priority": {"enum": ["standard", "critical"]},
+          "basis": {"type": "string", "minLength": 1},
+          "review_note": {"type": "string", "minLength": 40}
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "difficulty",
+          "prompt",
+          "expected_skill",
+          "confusable_with",
+          "rationale"
+        ],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["representative", "collision"]},
+          "difficulty": {"enum": ["smoke", "hard"]},
+          "prompt": {"type": "string", "minLength": 80},
+          "expected_skill": {"type": "string", "minLength": 1},
+          "confusable_with": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "rationale": {"type": "string", "minLength": 40},
+          "routing_mode": {
+            "enum": ["exclusive", "primary-owner"],
+            "default": "exclusive"
+          },
+          "acceptable_skills": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1},
+            "default": []
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "cases": {
+          "items": {
+            "if": {
+              "properties": {"kind": {"const": "representative"}}
+            },
+            "then": {
+              "properties": {"difficulty": {"const": "smoke"}}
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "cases": {
+          "items": {
+            "if": {
+              "required": ["routing_mode"],
+              "properties": {"routing_mode": {"const": "primary-owner"}}
+            },
+            "then": {
+              "required": ["acceptable_skills"],
+              "properties": {"acceptable_skills": {"minItems": 1}}
+            },
+            "else": {
+              "properties": {"acceptable_skills": {"maxItems": 0}}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

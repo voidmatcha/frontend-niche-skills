@@ -1,0 +1,155 @@
+{
+  "benchmark_schema_version": 4,
+  "dataset_id": "frontend-niche-skills-routing-v3",
+  "dataset_sha256": "c0160a3364d2ce8ffdafeb94b03b777652c2397f8459c1187e03febd54f6cd18",
+  "metadata_catalog_sha256": "ab816dcda373072f13a3eca838f10634ca3b983714c51d960fd3ee5ee1e22bde",
+  "run_id": "routing-v4-targeted-16-current-gpt-5.5",
+  "created_at_utc": "2026-07-31T06:57:18Z",
+  "model": {
+    "provider": "OpenAI",
+    "name": "gpt-5.5",
+    "version": "not_captured",
+    "role": "metadata-only-router"
+  },
+  "prompt_protocol": {
+    "metadata_source": "inline_metadata_catalog",
+    "selection_instruction": "Select exactly one allowed skill slug for this single case using only the supplied catalog metadata.",
+    "case_isolation": true,
+    "context_reset_between_cases": true,
+    "model_repo_access": false,
+    "temperature": null,
+    "notes": "Each case used a fresh codex exec --ephemeral process in an empty read-only directory with user config, rules, plugins, remote plugins, memories, workspace dependencies, and all discovered ambient skills disabled. The catalog contained the current frontmatter name and description values."
+  },
+  "batches": [
+    {
+      "id": "current-001",
+      "case_ids": [
+        "route-065"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-002",
+      "case_ids": [
+        "route-101"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-003",
+      "case_ids": [
+        "route-003"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-004",
+      "case_ids": [
+        "route-078"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-005",
+      "case_ids": [
+        "route-137"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-006",
+      "case_ids": [
+        "route-060"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-007",
+      "case_ids": [
+        "route-085"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-008",
+      "case_ids": [
+        "route-018"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-009",
+      "case_ids": [
+        "route-006"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-010",
+      "case_ids": [
+        "route-017"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-011",
+      "case_ids": [
+        "route-033"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-012",
+      "case_ids": [
+        "route-118"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-013",
+      "case_ids": [
+        "route-016"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-014",
+      "case_ids": [
+        "route-032"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-015",
+      "case_ids": [
+        "route-073"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    },
+    {
+      "id": "current-016",
+      "case_ids": [
+        "route-122"
+      ],
+      "started_at_utc": "not_captured",
+      "completed_at_utc": "not_captured"
+    }
+  ],
+  "predictions_path": "current-before-predictions.json",
+  "independence_caveat": "Provider cache and hidden-state reuse were not observable; every case used a fresh ephemeral process and the captured logs contain 16 unique session IDs."
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 4,
+  "dataset_id": "frontend-niche-skills-routing-v3",
+  "dataset_sha256": "c0160a3364d2ce8ffdafeb94b03b777652c2397f8459c1187e03febd54f6cd18",
+  "metadata_catalog_sha256": "0ed484ed4cd38218bbdb172ecf2f7cba66b9af6252d640d4166fc9d941260a55",
+  "predictions": [
+    {
+      "case_id": "route-065",
+      "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+    },
+    {
+      "case_id": "route-101",
+      "predicted_skill": "browser-storage-durability-contracts"
+    },
+    {
+      "case_id": "route-003",
+      "predicted_skill": "contenteditable-selection-contracts"
+    },
+    {
+      "case_id": "route-078",
+      "predicted_skill": "history-scroll-restoration-contracts"
+    },
+    {
+      "case_id": "route-137",
+      "predicted_skill": "media-capture-device-contracts"
+    },
+    {
+      "case_id": "route-060",
+      "predicted_skill": "pointer-gesture-contracts"
+    },
+    {
+      "case_id": "route-085",
+      "predicted_skill": "resize-observer-layout-contracts"
+    },
+    {
+      "case_id": "route-018",
+      "predicted_skill": "user-activation-contracts"
+    },
+    {
+      "case_id": "route-006",
+      "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+    },
+    {
+      "case_id": "route-017",
+      "predicted_skill": "browser-storage-durability-contracts"
+    },
+    {
+      "case_id": "route-033",
+      "predicted_skill": "contenteditable-selection-contracts"
+    },
+    {
+      "case_id": "route-118",
+      "predicted_skill": "cjk-text-and-input"
+    },
+    {
+      "case_id": "route-016",
+      "predicted_skill": "user-activation-contracts"
+    },
+    {
+      "case_id": "route-032",
+      "predicted_skill": "user-activation-contracts"
+    },
+    {
+      "case_id": "route-073",
+      "predicted_skill": "resize-observer-layout-contracts"
+    },
+    {
+      "case_id": "route-122",
+      "predicted_skill": "media-capture-device-contracts"
+    }
+  ]
+}

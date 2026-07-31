@@ -1,0 +1,162 @@
+[
+  {
+    "name": "a11y-contract-testing",
+    "description": "a11y-contract-testing"
+  },
+  {
+    "name": "async-effect-race-contracts",
+    "description": "async-effect-race-contracts"
+  },
+  {
+    "name": "bff-proxy-security-contracts",
+    "description": "bff-proxy-security-contracts"
+  },
+  {
+    "name": "browser-page-lifecycle-bfcache-contracts",
+    "description": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+    "name": "browser-storage-durability-contracts",
+    "description": "browser-storage-durability-contracts"
+  },
+  {
+    "name": "cjk-text-and-input",
+    "description": "cjk-text-and-input"
+  },
+  {
+    "name": "client-error-observability-contracts",
+    "description": "client-error-observability-contracts"
+  },
+  {
+    "name": "component-extraction-judgment",
+    "description": "component-extraction-judgment"
+  },
+  {
+    "name": "constraint-validation-contracts",
+    "description": "constraint-validation-contracts"
+  },
+  {
+    "name": "contenteditable-selection-contracts",
+    "description": "contenteditable-selection-contracts"
+  },
+  {
+    "name": "core-web-vitals-performance-contracts",
+    "description": "core-web-vitals-performance-contracts"
+  },
+  {
+    "name": "css-transition-animation-contracts",
+    "description": "css-transition-animation-contracts"
+  },
+  {
+    "name": "datetime-correctness",
+    "description": "datetime-correctness"
+  },
+  {
+    "name": "deeplink-hydration",
+    "description": "deeplink-hydration"
+  },
+  {
+    "name": "design-to-code-fidelity",
+    "description": "design-to-code-fidelity"
+  },
+  {
+    "name": "download-export-safety",
+    "description": "download-export-safety"
+  },
+  {
+    "name": "file-ingest-contracts",
+    "description": "file-ingest-contracts"
+  },
+  {
+    "name": "frontend-auth-flow-contracts",
+    "description": "frontend-auth-flow-contracts"
+  },
+  {
+    "name": "frontend-data-fetching-cache-contracts",
+    "description": "frontend-data-fetching-cache-contracts"
+  },
+  {
+    "name": "frontend-security-baseline",
+    "description": "frontend-security-baseline"
+  },
+  {
+    "name": "history-scroll-restoration-contracts",
+    "description": "history-scroll-restoration-contracts"
+  },
+  {
+    "name": "i18n-copy-and-layout",
+    "description": "i18n-copy-and-layout"
+  },
+  {
+    "name": "iframe-embed-contracts",
+    "description": "iframe-embed-contracts"
+  },
+  {
+    "name": "js-form-validation-contracts",
+    "description": "js-form-validation-contracts"
+  },
+  {
+    "name": "large-list-data-grid-contracts",
+    "description": "large-list-data-grid-contracts"
+  },
+  {
+    "name": "media-capture-device-contracts",
+    "description": "media-capture-device-contracts"
+  },
+  {
+    "name": "money-and-precision-contracts",
+    "description": "money-and-precision-contracts"
+  },
+  {
+    "name": "optimistic-update-rollback-contracts",
+    "description": "optimistic-update-rollback-contracts"
+  },
+  {
+    "name": "overlay-focus-scroll-contracts",
+    "description": "overlay-focus-scroll-contracts"
+  },
+  {
+    "name": "payment-page-client-security",
+    "description": "payment-page-client-security"
+  },
+  {
+    "name": "pointer-gesture-contracts",
+    "description": "pointer-gesture-contracts"
+  },
+  {
+    "name": "pwa-offline-cache-contracts",
+    "description": "pwa-offline-cache-contracts"
+  },
+  {
+    "name": "realtime-transport-contracts",
+    "description": "realtime-transport-contracts"
+  },
+  {
+    "name": "resize-observer-layout-contracts",
+    "description": "resize-observer-layout-contracts"
+  },
+  {
+    "name": "responsive-image-contracts",
+    "description": "responsive-image-contracts"
+  },
+  {
+    "name": "semantic-markup-contracts",
+    "description": "semantic-markup-contracts"
+  },
+  {
+    "name": "ssr-hydration-mismatch",
+    "description": "ssr-hydration-mismatch"
+  },
+  {
+    "name": "user-activation-contracts",
+    "description": "user-activation-contracts"
+  },
+  {
+    "name": "view-transitions-contracts",
+    "description": "view-transitions-contracts"
+  },
+  {
+    "name": "webview-bridge-pages",
+    "description": "webview-bridge-pages"
+  }
+]

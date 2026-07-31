@@ -1,0 +1,162 @@
+[
+  {
+    "name": "a11y-contract-testing",
+    "description": "Use when accessibility regressions keep slipping through review \u2014 unnamed dialogs, wrong roles on wrappers, menus/comboboxes/tabs losing ARIA state, modals invisible to getByRole \u2014 or tests need to lock accessibility semantics (roles, names, focus, state) as a contract instead of one-off audits. For native HTML form-validity wiring see constraint-validation-contracts; for auth-form-specific cases see frontend-auth-flow-contracts."
+  },
+  {
+    "name": "async-effect-race-contracts",
+    "description": "Use when raw async effects race or leak below a data library: an older fetch result overwrites a newer one, cleanup is missing after unmount, StrictMode exposes non-idempotent setup, a long-lived callback reads a stale closure, or an effect loops because its dependencies are unstable. Covers take-latest guards, AbortController, mirrored cleanup, and dependency discipline. Use frontend-data-fetching-cache-contracts when a data library owns the read, optimistic-update-rollback-contracts for mutation rollback races, and realtime-transport-contracts for socket recovery."
+  },
+  {
+    "name": "bff-proxy-security-contracts",
+    "description": "Use for pre-release security review or remediation when a frontend repository owns server-side BFF/API proxy code: Next.js API Routes or Route Handlers, Remix loaders/actions that relay requests, `/api/proxy` or `?cmd=` catch-all gateways, multipart upload proxies, or WebView-facing server adapters. Covers client-selected target SSRF, named-route/path/method allowlists, alternate-ingress policy drift, auth/body/header capability boundaries, multipart budgets and regenerated boundaries, redirect/error handling, adversarial release gates, and distinguishing gateway mitigations from upstream business-flow or operational controls. Client-only XSS/CSP/cookie review belongs to frontend-security-baseline; browser drag/drop/file picker behavior belongs to file-ingest-contracts."
+  },
+  {
+    "name": "browser-page-lifecycle-bfcache-contracts",
+    "description": "Use when browser Back/Forward restores a stale or half-alive page instead of rerunning startup: logged-out or changed data reappears, a spinner/socket/observer stays paused or duplicates after return, analytics double-count, an unload/beforeunload handler harms back-forward cache behavior, or a fix blindly reloads every pageshow. Top-level browser document freeze/restore scope; use deeplink-hydration for first navigation/router readiness, pwa-offline-cache-contracts for service-worker bytes, realtime-transport-contracts for reconnect protocol, and webview-bridge-pages for native WebView lifecycle."
+  },
+  {
+    "name": "browser-storage-durability-contracts",
+    "description": "Use when browser-local data is reported saved but disappears, an IndexedDB schema upgrade hangs behind another tab, writes fail with TransactionInactiveError or abort after request success, storage pressure causes QuotaExceededError or suspected eviction, navigator.storage.persist() is treated as backup assurance, or recovery UI overstates what remains durable. Covers IndexedDB lifecycle plus StorageManager evidence. Use pwa-offline-cache-contracts for service-worker Cache Storage, frontend-data-fetching-cache-contracts for HTTP/client read caches, and frontend-security-baseline for sensitive-data policy."
+  },
+  {
+    "name": "cjk-text-and-input",
+    "description": "Use when CJK (Korean, Japanese, Chinese) line-breaking, IME composition, Enter/keyCode 229 behavior, or grapheme counting is failing \u2014 mid-word line breaks in Korean, word-break/keep-all/line-break decisions, IME composition breaking controlled inputs, Enter firing during composition, duplicate keydown with keyCode 229, or string length counting Hangul wrong. East-Asian glyph-rendering & IME-input scope; for translation length, plurals, RTL, and Intl number/date formatting see i18n-copy-and-layout."
+  },
+  {
+    "name": "client-error-observability-contracts",
+    "description": "Use when frontend error capture or monitoring misbehaves: production reports only Script error, event-handler or async failures bypass framework boundaries, unhandled rejections vanish, minified stacks cannot be symbolicated, one bug fragments into many issues, or PII/tokens/card data leave the browser. Covers global capture wiring, cross-origin stack access, source-map upload versus public shipping, grouping/fingerprinting, and pre-send scrubbing. Use frontend-security-baseline for source-map exposure policy, ssr-hydration-mismatch for recoverable hydration errors, and payment-page-client-security for PAN/CVV logging boundaries."
+  },
+  {
+    "name": "component-extraction-judgment",
+    "description": "Use when component-based frontend code has near-duplicate components, copy-pasted cards/rows/banners, boolean-prop variant sprawl, wrapper-only components, duplicated hooks/composables/handlers, or AI-generated UI that needs a decision: extract a shared component, create thin wrappers, reuse behavior, or deliberately keep implementations separate without breaking design fidelity, accessibility, i18n, or data contracts. Framework-agnostic judgment for React, Vue, Svelte, Web Components, and similar component systems; route to design-to-code-fidelity, a11y-contract-testing, or i18n-copy-and-layout for those dimensions."
+  },
+  {
+    "name": "constraint-validation-contracts",
+    "description": "Use when wiring HTML form validation through the Constraint Validation API \u2014 required fields painted red on page load (`:invalid` vs `:user-invalid` timing), `setCustomValidity()` left set so the field is permanently invalid and submit is blocked, or choosing between `checkValidity()` / `reportValidity()` / `novalidate` and reading `ValidityState`. Native form-validity scope; for ARIA error/role semantics see a11y-contract-testing, for error-message copy/localization see i18n-copy-and-layout, for `autocomplete`/auth-specific fields see frontend-auth-flow-contracts."
+  },
+  {
+    "name": "contenteditable-selection-contracts",
+    "description": "Use when a contenteditable or rich-text editing host loses or jumps the caret, reverses a selection, duplicates or drops edits, breaks undo/redo, inserts paste/drop content at the wrong range, corrupts an active composition through DOM replacement, or restores focus/selection after teardown. Browser editing-host transaction scope; use cjk-text-and-input for language-specific IME/Enter behavior, frontend-security-baseline for HTML sanitization policy, a11y-contract-testing for editable semantics, file-ingest-contracts for pasted/dropped files, and the relevant editor-framework skill for library document-model internals."
+  },
+  {
+    "name": "core-web-vitals-performance-contracts",
+    "description": "Use when field or lab Core Web Vitals regress and the cause must be attributed: LCP is discovered late or blocked, CLS comes from unreserved media/fonts/injected UI/layout animation, INP is delayed by long tasks or heavy handlers, or slow TTFB gates the page. Covers whole-page LCP/CLS/INP/TTFB evidence and budgets. Use responsive-image-contracts for srcset/sizes/fetchpriority mechanics, ssr-hydration-mismatch for SSR streaming correctness, css-transition-animation-contracts for animation jank, and client-error-observability-contracts for RUM wiring."
+  },
+  {
+    "name": "css-transition-animation-contracts",
+    "description": "Use when reviewing or implementing enter/exit transitions for dialog, popover, or other top-layer/display:none UI, or any cleanup gated on a transition finishing: the exit animation is cut off and the element just vanishes, the entry animation never plays on first open, the ::backdrop does not fade, the whole transition breaks in older browsers, or focus/unmount/scroll-unlock logic gets stuck because transitionend never fired. Transition/animation lifecycle scope; use overlay-focus-scroll-contracts for the focus-trap/scroll-lock contract itself, view-transitions-contracts for the View Transitions API (a different mechanism), and a11y-contract-testing for reduced-motion and role/name assertions."
+  },
+  {
+    "name": "datetime-correctness",
+    "description": "Use when date/time behavior depends on timezone, DST, date-only parsing, floating local inputs, SSR/server zone differences, or instant-vs-wall-clock boundaries \u2014 wall-clock values stored with no zone, `new Date(\"2026-06-14\")` parsed as UTC and printing the previous day, `datetime-local input` floating values with no zone, adding 24h across a DST boundary, or `toLocaleString` rendering the server's zone. Correctness/storage scope; for which locale format to show (grouping, currency, format string) see i18n-copy-and-layout; for in-render `Date` causing server/client divergence see ssr-hydration-mismatch."
+  },
+  {
+    "name": "deeplink-hydration",
+    "description": "Use when deep links into an SPA/SSR page lose query params or land on the wrong screen \u2014 Next.js router.query empty on first render, redirects firing before router.isReady, login bounces dropping the intended destination, or deep-linkable pages lacking direct-navigation tests. Router/param-readiness scope; for server/client DOM divergence (\"Hydration failed\" / \"text content did not match\") see ssr-hydration-mismatch."
+  },
+  {
+    "name": "design-to-code-fidelity",
+    "description": "Use when implementing or reviewing UI against a design reference when visual mismatches slip past review: design QA checklist, visual regression gates, wrong fill/stroke, missing section background, off spacing/radius, misplaced CTA, badge/ribbon clipping, copy drift, or unsupported variant. Turns a design source plus an implementation into reference export, deterministic capture, comparison, and an evidence-graded report. Scope: rendered UI does not match the design reference; for translated-copy overflow and RTL mirroring see i18n-copy-and-layout, for merge/extract calls see component-extraction-judgment."
+  },
+  {
+    "name": "download-export-safety",
+    "description": "Use when reviewing or implementing client-side export/copy flows: CSV/Excel downloads, JSON/text/blob file downloads, URL.createObjectURL lifecycle, navigator.clipboard writes, generated filenames, and user-controlled spreadsheet cells. Export/download scope; keep this primary for observed payload leakage, stale fallback content, or success-before-settlement even when gesture timing is also suspect. Use user-activation-contracts when the gated call itself fails because activation is inactive or consumed, frontend-security-baseline for broad XSS/token/CSP issues, payment-page-client-security for payment card data, and datetime-correctness for timezone semantics in exported values."
+  },
+  {
+    "name": "file-ingest-contracts",
+    "description": "Use when bringing files INTO the page and the browser ingest path misbehaves: a drop-zone highlight flickering as the pointer crosses child elements (dragenter/leave counter), a dropped file that opens in the browser or navigates the page away instead of uploading (missing dragover preventDefault), a drop that never fires, a dropped folder yielding no files, files passing the picker with the wrong true type (accept attribute or file.type trusted over magic bytes), broken paste-image-from-clipboard, or preview thumbnails leaking memory from unrevoked object URLs. Covers DataTransfer.items vs files, dropEffect, directory/multiple upload, and object-URL lifecycle. Browser ingest/IN scope; server upload proxy budgets and multipart relay see bff-proxy-security-contracts, active SVG/HTML rendering risk see frontend-security-baseline, export/OUT see download-export-safety."
+  },
+  {
+    "name": "frontend-auth-flow-contracts",
+    "description": "Use when implementing or reviewing frontend authentication flows: login, signup, password reset, email verification, one-time code entry, passkeys/WebAuthn, auth callbacks/returnTo redirects, autofill/autocomplete, account-enumeration-safe errors, or fresh verification before sensitive account actions. Frontend/browser contract scope; for token storage, cookies, SameSite, CSRF, CSP, and XSS hardening use frontend-security-baseline."
+  },
+  {
+    "name": "frontend-data-fetching-cache-contracts",
+    "description": "Use when client-side data reads become stale or wasteful against a cache: mutations invalidate the wrong key/tag, unstable or incomplete keys cause misses/collisions, requests form avoidable waterfalls, focus/mount creates refetch storms, stale settings prevent refresh, pagination replaces pages or grows without bounds, or an Apollo fetch policy never reaches the network. Covers TanStack Query, SWR, RTK Query, Apollo, and hand-rolled read caches. Use optimistic-update-rollback-contracts for write/rollback behavior, realtime-transport-contracts for pushed deltas, ssr-hydration-mismatch for initial cache hydration, and async-effect-race-contracts for raw fetch-in-effect races."
+  },
+  {
+    "name": "frontend-security-baseline",
+    "description": "Use when running a trap-first client-side security pass before shipping, focused on non-obvious frontend security traps: unsafe HTML sinks, sanitizer misuse, framework raw-HTML escape hatches, Trusted Types/DOMPurify gaps, host-allowlist CSP silently fails, JWT/localStorage token theft, SameSite/CSRF edge cases, opener leaks/window.open, open-redirect string checks, npm supply-chain footguns. Client-side scope; frontend-owned server proxy/SSRF/upload relay boundaries use bff-proxy-security-contracts; payment-page/PAN/PCI DSS evidence use payment-page-client-security; native-WebView bridge inbound-origin contracts use webview-bridge-pages."
+  },
+  {
+    "name": "history-scroll-restoration-contracts",
+    "description": "Use when SPA Back/Forward or same-document navigation restores the wrong scroll position: the page jumps to the top, restores before async content creates enough height, jumps a second time after layout, loses a nested scroll container, or mishandles a hash target/history entry. Covers History API and router scroll restoration within the current document. Route bfcache document resume to browser-page-lifecycle-bfcache-contracts, cold URL reconstruction to deeplink-hydration, virtualized-row anchoring to large-list-data-grid-contracts, and modal scroll locking to overlay-focus-scroll-contracts."
+  },
+  {
+    "name": "i18n-copy-and-layout",
+    "description": "Use when shipping UI copy in more than one language \u2014 text overflowing buttons/labels after translation, German/Finnish compound words too long to wrap, `count === 1 ? singular : plural` breaking in Russian/Arabic/Polish, sentences built by string concatenation mistranslating, hardcoded date/number/currency formats, or no RTL (Arabic/Hebrew) support. Excludes CJK glyph rendering & IME input \u2014 see cjk-text-and-input. For timezone/DST/instant storage see datetime-correctness; for rendered-UI vs design mismatches see design-to-code-fidelity."
+  },
+  {
+    "name": "iframe-embed-contracts",
+    "description": "Use when a web app embeds a third-party page or is itself shipped as an iframe/widget and the host-guest contract fails: a blank frame from frame-ancestors/X-Frame-Options, postMessage with wildcard targetOrigin or no origin/source/schema validation, the first READY/init message lost, height-resize loops or flickering scrollbars, sandbox tokens blocking forms/popups/downloads or collapsing isolation, iframe allow/Permissions-Policy blocking fullscreen/camera/microphone/payment, third-party cookie or partitioned-storage changes breaking sign-in, or listeners/observers surviving frame navigation and teardown. Browser iframe/embed scope; use webview-bridge-pages for native app WebViews, payment-page-client-security for hosted payment fields/PAN boundaries, and frontend-security-baseline for site-wide CSP/cookie/security policy."
+  },
+  {
+    "name": "js-form-validation-contracts",
+    "description": "Use when wiring form validation through a JS library (react-hook-form, Formik, vee-validate, Final Form, TanStack Form) with a schema resolver (zod/yup/valibot) \u2014 errors painted before the user touches a field (`validateOnMount`/eager display), an error that stays after the value is corrected (`reValidateMode`, server/root `setError`), a submit button stuck disabled on `isValid`, an async/server validation that races a double-submit, or a server-side field error (uniqueness, 409) that never reaches the right field. Library validity-lifecycle scope; for the native Constraint Validation API (`:user-invalid`, `setCustomValidity`, `reportValidity`) see constraint-validation-contracts, for ARIA error role/name/focus see a11y-contract-testing, for message wording/localization see i18n-copy-and-layout."
+  },
+  {
+    "name": "large-list-data-grid-contracts",
+    "description": "Use when a virtualized list or data grid breaks at windowing seams: variable-height measurement makes scroll jump, overscan blanks rows or harms INP/memory, tests disable virtualization and miss production failures, find-in-page or accessibility counts assume every row is mounted, focus disappears when a row unmounts, or sticky/pinned regions drift from the body. Covers virtualization/windowing contracts. Route row-count semantics to a11y-contract-testing, focus restoration to overlay-focus-scroll-contracts, row images to responsive-image-contracts, and paginated/infinite data reads to frontend-data-fetching-cache-contracts."
+  },
+  {
+    "name": "media-capture-device-contracts",
+    "description": "Use when browser camera or microphone capture stays blocked after denial, reports the wrong recovery, fails when a device is unplugged or switched, opens the same device twice, or leaves the camera light or microphone active after replacement, navigation, or unmount. Top-level browser getUserMedia session, device-change, and MediaStreamTrack ownership scope; use iframe-embed-contracts for embedded capability delegation, webview-bridge-pages for native WebView permissions, user-activation-contracts only when a separate gesture-gated API fails with trusted-event timing evidence, and a recording-specific workflow for MediaRecorder final-chunk semantics."
+  },
+  {
+    "name": "money-and-precision-contracts",
+    "description": "Use when money or quantity arithmetic runs in the browser and the result is off by a fraction or a penny \u2014 a total that shows 0.30000000000000004 or $19.999999999999996, summed line items or tax that don't reconcile, `toFixed`/`Math.round` producing surprising rounding (`(1.005).toFixed(2)` is `\"1.00\"`), a price stored as a float, `parseFloat`/`Number` mangling a localized amount (`\"1.234,56\"` \u2192 1.234 or NaN), or amounts that overflow past exact integer range. Arithmetic/precision/storage scope; for which locale format to display (grouping, currency symbol, decimal mark) see i18n-copy-and-layout, for timezone/DST value correctness see the sibling datetime-correctness, and for numeric input field validity/error state see js-form-validation-contracts."
+  },
+  {
+    "name": "optimistic-update-rollback-contracts",
+    "description": "Use when a UI applies a mutation before the server confirms and reconciliation goes wrong \u2014 an optimistic change that never rolls back on failure, a created row that shows up twice (temp entry plus refetched real one), an item that flickers or reverts when the server response races a background refetch, a temp client id never swapped for the server id (a later edit/delete hits the wrong record or orphans the temp row), concurrent mutations landing out of order, or a `useOptimistic`/`optimisticData` value that snaps back with nothing persisted. Optimistic-apply/rollback/reconcile lifecycle scope; for form double-submit races see js-form-validation-contracts, announcing rollback to assistive tech see a11y-contract-testing, server-vs-client first render see ssr-hydration-mismatch."
+  },
+  {
+    "name": "overlay-focus-scroll-contracts",
+    "description": "Use when reviewing or implementing modal, dialog, drawer, sheet, popover, menu, command palette, or overlay behavior where focus trap/restoration, background inert/aria-hidden, ESC/backdrop dismissal, nested overlay stacks, animation timing, or body scroll-lock cleanup can regress. Overlay runtime scope; use a11y-contract-testing for role/name/state assertions and semantic-markup-contracts for native element choice."
+  },
+  {
+    "name": "payment-page-client-security",
+    "description": "Use when reviewing checkout/payment pages for frontend-owned payment security: Stripe/Adyen/Braintree/Razorpay/PayPal hosted fields, iframes, redirects, wallets, direct card forms; PAN/CVV/CVC/cardholder data in DOM, React/Vue/Svelte state, logs, analytics, storage, URLs, replay tools; payment-page runtime script inventory, tag managers, third-party scripts, CSP/SRI/header controls, PCI DSS 6.4.3/11.6.1 evidence, SAQ A vs SAQ A-EP scope signals. This does not decide legal PCI scope, SAQ eligibility, or QSA acceptance. Route token-storage/CSP/XSS to frontend-security-baseline; route WebView-host payment pages to webview-bridge-pages."
+  },
+  {
+    "name": "pointer-gesture-contracts",
+    "description": "Use when a single-pointer drag, resize handle, slider, canvas tool, or swipe interaction stops outside its hit area, stays active after release or interruption, commits after pointer cancellation, loses touch or pen input, or blocks browser pan/zoom because active-pointer state, event delivery, capture, or touch-action is wrong. Single-pointer direct-manipulation runtime scope; true multi-pointer gesture geometry is out of scope. Use file-ingest-contracts for HTML/file drag-and-drop, a11y-contract-testing for generic click/keyboard semantics, user-activation-contracts for gesture-gated APIs, and core-web-vitals-performance-contracts for pointer-handler performance."
+  },
+  {
+    "name": "pwa-offline-cache-contracts",
+    "description": "Use when a service worker or offline cache serves the wrong bytes: a waiting worker leaves users on an old build, stale HTML references purged chunks, Workbox patterns omit required assets, old caches accumulate, one failed cache.addAll entry aborts install, activation happens without a reload path, navigation lacks an offline fallback, or authenticated responses enter shared Cache Storage. Covers service-worker and asset-cache lifecycle. Use client-error-observability-contracts for monitoring failures, frontend-data-fetching-cache-contracts for runtime query caches, and frontend-security-baseline for authenticated-cache policy."
+  },
+  {
+    "name": "realtime-transport-contracts",
+    "description": "Use when a WebSocket or SSE client misbehaves across a connection drop: a reconnect storm after a server restart (fixed-interval retry, no jitter), a socket OPEN but silently dead (zombie, close code 1006, proxy idle-timeout), events duplicated or missing after reconnect (no SSE Last-Event-ID or server cursor), deltas applied out-of-order/gapped, unbounded buffering (bufferedAmount climbing) forcing a close, an EventSource that reconnects forever, or a socket running on a token that expired after the handshake. Client transport-resilience scope; for token/session refresh see frontend-auth-flow-contracts, token-in-URL and origin checks see frontend-security-baseline, snapshot-vs-stream hydration see ssr-hydration-mismatch; the native WebView postMessage bridge is webview-bridge-pages."
+  },
+  {
+    "name": "resize-observer-layout-contracts",
+    "description": "Use when ResizeObserver-driven UI flickers, grows forever, throws 'ResizeObserver loop completed with undelivered notifications', measures the wrong box, keeps observing replaced/unmounted elements, or a callback writes size-affecting styles that trigger itself. Ordinary component/container measurement scope; use iframe-embed-contracts for parent-guest sizing protocols, large-list-data-grid-contracts for virtualization measurement, core-web-vitals-performance-contracts for page-wide layout-shift attribution, and responsive-image-contracts for image intrinsic sizing."
+  },
+  {
+    "name": "responsive-image-contracts",
+    "description": "Use when responsive image markup ships the wrong file: width-descriptor srcset lacks accurate sizes, descriptors do not match intrinsic file widths, an LCP image is lazy or low priority, img lacks reserved dimensions and causes CLS, candidate coverage is poor, density and width descriptors are mixed, picture art direction omits media/type, or sizes=auto is used without lazy loading. Covers image selection, role-based sizing, load priority, and candidate verification. Use design-to-code-fidelity for visual drift, i18n-copy-and-layout for localized copy, and core-web-vitals-performance-contracts for whole-page budgets."
+  },
+  {
+    "name": "semantic-markup-contracts",
+    "description": "Use when reviewing or implementing frontend markup structure: clickable divs that should be buttons, links used as buttons, heading/landmark hierarchy, form label/control association, table/list semantics, invalid interactive nesting, overused ARIA replacing native HTML, or markup that breaks the accessibility tree, role-based tests, or hydration (and weakens SEO structure signals). Native HTML/semantic structure scope; for rendered role/name/state/focus regression tests use a11y-contract-testing, for visual design drift use design-to-code-fidelity."
+  },
+  {
+    "name": "ssr-hydration-mismatch",
+    "description": "Use when server-rendered HTML and the client's first render diverge \u2014 React/Next \"Hydration failed\" or \"text content did not match\", a tree silently re-rendering on the client, or render output that depends on `Date.now()` / `Math.random()` / `new Date()` / timezone / `typeof window` / locale. Determinism + re-render blast-radius scope; for first-render router/query-param readiness see deeplink-hydration; for the timezone/`Date` trigger specifically see datetime-correctness."
+  },
+  {
+    "name": "user-activation-contracts",
+    "description": "Use when a gesture-gated browser API works from a direct click but fails after async work or in stricter browsers: window.open returns null, OAuth popup login is blocked after await, clipboard/share/file picker/fullscreen/payment requests reject with NotAllowedError, or one gated call consumes activation before the next. User-gesture timing and recovery scope. For copy/export reports, route here only when inactive or consumed activation is the evidenced failure; payload selection, fallback content, and premature success-state defects remain download-export-safety. Use frontend-auth-flow-contracts for OAuth/returnTo policy, payment-page-client-security for payment data boundaries, and iframe-embed-contracts for embedded permissions and host-guest capability policy."
+  },
+  {
+    "name": "view-transitions-contracts",
+    "description": "Use when a View Transitions API animation silently aborts or captures the wrong state: duplicate view-transition-name values, an unpainted Suspense/streaming/image state, missing reduced-motion handling, a React update outside startTransition, interruption that skips animation but still applies the DOM change, stale names, top-layer paint conflicts, or uncapturable iframe/cross-origin content. Covers review and PR-worthiness. Use overlay-focus-scroll-contracts for overlay focus/stacking, ssr-hydration-mismatch for first-render determinism, and a11y-contract-testing for reduced-motion regression coverage."
+  },
+  {
+    "name": "webview-bridge-pages",
+    "description": "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) \u2014 postMessage-to-native bridge, native close/back and Android hardware-back, first READY/auth message can be missed on cold start (buffer + bounded flush), blank screen after renderer death, query-param render inputs and A/B variants, IAP button stuck disabled, auth/token handoff, safe-area insets and 100vh wrong (svh/dvh), paint/compositing vs hit-test separation, iOS sub-16px input-zoom. Hosts: React Native, WKWebView, Android WebView, Flutter. For first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
+  }
+]

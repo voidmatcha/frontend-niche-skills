@@ -1,0 +1,79 @@
+{
+  "acceptable_accuracy": 0.9375,
+  "acceptable_correct": 15,
+  "accuracy": 0.9375,
+  "all_collision_accuracy": 0.875,
+  "collision_accuracy": 0.875,
+  "confusions": {
+    "download-export-safety -> user-activation-contracts": 1
+  },
+  "correct": 15,
+  "critical_edge_count": 56,
+  "critical_edge_coverage": 0.14285714285714285,
+  "dataset_id": "frontend-niche-skills-routing-v3",
+  "dataset_sha256": "c0160a3364d2ce8ffdafeb94b03b777652c2397f8459c1187e03febd54f6cd18",
+  "directed_edge_macro_accuracy": 0.875,
+  "evaluated": 16,
+  "exact_primary_accuracy": 0.9375,
+  "exact_primary_correct": 15,
+  "exclusive_acceptable_accuracy": 0.9375,
+  "exclusive_exact_primary_accuracy": 0.9375,
+  "hard_collision_accuracy": 0.875,
+  "incorrect": 1,
+  "macro_skill_recall": 0.9,
+  "metadata_catalog_sha256": "0ed484ed4cd38218bbdb172ecf2f7cba66b9af6252d640d4166fc9d941260a55",
+  "pairwise_directed_edge_acceptable_accuracy": {
+    "browser-page-lifecycle-bfcache-contracts -> browser-storage-durability-contracts": 1.0,
+    "browser-storage-durability-contracts -> browser-page-lifecycle-bfcache-contracts": 1.0,
+    "cjk-text-and-input -> contenteditable-selection-contracts": 1.0,
+    "contenteditable-selection-contracts -> i18n-copy-and-layout": 1.0,
+    "download-export-safety -> user-activation-contracts": 0.0,
+    "media-capture-device-contracts -> webview-bridge-pages": 1.0,
+    "resize-observer-layout-contracts -> core-web-vitals-performance-contracts": 1.0,
+    "user-activation-contracts -> download-export-safety": 1.0
+  },
+  "pairwise_directed_edge_accuracy": {
+    "browser-page-lifecycle-bfcache-contracts -> browser-storage-durability-contracts": 1.0,
+    "browser-storage-durability-contracts -> browser-page-lifecycle-bfcache-contracts": 1.0,
+    "cjk-text-and-input -> contenteditable-selection-contracts": 1.0,
+    "contenteditable-selection-contracts -> i18n-copy-and-layout": 1.0,
+    "download-export-safety -> user-activation-contracts": 0.0,
+    "media-capture-device-contracts -> webview-bridge-pages": 1.0,
+    "resize-observer-layout-contracts -> core-web-vitals-performance-contracts": 1.0,
+    "user-activation-contracts -> download-export-safety": 1.0
+  },
+  "pairwise_directed_edge_exact_primary_accuracy": {
+    "browser-page-lifecycle-bfcache-contracts -> browser-storage-durability-contracts": 1.0,
+    "browser-storage-durability-contracts -> browser-page-lifecycle-bfcache-contracts": 1.0,
+    "cjk-text-and-input -> contenteditable-selection-contracts": 1.0,
+    "contenteditable-selection-contracts -> i18n-copy-and-layout": 1.0,
+    "download-export-safety -> user-activation-contracts": 0.0,
+    "media-capture-device-contracts -> webview-bridge-pages": 1.0,
+    "resize-observer-layout-contracts -> core-web-vitals-performance-contracts": 1.0,
+    "user-activation-contracts -> download-export-safety": 1.0
+  },
+  "per_skill_recall": {
+    "browser-page-lifecycle-bfcache-contracts": 1.0,
+    "browser-storage-durability-contracts": 1.0,
+    "cjk-text-and-input": 1.0,
+    "contenteditable-selection-contracts": 1.0,
+    "download-export-safety": 0.0,
+    "history-scroll-restoration-contracts": 1.0,
+    "media-capture-device-contracts": 1.0,
+    "pointer-gesture-contracts": 1.0,
+    "resize-observer-layout-contracts": 1.0,
+    "user-activation-contracts": 1.0
+  },
+  "primary_owner_acceptable_accuracy": null,
+  "primary_owner_exact_primary_accuracy": null,
+  "registered_edge_count": 100,
+  "registered_edge_coverage": 0.08,
+  "representative_accuracy": 1.0,
+  "tested_critical_edge_count": 8,
+  "tested_directed_edge_count": 8,
+  "tested_registered_edge_count": 8,
+  "unacceptable_predictions": {
+    "download-export-safety -> user-activation-contracts": 1
+  },
+  "unregistered_tested_edge_count": 0
+}

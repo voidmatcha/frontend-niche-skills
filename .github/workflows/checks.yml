@@ -13,21 +13,34 @@ jobs:
   pack-checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22.20.0"
 
       - name: Install test dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y bats imagemagick
-          npm install -g playwright
-          playwright install --with-deps chromium
+          npm install -g playwright@1.62.1 skills@1.5.21
+          test "$(node --version)" = "v22.20.0"
+          test "$(playwright --version)" = "Version 1.62.1"
+          test "$(skills --version)" = "1.5.21"
+          playwright install --with-deps chromium firefox webkit
 
-      # Offline audit + manifest/README consistency + Bats suites.
-      # The Bats suites skip themselves when a dependency is missing, so this
-      # step still passes if the installs above change shape upstream.
+      # Offline audit + manifest/README consistency + Bats suites. The
+      # fresh-consumer suite fails in CI if the pinned skills CLI is missing.
       - name: Run pack checks
+        env:
+          CASEBOOK_BROWSERS: chromium,firefox,webkit
+          CHECK_DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CHECK_DIFF_HEAD: ${{ github.sha }}
         run: ./scripts/pre-push-checks.sh
