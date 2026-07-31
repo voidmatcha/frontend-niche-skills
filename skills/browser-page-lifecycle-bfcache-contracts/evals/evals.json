@@ -1,0 +1,36 @@
+{
+  "skill_name": "browser-page-lifecycle-bfcache-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A user opens account settings, navigates to billing, logs out in another tab, then presses Back. The old account settings and email are visible until the next API request. Review the lifecycle fix.",
+      "expected_output": "Requires a real Back traversal and pageshow.persisted evidence, treats the restored document as a resume path, revalidates sensitive account state idempotently, and adds a multi-context Back regression without defaulting to a blind reload.",
+      "expectations": [
+        "The response requires an actual Back traversal and records pageshow.persisted before classifying the incident as a bfcache restoration defect.",
+        "The restored document is treated as a resume path that idempotently revalidates sensitive account state and removes or blocks stale protected content when the session is no longer valid.",
+        "The regression uses multiple tabs or browser contexts to log out elsewhere, traverse Back, and verify that stale account data is not exposed.",
+        "A blind unconditional reload is rejected as the default fix unless narrower resume and revalidation behavior cannot meet the product contract."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A page contains a pagehide listener that pauses a timer and a pageshow listener that restarts it. There is no duplicate timer and no stale UI in repeated Back/Forward tests. File a bug because pagehide appears in the source.",
+      "expected_output": "Rejects the source-only finding, asks for persisted restoration and a user-visible or resource failure, and recognizes idempotent pause/resume behavior as a positive control.",
+      "expectations": [
+        "The response rejects the presence of pagehide or pageshow listeners as sufficient evidence of a defect.",
+        "A reportable finding requires a real persisted restoration plus a reproducible user-visible stale state, duplicate resource, leak, or other lifecycle failure.",
+        "Repeated Back/Forward tests with one paused and one resumed timer are recognized as positive evidence that the handlers are idempotent."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "After the network drops, an SSE client reconnects after browser Back but replays three events and misses two others. Decide whether this is page lifecycle or transport resilience.",
+      "expected_output": "Uses lifecycle evidence only to establish the restore path, then routes cursor resume, deduplication, ordering, and gap handling to realtime-transport-contracts.",
+      "expectations": [
+        "The response uses pageshow or equivalent lifecycle evidence only to establish that restoration triggered the reconnect path.",
+        "Replay, deduplication, ordering, cursor resumption, and gap recovery are assigned to realtime-transport-contracts rather than repaired as a page-lifecycle policy.",
+        "The proposed regression separates the restore trigger from transport assertions so event loss or duplication can be reproduced independently."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "History and Scroll Restoration Contracts"
+  short_description: "Review wrong SPA Back and Forward scroll restoration."
+  default_prompt: "Use $history-scroll-restoration-contracts to review this SPA or same-document Back/Forward/hash scroll failure, identify the history entry and scroll owner, prove restoration timing against async layout, reject competing or speculative writes, and define a real-browser regression."

@@ -1,0 +1,65 @@
+{
+  "skill_name": "history-scroll-restoration-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "In our React SPA, users scroll halfway down /catalog, open an item, and press Back. The saved window Y is 2400, but product cards load asynchronously and the restore runs while the page can only scroll to 900. Logs say scrollTo(0, 2400) ran, yet users land near the top and sometimes jump again a moment later. Review the proposed fix of adding setTimeout(..., 500).",
+      "expected_output": "Confirms a history-scroll candidate from the real Back sequence, explains that the early write is clamped by insufficient scroll extent, rejects a fixed timeout, selects one restoration owner and an observable route/data/layout-ready boundary, cancels bounded work on user scroll or navigation, and specifies a browser regression that asserts the final offset remains stable after async layout.",
+      "expectations": [
+        "Requires capturing the destination history entry, scroll owner, saved offset, maximum available offset at restore time, and final offset.",
+        "Rejects a fixed 500 ms delay as the correctness contract.",
+        "Requires a real-browser Back regression with delayed content and a no-second-jump assertion."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A reviewer found history.scrollRestoration = 'manual' and two calls to window.scrollTo in the router shell. Back and Forward tests in Chrome and Firefox restore the expected position without a visible second jump, and the app intentionally owns restoration. File a bug because manual restoration and scrollTo are risky.",
+      "expected_output": "Rejects the API-name-only finding because the explicit application ownership is working in real traversals, asks for evidence of a wrong entry, wrong owner, clamped timing, competing write, or visible instability, and does not prescribe browser auto restoration or overflow-anchor changes without a demonstrated defect.",
+      "expectations": [
+        "Returns a reject disposition rather than filing a speculative defect.",
+        "Treats stable browser evidence as a positive control.",
+        "Does not recommend changing ownership or anchoring from source inspection alone."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A top-level page is restored from the browser back-forward cache after returning from checkout. pageshow.persisted is true, the old signed-in account details remain visible, and a WebSocket resumes twice. The scroll position happens to be stale too. Which skill should own the review?",
+      "expected_output": "Routes the top-level persisted Document, stale private state, and duplicated resource resume to browser-page-lifecycle-bfcache-contracts. It may record the stale position as a symptom but does not replace the bfcache resume investigation with same-document scroll restoration.",
+      "expectations": [
+        "Routes primary ownership to browser-page-lifecycle-bfcache-contracts.",
+        "Uses pageshow.persisted and duplicated resources as the decisive boundary evidence.",
+        "Does not propose an SPA scroll-only fix for the stale document."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Back to a 20,000-row virtualized chat restores the outer route scrollTop, but the user lands 80 messages away because variable-height rows above the viewport are not mounted and prepended history changes the virtualizer offsets. Review the restoration.",
+      "expected_output": "Routes row identity, measurement, prepend compensation, and an anchor for unmounted virtual rows to large-list-data-grid-contracts. This skill owns only any verified outer route/container entry restoration and must not treat a raw pixel offset as sufficient for the virtualized list.",
+      "expectations": [
+        "Routes virtualized-row anchoring to large-list-data-grid-contracts.",
+        "Separates outer container restoration from internal virtualizer offsets.",
+        "Does not recommend repeated window scroll writes as the row-anchor fix."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Opening /reports?month=may#failed in a fresh browser tab renders the default dashboard because the router query is empty on first render. Once in the app, Back/Forward and the #failed target always restore correctly. Is this a history-scroll bug?",
+      "expected_output": "Routes the cold URL-to-screen and router-parameter readiness failure to deeplink-hydration. It recognizes the passing in-app Back/Forward and fragment restoration as evidence against a history-scroll defect.",
+      "expectations": [
+        "Routes the cold-start failure to deeplink-hydration.",
+        "Uses the stable Back/Forward/hash behavior as negative evidence for this skill.",
+        "Does not add scroll retries to fix missing first-render query state."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "A feed stores scroll positions by pathname. A user visits /feed, scrolls to 1200, opens an item, returns to /feed, scrolls to 4200, opens another item, and then traverses Back twice. Both /feed history entries now restore to 4200 because they share the same pathname key. Review the fix.",
+      "expected_output": "Confirms an entry-identity defect, distinguishes repeated visits to the same pathname, and recommends keying by the router or history entry identity when the product expects each visit to retain its own position. It preserves pathname-based reuse only as an explicit alternative contract and adds a Back/Forward regression covering both saved positions.",
+      "expectations": [
+        "Identifies pathname-keyed storage as collapsing two distinct history entries.",
+        "Requires a unique location or history-entry key when per-visit restoration is intended.",
+        "Adds a browser regression that traverses both /feed entries and asserts their different saved positions."
+      ]
+    }
+  ]
+}

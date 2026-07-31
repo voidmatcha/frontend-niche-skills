@@ -1,0 +1,4 @@
+interface:
+  display_name: "User Activation Contracts"
+  short_description: "Review APIs blocked by expired user activation."
+  default_prompt: "Use $user-activation-contracts to trace this gesture-gated browser call from the trusted event through async work and activation consumption, verify the real denial path, and propose the smallest ordering or fallback fix."

@@ -1,0 +1,65 @@
+{
+  "skill_name": "pointer-gesture-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A horizontal swipe control inside a vertically scrolling feed sets touch-action: none on every card. Swiping works, but vertical pan and pinch zoom are blocked. Removing the rule makes the browser cancel some horizontal swipes. Review the smallest browser-gesture contract.",
+      "expected_output": "Maps the axis the control owns, scopes touch-action before the gesture so vertical pan and pinch zoom remain available, treats pointercancel as a terminal path rather than something to suppress globally, and requires rendered horizontal-swipe plus preserved-scroll/zoom regressions.",
+      "files": [],
+      "expectations": [
+        "The answer identifies the horizontal component gesture and the vertical page pan or pinch zoom as separate ownership contracts.",
+        "The proposed touch-action value and scope preserve the browser gestures the component does not replace instead of applying none to every card.",
+        "The answer handles pointercancel as an explicit terminal transition and does not try to eliminate cancellation by disabling browser gestures globally.",
+        "The rendered regression verifies the horizontal swipe result together with preserved vertical scrolling and zoom behavior on supported input paths."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A horizontal swipe control uses pointer capture, handles pointerup, pointercancel, lostpointercapture, and unmount cleanup, ignores non-active pointerIds, and sets touch-action: pan-y pinch-zoom on only its interaction surface. Mouse, touch, and pen tests preserve vertical scroll and show no stuck state. File a bug because every custom swipe should use touch-action: none.",
+      "expected_output": "Rejects the blanket touch-action finding, recognizes the existing ownership, terminal, teardown, and browser-gesture positive controls, and requires a reproduced gesture or state failure before proposing a change.",
+      "files": [],
+      "expectations": [
+        "The disposition is reject rather than confirmed.",
+        "The answer treats pan-y pinch-zoom as a deliberate preservation contract instead of demanding touch-action: none.",
+        "The answer cites the active pointer, cancel, capture-loss, teardown, and cross-input tests as positive controls.",
+        "The answer states that no code change is warranted without a reproduced component or browser-behavior failure."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Users drag PDF files from the desktop into an upload zone. Some drops contain directories and DataTransferItem entries that cannot be converted to File objects. Should pointer capture and pointercancel own this fix?",
+      "expected_output": "Routes the issue to file-ingest-contracts because it concerns HTML Drag and Drop, DataTransfer, files, and directories, and does not prescribe custom pointer capture as a repair.",
+      "files": [],
+      "expectations": [
+        "The answer routes ownership to file-ingest-contracts.",
+        "The answer identifies DataTransfer and directory/file normalization as the relevant evidence.",
+        "The answer explicitly rejects setPointerCapture or pointercancel as the fix for the HTML drag-and-drop intake contract."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A 4px column-resize handle listens for pointermove on document. Touch drag stops as soon as the finger leaves the handle, and an ancestor sometimes stops propagation. Mouse usually works. Diagnose and define the browser regression.",
+      "expected_output": "Confirms an event-delivery ownership candidate, traces the active pointer and current propagation/listener path, and does not add capture while leaving move handling on the blocked document bubble path. It either consumes captured move/terminal events on the handle or before the blocker, or uses an appropriate capture-phase/global path with cleanup, then verifies touch, mouse, and pen terminal paths plus preserved page gestures.",
+      "files": [],
+      "expectations": [
+        "The answer traces where pointerdown, pointermove, and terminal events are handled and how propagation affects document listeners.",
+        "If the answer chooses setPointerCapture, it moves or confirms pointermove and terminal-event consumption on the capturing element or before the propagation blocker rather than leaving the broken document bubble listener unchanged.",
+        "The answer also recognizes an appropriate window capture-phase or correctly managed global listener as a valid alternative ownership path with explicit cleanup.",
+        "The answer includes pointercancel, lostpointercapture, zero-buttons recovery where applicable, and teardown cleanup.",
+        "The regression covers rapid movement outside the narrow handle on touch and checks mouse and pen without claiming unrun physical-device coverage."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "A custom volume slider captures the active pointer, drags correctly with mouse, touch, and pen, clears state on pointerup, pointercancel, capture loss, and unmount, and preserves page scrolling. However, it is an unnamed div with no slider role or value semantics and cannot be adjusted from the keyboard. Should we change pointer capture?",
+      "expected_output": "Recognizes the pointer ownership contract as a positive control, routes the missing name, role, value, and keyboard interaction to a11y-contract-testing, and does not invent a capture or touch-action change.",
+      "files": [],
+      "expectations": [
+        "The answer routes the defect to a11y-contract-testing rather than confirming a pointer-gesture-contracts defect.",
+        "The answer identifies the missing accessible name, slider role or value semantics, and keyboard operation as the relevant evidence.",
+        "The answer treats working cross-input capture, terminal cleanup, and preserved scrolling as pointer positive controls.",
+        "The answer states that pointer capture and touch-action should not change without a demonstrated pointer-stream failure."
+      ]
+    }
+  ]
+}

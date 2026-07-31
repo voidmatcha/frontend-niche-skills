@@ -1,0 +1,140 @@
+{
+  "skill_name": "browser-storage-durability-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "After deploying schema version 8, users with an older tab open see the loading screen forever. A new tab's indexedDB.open request fires blocked, while the old tab receives versionchange but keeps its shared database connection open. Review the smallest durable fix.",
+      "expected_output": "Confirms a cross-tab upgrade ownership defect from ordered blocked/versionchange evidence, closes every long-lived old connection after stopping new work, gives the affected UI a reload or retry path, and adds a two-tab upgrade regression without deleting the database.",
+      "expectations": [
+        "The response explains the causal order: the new version-8 open is blocked because the old tab keeps its connection open after receiving versionchange.",
+        "The proposed fix makes every long-lived old connection stop starting database work and close on versionchange, rather than deleting the database or forcing an upgrade through.",
+        "The recovery behavior gives blocked and outdated tabs an explicit reload, close-other-tabs, or retry state instead of an indefinite loading screen.",
+        "The regression uses at least two browser contexts or tabs and verifies that releasing the old connection allows the upgrade transaction and open request to complete."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A readwrite IndexedDB transaction reads a draft, awaits fetch('/normalize'), then tries to put the normalized draft and throws TransactionInactiveError. The current retry opens a fresh transaction for only the put. Review the consistency risk.",
+      "expected_output": "Identifies the unrelated await as a transaction-lifetime boundary, moves external work before the transaction or defines an explicit split with stale-read protection, awaits transaction completion, and tests the delayed path instead of treating retries as proof of atomicity.",
+      "expectations": [
+        "The response identifies the external await as allowing the original readwrite transaction to become inactive before the later put.",
+        "The proposed flow either performs external work before opening the readwrite transaction or adds an explicit stale-read or revision check when work is split across transactions.",
+        "The response rejects a fresh put-only retry as proof that the original read-modify-write operation is atomic or consistent.",
+        "Completion is tied to the replacement transaction's complete outcome, and the regression delays normalization while exercising a concurrent or changed draft."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The first request in a readwrite transaction fires success, so the UI shows Saved. A later request violates a unique index, the transaction aborts, and neither write remains after reload.",
+      "expected_output": "Confirms a false-commit defect, distinguishes request success from transaction completion, moves the Saved claim after complete or the wrapper completion promise, surfaces the abort cause, and adds a later-request-fails rollback regression.",
+      "expectations": [
+        "The response states that one request succeeding does not establish that the containing transaction committed.",
+        "The Saved state is moved after transaction completion, while abort or error produces a non-saved recovery state with the failure surfaced.",
+        "The regression makes an earlier request succeed and a later request fail, then verifies after reopening that neither write was committed."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "navigator.storage.estimate() reports 84% usage, but writes still complete and no QuotaExceededError has occurred. File a high-severity quota bug and delete the oldest records at 80%.",
+      "expected_output": "Rejects the threshold-only finding because estimate values are approximate and origin-wide, requires an actual rejected write and user-visible impact, and does not endorse destructive cleanup from a percentage alone.",
+      "expectations": [
+        "The response rejects high-severity classification from the estimate ratio alone because the observed writes still succeed and no data-loss or failed-write impact is shown.",
+        "The response refuses automatic deletion at 80% unless a separately defined retention or cache-eviction policy authorizes exactly which disposable records may be removed.",
+        "A quota defect requires evidence from an actual rejected or aborted write plus its user-visible consistency or recovery outcome, not only a storage estimate."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "The app received true from navigator.storage.persist(), so onboarding says: 'Your offline records are permanently backed up and can never be deleted.' Review that copy and recovery contract.",
+      "expected_output": "Confirms the claim is false, distinguishes pressure-eviction protection from backup and user deletion, records persisted() as current evidence only, requires truthful browser-local recovery wording, and notes that sync or backup architecture is outside this skill.",
+      "expectations": [
+        "The response rejects or rewrites the permanent-backup and never-deleted claims rather than treating a true persist result as a guarantee.",
+        "The replacement contract distinguishes reduced pressure-eviction risk from backup or recovery after user clearing, browser/profile loss, corruption, or application deletion.",
+        "The response treats persisted storage status as current browser evidence and routes cross-device sync or recoverable backup guarantees to a separate architecture."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "A service worker serves stale app-shell HTML from Cache Storage after deploy, so the page references a removed hashed chunk. Investigate browser durable storage.",
+      "expected_output": "Routes the defect to pwa-offline-cache-contracts because service-worker and Cache Storage byte lifecycle owns it, without expanding into IndexedDB or StorageManager advice.",
+      "expectations": [
+        "The response routes the primary investigation to pwa-offline-cache-contracts and identifies service-worker app-shell and asset-cache version coherence as the owning failure.",
+        "The response does not prescribe IndexedDB transaction, schema-upgrade, quota-estimate, or persistence changes for this Cache Storage defect."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "A TanStack Query list stays stale after a mutation because the mutation invalidates a different query key. The reporter calls it an IndexedDB persistence bug.",
+      "expected_output": "Routes the read-cache key and invalidation defect to frontend-data-fetching-cache-contracts and rejects an IndexedDB durability diagnosis without browser-storage evidence.",
+      "expectations": [
+        "The response routes the defect to frontend-data-fetching-cache-contracts and makes the mismatched query key or invalidation target the primary evidence.",
+        "The response rejects an IndexedDB durability diagnosis unless separate browser-storage write, transaction, upgrade, quota, or eviction evidence is produced."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "A review finds access tokens and private profile fields stored in IndexedDB. Transactions complete and recovery works, but the question is whether those values may be stored there at all.",
+      "expected_output": "Routes sensitive client-storage and privacy policy to frontend-security-baseline; transaction completion does not answer whether the data is safe or permitted to store.",
+      "expectations": [
+        "The response routes the storage-permission, exposure, and privacy-policy question to frontend-security-baseline.",
+        "The response explicitly separates successful IndexedDB transaction and recovery behavior from whether access tokens or private profile data are safe or permitted to persist.",
+        "The response does not propose transaction-lifecycle, schema-upgrade, quota, or persistence mechanics as the primary remediation."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Autosave opens a readwrite transaction and reads draft revision 41. It then sends the text to /normalize; when normalization returns, the original transaction has already completed and the put fails. The catch path opens a fresh transaction and writes the normalized revision-41 text. Another tab may have saved revision 42 meanwhile, and users occasionally see the older normalized text after reload. Review the retry and define the smallest regression.",
+      "expected_output": "Identifies that the external async step broke the original read-modify-write boundary, rejects a blind put-only retry that can overwrite revision 42, requires normalization before the final transaction or a final revision compare, and tests a delayed normalization against a concurrent newer save through transaction completion.",
+      "expectations": [
+        "The response identifies the non-IndexedDB normalization request as breaking the original read-modify-write transaction boundary.",
+        "The response explains that the fresh put-only transaction can overwrite revision 42 with stale normalized revision-41 content.",
+        "The fix either performs external normalization before the final readwrite transaction or rereads and compares the revision in the final transaction before writing.",
+        "The regression delays normalization while another context saves a newer revision, then verifies the newest revision survives after the final transaction completes and the database is reopened."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "An autosave trace shows draft.put success, then searchIndex.add error: ConstraintError, followed by transaction abort. The UI sets savedAt in the first request's success handler. After reopening the database, neither change is present. An engineer proposes catching only the index error and leaving the UI timing unchanged. Review the patch.",
+      "expected_output": "Rejects request success as a commit signal, moves savedAt after transaction completion, clears the saved state and surfaces the transaction failure on abort, and verifies rollback after a later request fails.",
+      "expectations": [
+        "The response states that draft.put success does not mean the containing transaction committed.",
+        "The response moves savedAt after the transaction complete event or an equivalent completion promise.",
+        "The abort or error path removes the saved state and surfaces the actual transaction failure rather than catching only the index request error.",
+        "The regression makes the earlier request succeed and the later request fail, then reopens the database and verifies that neither write committed."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Support labels failed autosaves as storage full because navigator.storage.estimate() is near 91%. Error telemetry shows TransactionInactiveError after an asynchronous spellcheck call, while a later uninterrupted 25 MB import transaction completes. The proposed fix deletes the oldest drafts above 85% and calls persist(). Review the diagnosis.",
+      "expected_output": "Makes transaction inactivity the supported diagnosis, treats the approximate origin-wide estimate and successful large write as evidence against quota exhaustion, rejects destructive deletion and persistence requests as this failure's fix, and separates transaction-boundary and real-quota regressions.",
+      "expectations": [
+        "The response uses the exact TransactionInactiveError sequence to make transaction activity, not quota, the primary diagnosis.",
+        "The response explains that the estimate is approximate and origin-wide and treats the successful uninterrupted 25 MB transaction as evidence against the quota hypothesis.",
+        "The response rejects automatic draft deletion and persist() as fixes for this transaction-lifetime failure.",
+        "The verification moves spellcheck outside the live transaction and separately tests actual QuotaExceededError handling rather than conflating the two paths."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "During a version-14 rollout, both visible tabs log that they closed their databases after an update notification, yet the new open remains blocked. Closing both tabs does not help. Terminating a shared worker immediately lets the upgrade finish; that worker performs periodic sync and has no database lifecycle logging. Operations proposes deleteDatabase() after ten seconds.",
+      "expected_output": "Treats the shared worker's unobserved long-lived connection as the ownership hypothesis to prove, instruments its versionchange and close behavior, rejects destructive timeout deletion, and tests the window-plus-worker upgrade while preserving existing data.",
+      "expectations": [
+        "The response identifies the shared worker's long-lived connection as the ownership hypothesis that still needs direct lifecycle evidence.",
+        "The response requires worker-side versionchange, stop-new-work, connection close, and transaction lifecycle logging.",
+        "The response rejects timeout-driven deleteDatabase() without an explicit destructive reset and proven recoverability contract.",
+        "The regression runs windows and the shared worker together, verifies that the worker yields its connection, and confirms the upgrade completes without losing existing records."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Before a loss report, telemetry recorded a completed write transaction, transaction.durability === \"strict\", and navigator.storage.persisted() === true. After the user removed site data, the app silently created an empty database and displayed \"Recovery complete: 0 items.\" The proposed fix calls persist() on every launch and switches every write to strict durability. Review the supported recovery claims and regression.",
+      "expected_output": "Separates transaction completion, strict durability hints, and persistence from backup after user deletion, rejects repeated persist/strict writes as recovery, exposes absent browser-local data truthfully, and tests both recovery wording and reconstructibility.",
+      "expectations": [
+        "The response does not treat transaction completion or the strict durability hint as proof of backup after the user removes site data.",
+        "The response distinguishes protection from automatic storage-pressure eviction from protection against deliberate user removal.",
+        "The response rejects repeated persist() calls and strict writes as a way to recover the removed records and replaces the zero-item success message with truthful browser-local loss and reconstructibility wording.",
+        "The regression clears or starts without the database, then verifies the recovery message and available reconstruction path; actual backup or sync design is kept as a separate architecture boundary."
+      ]
+    }
+  ]
+}

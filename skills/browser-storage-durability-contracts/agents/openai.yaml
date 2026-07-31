@@ -1,0 +1,4 @@
+interface:
+  display_name: "Browser Storage Durability Contracts"
+  short_description: "Review IndexedDB and browser storage durability."
+  default_prompt: "Use $browser-storage-durability-contracts to trace this browser-local data claim through IndexedDB upgrade ownership, transaction completion or abort, StorageManager quota and persistence evidence, and truthful recovery."

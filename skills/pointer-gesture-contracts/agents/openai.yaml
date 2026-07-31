@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pointer Gesture Contracts"
+  short_description: "Review pointer capture, cancellation, and recovery."
+  default_prompt: "Use $pointer-gesture-contracts to trace this direct-manipulation interaction from pointer ownership through capture, browser gesture competition, terminal events, and teardown, then verify the smallest fix with focused mouse, touch, and pen regressions."

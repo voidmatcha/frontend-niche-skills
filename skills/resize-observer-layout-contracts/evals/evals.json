@@ -1,0 +1,36 @@
+{
+  "skill_name": "resize-observer-layout-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A calendar logs 'ResizeObserver loop completed with undelivered notifications' whenever an all-day row appears. The callback reads the row width and sets padding on the same container. Review it without hiding window errors.",
+      "expected_output": "Maps the observed-size to padding-write feedback cycle, captures repeated error and final geometry, considers a convergent expected-size guard or justified post-paint write, and adds a resize/content regression.",
+      "expectations": [
+        "The response identifies the observed container's width-to-padding write as a concrete feedback cycle rather than treating the browser message as noise.",
+        "Diagnosis preserves and counts the error while recording callback iterations and final geometry; it does not silence window errors as the fix.",
+        "The proposed repair makes the write converge through an expected-size guard or justifies a post-paint write that no longer changes the observed size indefinitely.",
+        "The regression changes both viewport or container size and row content, then verifies stable final geometry and no repeated loop error."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A component uses ResizeObserver, disconnects it on unmount, never writes layout from the callback, and repeated resize tests have stable geometry and no error. Flag it because ResizeObserver can loop.",
+      "expected_output": "Rejects the API-name-only finding and requires a demonstrated cycle, wrong box, stale target, cleanup leak, or user-visible effect.",
+      "expectations": [
+        "The response rejects an API-name-only finding when no callback write, error, unstable geometry, stale target, or cleanup leak is demonstrated.",
+        "Disconnecting on unmount and stable repeated-resize results are treated as positive controls rather than suspicious source patterns.",
+        "The response names the additional runtime evidence required before filing a defect, such as a feedback cycle, wrong observed box, stale observation, or user-visible layout failure."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A child iframe posts its height to the parent, which changes the iframe height and triggers another post forever. Which skill owns the fix?",
+      "expected_output": "Routes the cross-document sizing protocol and stabilization contract to iframe-embed-contracts while using ResizeObserver evidence only to identify the local trigger.",
+      "expectations": [
+        "The response assigns ownership of the cross-document sizing protocol and its convergence contract to iframe-embed-contracts.",
+        "ResizeObserver records are used to identify the local trigger, but changing observer scheduling alone is rejected as proof that the parent-child loop is fixed.",
+        "Verification exercises both parent and child and proves that posted sizes and iframe geometry settle instead of oscillating."
+      ]
+    }
+  ]
+}

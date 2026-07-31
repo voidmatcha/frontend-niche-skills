@@ -1,0 +1,87 @@
+{
+  "skill_name": "contenteditable-selection-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A React comment editor controls a contentEditable div from HTML state. Typing in the middle calls setState from onInput, rerenders the subtree, and the caret jumps to the end after every character. Review the smallest correct fix.",
+      "expected_output": "Confirms the failure with a beforeinput/input/render/selection trace, identifies DOM replacement of the live selection boundary or double ownership, chooses native-DOM reconciliation or a canceled model transaction, preserves a logical directional bookmark across commits, and adds a middle-of-nested-markup typing plus undo/redo regression.",
+      "expectations": [
+        "The answer ties the caret jump to rerendered or replaced live selection boundaries using an ordered input, render, and selection sequence, rather than blaming contentEditable generically.",
+        "The proposed fix gives one layer clear edit ownership: either reconcile state from browser-owned DOM without rewriting each input, or cancel native mutation and commit a model-owned transaction.",
+        "If DOM replacement remains necessary, the answer preserves both endpoints and selection direction against the committed host instead of restoring a single flat character offset.",
+        "Verification types in the middle of nested markup and checks the resulting caret plus undo and redo behavior after rerender."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A model-driven rich-text host prevents every cancelable beforeinput and applies operations to its own document model. Typing works, but browser Edit > Undo does nothing while the app toolbar undo works. Diagnose the contract.",
+      "expected_output": "Identifies application history as the effective owner and the missing native-history bridge rather than inventing target ranges for historyUndo/historyRedo, requires an explicit history ownership decision, and tests typing followed by keyboard/menu/toolbar undo and redo on supported paths.",
+      "expectations": [
+        "The answer identifies the application model as the effective history owner because native beforeinput mutations are canceled.",
+        "The remedy makes native-versus-application history ownership explicit and does not claim that fabricated target ranges alone restore browser undo history.",
+        "Verification performs an edit and checks undo and redo through each supported keyboard, browser-menu, and toolbar path against the same document state."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A toolbar bold command clones the current Range, prevents the toolbar pointerdown from moving focus, updates text nodes synchronously without replacing them, restores the directional selection, and browser tests show stable selection and undo. Flag Range usage as stale by definition.",
+      "expected_output": "Rejects the API-name-only finding because the range boundaries remain connected, contained, and stable for the synchronous operation and the selection/history regression passes.",
+      "expectations": [
+        "The answer rejects the requested finding instead of treating cloneRange or Range usage as defective by API name alone.",
+        "The rejection relies on the saved boundaries remaining connected to the same host through the synchronous mutation and on directional-selection and undo test evidence.",
+        "The answer requires a reproduced disconnected, replaced, foreign, or asynchronously invalidated boundary before recommending a selection-restoration rewrite."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Korean users submit a contenteditable message when Enter commits an IME candidate, and the composed syllable splits into jamo. There is no rerender or selection restore. Which skill owns this?",
+      "expected_output": "Routes the language/input-method-specific Enter, keyCode 229, and syllable-composition behavior to cjk-text-and-input rather than treating it as a general editing-host selection defect.",
+      "expectations": [
+        "The answer routes the primary diagnosis to cjk-text-and-input.",
+        "The routing decision is based on Enter during active IME composition and jamo corruption, while the absence of rerender or selection restoration is treated as negative evidence for this skill.",
+        "The answer does not propose a generic Range bookmark or contenteditable ownership rewrite as the primary fix."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Pasting HTML inserts once at the correct caret and undo removes it as one step, but event-handler attributes are not removed from the imported markup. Review the primary defect.",
+      "expected_output": "Routes the allowed HTML and XSS sanitization policy to frontend-security-baseline, while noting that contenteditable-selection-contracts would own only insertion range, transaction count, post-paste selection, and undo grouping.",
+      "expectations": [
+        "The answer routes the primary defect to frontend-security-baseline and identifies executable imported markup or sanitization policy as the security boundary.",
+        "The answer treats correct caret insertion and single-step undo as positive evidence rather than manufacturing an editing-transaction defect.",
+        "Any contenteditable follow-up is limited to observable insertion range, transaction count, post-paste selection, or undo grouping."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Dropping a 2 GB video File into a rich-text host begins decoding it without checking type or size. The caret and document transaction remain correct. Which skill should review it?",
+      "expected_output": "Routes file type, size, and content processing to file-ingest-contracts; rejects a contenteditable selection finding because no range, duplicate-insertion, or history failure is shown.",
+      "expectations": [
+        "The answer routes the primary review to file-ingest-contracts based on unbounded file type, size, and decoding behavior.",
+        "The answer rejects a contenteditable selection finding because caret placement and the document transaction are reported correct and no duplicate insertion or history failure is evidenced.",
+        "Verification is framed around rejecting or safely handling the oversized or disallowed file before expensive processing, not around selection restoration."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "A contenteditable editor has no accessible name, its formatting toolbar lacks button states, and keyboard focus order is confusing, but typing, selection, paste, undo, and teardown are correct.",
+      "expected_output": "Routes role, name, state, keyboard, focus-order, and assistive-technology semantics to a11y-contract-testing instead of manufacturing an editing transaction defect.",
+      "expectations": [
+        "The answer routes the primary review to a11y-contract-testing based on accessible naming, control state, keyboard order, and assistive-technology behavior.",
+        "The answer rejects an editing transaction defect because typing, selection, paste, undo, and teardown are all reported correct.",
+        "Verification checks observable roles, accessible names, formatting state, and keyboard focus order rather than caret or undo internals."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "After closing a modal editor, a queued selectionchange callback restores a saved Range into a newly opened editor and steals focus from a search field. The old host nodes are disconnected.",
+      "expected_output": "Confirms stale ownership after teardown, verifies disconnected or foreign boundary nodes and listener lifetime, invalidates the old bookmark, scopes restoration to the same live host and intentional focus return, and adds close/reopen plus unrelated-focus regression coverage.",
+      "expectations": [
+        "The answer confirms a stale post-teardown ownership defect using the queued callback, disconnected old boundaries, foreign new host, and stolen focus as evidence.",
+        "The fix invalidates the old bookmark and cancels or guards queued restoration by the identity and lifetime of the same live editing host.",
+        "Selection or focus restoration occurs only for an intentional return to that host, not merely because a saved Range exists.",
+        "Verification closes the first editor, focuses an unrelated control, opens a new editor, flushes queued callbacks, and asserts that focus and selection are not stolen."
+      ]
+    }
+  ]
+}

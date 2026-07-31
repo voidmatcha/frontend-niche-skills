@@ -1,0 +1,36 @@
+{
+  "skill_name": "user-activation-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A target browser blocks an OAuth popup. The click handler awaits a challenge request and PKCE helper, then calls window.open(url), while another target browser usually works. Review the smallest safe frontend fix.",
+      "expected_output": "Traces transient activation through both awaits, verifies window.open returning null in the affected browser, considers a synchronously pre-opened named window with close-on-failure or redirect fallback, and keeps OAuth callback policy in frontend-auth-flow-contracts.",
+      "expectations": [
+        "The response traces transient user activation from the click through both awaited operations before the window.open call.",
+        "The reproduction checks the actual window.open return value and popup behavior in the affected target browser instead of inferring the cause from cross-browser difference alone.",
+        "The smallest frontend options include synchronously pre-opening a named window and closing it on failure, or using an explicit same-tab redirect fallback.",
+        "OAuth callback, state, and token policy remain owned by frontend-auth-flow-contracts rather than being redesigned inside the activation fix."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A button awaits fetch('/report') and then creates a Blob download through an anchor click. Claim that user activation is definitely the bug because there is an await.",
+      "expected_output": "Rejects the assumption until the exact browser API is shown to require activation, distinguishes download/export lifecycle from gesture gating, and routes Blob/file correctness to download-export-safety.",
+      "expectations": [
+        "The response rejects the claim that any await necessarily consumes activation for the exact API being used.",
+        "It requires evidence that the target browser gates the relevant download action on activation before selecting this skill as owner.",
+        "Blob construction, object URL lifetime, filename, response integrity, and file correctness are routed to download-export-safety."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Inside a sandboxed iframe, requestFullscreen rejects even when called directly from a click. The iframe does not have the relevant allow policy. Should we move the call earlier?",
+      "expected_output": "Recognizes that activation timing alone cannot grant a denied embedded capability and routes sandbox/Permissions Policy ownership to iframe-embed-contracts.",
+      "expectations": [
+        "The response identifies the missing iframe capability or Permissions Policy as the blocking condition despite valid click timing.",
+        "Moving requestFullscreen earlier is rejected because transient activation cannot override a denied embedded capability.",
+        "Sandbox and iframe allow-policy ownership is routed to iframe-embed-contracts, with retesting after the policy is corrected."
+      ]
+    }
+  ]
+}

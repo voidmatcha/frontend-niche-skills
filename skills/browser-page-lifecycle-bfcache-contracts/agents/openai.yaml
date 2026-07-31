@@ -1,0 +1,4 @@
+interface:
+  display_name: "Browser Page Lifecycle and bfcache Contracts"
+  short_description: "Review stale state after browser Back/Forward restore."
+  default_prompt: "Use $browser-page-lifecycle-bfcache-contracts to review this top-level browser page for bfcache eligibility, pageshow.persisted restoration, stale-state reconciliation, idempotent resource resume, and real Back/Forward regression evidence."

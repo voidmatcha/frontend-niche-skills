@@ -1,0 +1,5 @@
+interface:
+  display_name: "Contenteditable Selection Contracts"
+  short_description: "Debug contenteditable selection and edit transactions."
+  default_prompt: "Use $contenteditable-selection-contracts to trace this editing host from selection and beforeinput intent through DOM/model mutation, composition, history, paste/drop, focus, and teardown; reject weak findings and propose the smallest verified single-owner fix."
+

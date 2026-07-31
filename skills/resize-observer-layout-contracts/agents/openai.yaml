@@ -1,0 +1,4 @@
+interface:
+  display_name: "ResizeObserver Layout Contracts"
+  short_description: "Review ResizeObserver cycles, box choice, and cleanup."
+  default_prompt: "Use $resize-observer-layout-contracts to trace this ResizeObserver from the observed box through callback writes and relayout, verify any loop error or stale-target leak, and propose the smallest convergent or cleanup fix with a geometry regression."
