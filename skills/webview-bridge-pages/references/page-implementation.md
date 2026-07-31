@@ -67,23 +67,17 @@ Web-side implementation rules once the contract is settled.
   desktop width: `width=device-width, initial-scale=1, viewport-fit=cover`.
 - **Don't trust `100vh`.** It measures the large viewport; use `100svh` for stable
   full-height layouts, `100dvh` only when you want reflow as chrome shows/hides.
-- **Even `svh`/`dvh` can be wrong at *initial load* on older Android WebView.** Some
-  pre-M139 Chromium versions compute the viewport too tall on first paint and freeze it
-  until a *real* viewport change (rotation/keyboard/resize), pushing a full-height
-  page's bottom below the fold (see bug 331326389, the keyboard-during-nav `clientHeight`
-  case, fixed M139; non-keyboard `dvh`-too-tall-at-load is reported separately). An
-  app-side 1px container resize does **not** clear it — only a genuine viewport change
-  does. When you must support old WebViews, drive height from JS instead of the CSS
-  unit: `--vh = innerHeight*0.01` → `height: calc(var(--vh, 1vh) * 100)`, updated on
-  `resize`. `innerHeight` read at mount escapes the CSS-unit-at-load bug in a chrome-less
-  in-app WebView (no URL bar). And **don't pin the bottom CTA with `position:fixed`**
-  here — fixed anchors to that buggy viewport (changing the page's height unit won't move
-  it, and it lands below the fold); anchor it `position:absolute` to the `--vh`-sized
-  page container instead. Verify on a *real old device* — modern emulators (WebView
-  ≥M139) have it fixed and can't reproduce it. Most robust of all: have the **app pass
-  the absolute pixel height** as a param and use
-  `height: var(--app-height, calc(var(--vh, 1vh) * 100))` — independent of every CSS/JS
-  viewport quirk, with `--vh` then the unit as graceful fallbacks.
+- **`svh`/`dvh` can still disagree with visible geometry on a failing target.**
+  Chromium issue 331326389 documents one `clientHeight` failure around
+  navigation and keyboard state; separate reports cover other initial-load
+  symptoms. Do not merge those reports into a blanket pre-M139 rule. On the
+  affected app/WebView pair, record `innerHeight`,
+  `documentElement.clientHeight`, `visualViewport.height`, and the event that
+  changes them. A JS-measured `--vh`, an app-provided inset/height, or anchoring
+  a CTA to a measured positioned container are possible local repairs, but each
+  needs cold-load, rotation, keyboard, and hit-test verification. A modern
+  emulator that does not reproduce the geometry is a control, not proof that
+  an older supported target is fixed.
 - **Gate first paint on a measured height.** If the base can be briefly wrong at first
   paint (`--vh`/`--app-height` not set yet → `1vh` falls back to the large viewport),
   hold rendering until the JS height is measured (`> 0`) so the page doesn't flash at the
@@ -135,13 +129,15 @@ Web-side implementation rules once the contract is settled.
   additionally use `interactive-widget=resizes-content` or the VirtualKeyboard API.
   Never clear element focus in resize handlers — that creates a
   focus-loss/keyboard-dismiss loop.
-- **iOS auto-zooms on focus when an input's `font-size` is < 16px**, and often does
-  not restore zoom on blur (page left shifted/clipped). Set `font-size: 16px` on
-  `input`/`select`/`textarea`/`contenteditable`. The `maximum-scale=1`/`user-scalable=no`
-  viewport hack also stops the zoom, but a default in-app WKWebView honors those scale
-  limits (`ignoresViewportScaleLimits` defaults to `false`), so the hack actually disables
-  pinch-zoom and fails WCAG 1.4.4 — unlike mobile Safari, which ignores `user-scalable=no`
-  since iOS 10. Prefer the 16px fix.
+- **Small form-control text can trigger focus zoom in iOS WebKit contexts.** A
+  widely reproduced authoring threshold is below `16px`, but treat that as a
+  target-device behavior, not a Web standard invariant. Use `16px` as a
+  conservative default for `input`/`select`/`textarea`/`contenteditable`, then
+  reproduce focus and blur on the supported WKWebView versions. Do not use
+  `maximum-scale=1`/`user-scalable=no` as the page-side fix: a default
+  `WKWebViewConfiguration` honors author scale limits because
+  `ignoresViewportScaleLimits` defaults to `false`, so that workaround can
+  disable user zoom. Prefer readable control text and preserve pinch zoom.
 - **System font scale breaks layouts on Android.** WebView text follows the OS
   accessibility font size via `textZoom` (~85% at the smallest preset; up to ~130%
   before Android 14, up to **200%** non-linear on Android 14+). Don't silently
@@ -171,18 +167,22 @@ Web-side implementation rules once the contract is settled.
 - CSS Values viewport-relative lengths (svh/dvh/lvh)
   (https://drafts.csswg.org/css-values-4/#viewport-relative-lengths) and
   CanIWebView (https://caniwebview.com/).
-- Scroll/overscroll & input-zoom: WebKit bug 243270
-  (https://bugs.webkit.org/show_bug.cgi?id=243270; `bounces` vs `overscroll-behavior`,
-  fixed ~iOS 16.2) and bug 262287
+- Scroll/overscroll: WebKit bug 243270
+  (https://bugs.webkit.org/show_bug.cgi?id=243270; `bounces` vs `overscroll-behavior`)
+  and bug 262287
   (https://bugs.webkit.org/show_bug.cgi?id=262287; `position:fixed`
-  interrupted-momentum hit-test, fixed in Safari Technology Preview 239);
-  WCAG 1.4.4 resize-text understanding
+  interrupted-momentum hit-test). Input focus zoom: the CSS-Tricks target-device
+  reproduction of the conservative `16px` mitigation
+  (https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/), Apple
+  `WKWebViewConfiguration.ignoresViewportScaleLimits` documentation
+  (https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits),
+  and WCAG 1.4.4 resize-text understanding
   (https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html).
-- Initial-load viewport-height bug: Chromium issue 331326389 (`clientHeight` wrong on
-  first load when keyboard was up during nav, fixed M139; repro:
-  Zwyx/chrome-android-clientheight), Stack Overflow 77033005 (`100dvh` extends past
-  bottom on Android Chrome) and 79831083 (Chrome PWA `dvh` wrong on initial load); JS
-  `--vh` trick: CSS-Tricks "The trick to viewport units on mobile".
+- Initial-load viewport-height reports: Chromium issue 331326389
+  (`clientHeight` wrong around navigation/keyboard state), Stack Overflow
+  77033005 (`100dvh` extends past bottom on Android Chrome), and 79831083
+  (standalone PWA `dvh` wrong on initial load). JS `--vh` compatibility
+  pattern: CSS-Tricks "The trick to viewport units on mobile".
 - Keyboard mechanisms: Chrome 108 viewport-resize change ("These changes do not
   affect WebView") — https://developer.chrome.com/blog/viewport-resize-behavior;
   WebKit bug 259770 (`interactive-widget` unimplemented) —

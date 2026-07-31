@@ -52,6 +52,18 @@ Only T1 is implemented as a refactor. T2/T3 become a cleanup plan or TODO with t
 - Refactor removes caller-level tests/stories without replacements at the new boundary.
 - The first patch is a repo-wide move/rename rather than a one-cluster extraction with rollback-friendly diff.
 
+## PR-worthiness gate
+
+Require at least two concrete source locations with the same user-facing
+semantics, interaction/state model, accessibility contract, and stable variant
+axis. Only T1 evidence justifies an implementation; lock behavior before moving
+the boundary.
+
+Reject weak findings: similar names or screenshots without source evidence,
+shared styling with different semantics, duplication across only one unstable
+experiment, a scanner score without contract comparison, or an abstraction
+whose first API needs caller-specific escape hatches.
+
 ## Output shape
 
 Return a compact table before editing:

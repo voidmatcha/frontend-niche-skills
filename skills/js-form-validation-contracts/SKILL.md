@@ -81,7 +81,7 @@ when a user-visible contract is violated:
 - **Async race**: per-keystroke async validation with no debounce, or a submit handler reachable
   twice while a request is in flight.
 
-Reject likely false positives:
+Reject weak findings:
 
 - `mode: 'onChange'` alone, or `mode: 'onTouched'` / `'onBlur'` with default `reValidateMode`
   and submit gated on attempt — correct.
@@ -94,6 +94,12 @@ Reject likely false positives:
 Minimal useful PR: a failing sequence test — mount (no error) → blur invalid (error) → type valid
 (error clears) → submit rejects (button re-enabled) → server `setError('email')` (focused, then
 cleared on edit).
+
+## Output shape
+
+Report the library and state owner, exact mount-touch-edit-submit sequence,
+visible error/button/focus evidence, smallest validity-lifecycle change, and a
+test that covers clearing, rejected-submit recovery, and server-error mapping.
 
 ## References
 

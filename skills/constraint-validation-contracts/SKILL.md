@@ -66,7 +66,7 @@ one of these user-visible contracts is violated:
 - **Submission contract**: `novalidate`, `checkValidity()`, or `reportValidity()` lets an invalid
   value through, blocks a valid value, or focuses the wrong field.
 
-Reject likely false positives:
+Reject weak findings:
 
 - `:invalid` is scoped under `.submitted`, `.touched`, `:user-invalid`, or equivalent state.
 - Every non-empty `setCustomValidity(...)` path has a paired `setCustomValidity('')` on input or
@@ -77,6 +77,12 @@ Reject likely false positives:
 
 Minimal useful PR: include a failing sequence test such as invalid -> edit valid ->
 `expect(input.validationMessage).toBe('')` -> submit succeeds.
+
+## Output shape
+
+Report the native validity owner, failing invalid-to-valid or submit sequence,
+`ValidityState`/message evidence, smallest lifecycle fix, and the browser test
+that confirms timing, clearing, and submission behavior.
 
 ## References
 

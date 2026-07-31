@@ -137,7 +137,7 @@ A security grep hit is only a lead. Before calling it a vulnerability, show the 
 4. **Fail-closed patch**: prefer a safe sink, renderer hook, URL parser allow-list, nonce/hash CSP,
    HttpOnly cookie, or CI install policy over ad-hoc string filtering.
 
-Be precise about modern browser behavior:
+Reject weak findings:
 
 - `<a target="_blank">` is lower signal by itself because modern browsers generally apply
   implicit `noopener` for anchors. Count it as a hardening/policy consistency issue only when the

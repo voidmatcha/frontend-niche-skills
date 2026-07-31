@@ -81,7 +81,7 @@ targets. Each endpoint can restrict `allowedMethods`, `allowedHeaders`, and cred
 policy.
 
 - Docs: <https://backstage.io/docs/plugins/proxying/>
-- Config source: <https://github.com/backstage/backstage/blob/master/plugins/proxy-backend/config.d.ts>
+- Config source (commit-pinned): <https://github.com/backstage/backstage/blob/04f25e440b36498647d50129b9f82d7dda928ae2/plugins/proxy-backend/config.d.ts>
 
 **Pattern:** explicit proxy capabilities, not a browser-selected arbitrary destination.
 
@@ -102,7 +102,7 @@ protocol, hostname, port, pathname, and search. Its documentation recommends bei
 specific as possible and notes that redirect following needs its own bound.
 
 - Docs: <https://nextjs.org/docs/pages/api-reference/components/image#remotepatterns>
-- Matcher source: <https://github.com/vercel/next.js/blob/canary/packages/next/src/shared/lib/match-remote-pattern.ts>
+- Matcher source (commit-pinned): <https://github.com/vercel/next.js/blob/e3d634e0bcb634c5a1814ed1c800b051711996cd/packages/next/src/shared/lib/match-remote-pattern.ts>
 
 **Pattern:** exact component matching for a frontend-owned server fetch surface.
 

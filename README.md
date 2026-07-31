@@ -5,7 +5,7 @@
 # Frontend Niche Skills
 
 <p align="center">
-<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-41-1FC07C?style=flat-square&amp;labelColor=black" /></a>
 <a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
 <a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
 <a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
@@ -103,7 +103,7 @@ Pattern value: make the agent test the right hypothesis before applying another 
 
 ## Skills
 
-32 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
+41 skills, grouped by the kind of frontend failure they target. If the report is messy or crosses domains, start with `frontend-report-triage`.
 
 Practical priority:
 
@@ -125,6 +125,9 @@ Source model: README lists routing and evidence documents; detailed citations li
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | Building or debugging pages loaded inside native WebViews: bridge contracts, safe-area/viewport layout, lifecycle, hit-test vs paint/compositing, app-host quirks. |
 | [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | Building or debugging browser iframe/widgets: parent-guest messaging, embeddability headers, sandbox/Permissions Policy, READY/init handshakes, dynamic sizing, partitioned storage, and teardown. |
+| [`browser-page-lifecycle-bfcache-contracts`](./skills/browser-page-lifecycle-bfcache-contracts/SKILL.md) | Debugging top-level browser Back/Forward restoration: stale auth/data/UI, duplicated or paused resources, `pageshow.persisted`, bfcache eligibility, and idempotent resume. |
+| [`history-scroll-restoration-contracts`](./skills/history-scroll-restoration-contracts/SKILL.md) | SPA Back/Forward or same-document hash navigation restores the wrong scroll position, jumps twice after async rendering, or misses a fragment target: history-entry identity, restoration ownership, and render readiness. |
+| [`media-capture-device-contracts`](./skills/media-capture-device-contracts/SKILL.md) | Camera or microphone capture fails after permission denial, device switching, track interruption, or teardown: `getUserMedia`, device enumeration/change, track state, cleanup, and reacquisition. |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | Debugging SPA/SSR deep links that lose query params or land on the wrong state before router hydration is ready. |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | Diagnosing hydration mismatches from locale/time/randomness/browser-only APIs, storage, auth state, responsive branches, or data races. |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | Debugging a WebSocket/SSE client across a connection drop: reconnect backoff/jitter, SSE Last-Event-ID/cursor resume, out-of-order/duplicate/gapped deltas, heartbeat/zombie detection, bufferedAmount backpressure, and refreshing auth on an open socket. |
@@ -135,6 +138,7 @@ Source model: README lists routing and evidence documents; detailed citations li
 | --- | --- |
 | [`semantic-markup-contracts`](./skills/semantic-markup-contracts/SKILL.md) | Reviewing native HTML structure: buttons vs links, headings, landmarks, labels, tables/lists, invalid interactive nesting, native-before-ARIA fixes. |
 | [`overlay-focus-scroll-contracts`](./skills/overlay-focus-scroll-contracts/SKILL.md) | Reviewing modal, drawer, sheet, popover, menu, and command-palette runtime contracts: focus trap/restore, inert/aria-hidden timing, nested stacks, scroll-lock cleanup. |
+| [`pointer-gesture-contracts`](./skills/pointer-gesture-contracts/SKILL.md) | Single-pointer drag, swipe, resize, or draw interactions stick, cancel, scroll the page, or lose input outside an element: active-pointer ownership, event delivery/capture, cancellation, `touch-action`, and cleanup. True pinch, rotate, and multi-contact geometry are out of scope. |
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | Turning accessibility semantics into regression tests: roles, names, states, focus, dialogs, menus, comboboxes, tabs. |
 | [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | Reviewing a View Transitions API animation that silently aborts, freezes on a stale snapshot, ignores reduced-motion, or ghosts — the review/PR-worthiness lens, not a re-implementation guide. |
 | [`css-transition-animation-contracts`](./skills/css-transition-animation-contracts/SKILL.md) | Reviewing enter/exit transitions for dialogs/popovers/top-layer (`@starting-style`, `allow-discrete`, `overlay`) and cleanup gated on a transition finishing (`transitionend` vs `getAnimations().finished`). |
@@ -144,6 +148,7 @@ Source model: README lists routing and evidence documents; detailed citations li
 
 | Skill | Use when |
 | --- | --- |
+| [`contenteditable-selection-contracts`](./skills/contenteditable-selection-contracts/SKILL.md) | A contenteditable or rich-text host loses or jumps the caret, duplicates an edit, breaks undo/redo, inserts paste/drop at the wrong range, corrupts composition during rerender, or restores stale focus/selection after teardown. |
 | [`cjk-text-and-input`](./skills/cjk-text-and-input/SKILL.md) | Handling Korean, Japanese, or Chinese text/input: wrapping, IME composition, Enter handling, grapheme-safe length, validation timing. |
 | [`i18n-copy-and-layout`](./skills/i18n-copy-and-layout/SKILL.md) | Reviewing localization copy/layout: pluralization, expansion, bidi/RTL, locale formatting, translation-key contracts. |
 | [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | Auditing date/time code: timezone, DST, parsing, formatting, `datetime-local`, relative time, server/client clock issues. |
@@ -155,7 +160,8 @@ Source model: README lists routing and evidence documents; detailed citations li
 | --- | --- |
 | [`constraint-validation-contracts`](./skills/constraint-validation-contracts/SKILL.md) | Native HTML Constraint Validation API contracts: `setCustomValidity`, `reportValidity`, `:user-invalid`, invalid-then-valid lifecycle. |
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form, Formik, Final Form, vee-validate, Valibot, or custom JS form flows: stale errors, disabled submits, async/server races, server field-error mapping. |
-| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Hardening browser-facing auth: returnTo redirects, OAuth/passkey/autocomplete contracts, token storage boundaries, CSRF edges. |
+| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | Hardening browser-facing auth flows: returnTo redirects, OAuth/passkey/autocomplete contracts, OTP expiry/retry, safe errors, and fresh verification. |
+| [`user-activation-contracts`](./skills/user-activation-contracts/SKILL.md) | Debugging popup, clipboard, share, picker, fullscreen, and payment calls that lose transient user activation after async work or another consuming API. |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | Checking frontend XSS, DOM injection, sanitizer misuse, CSP, third-party scripts, storage, and URL parsing basics. |
 | [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | Reviewing frontend-owned BFF/API proxies: client-selected target SSRF, route/method/auth capability allowlists, alternate ingress drift, multipart budgets/boundaries, redirect/error handling, and upstream business-flow ownership. |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | Reviewing checkout/payment page client evidence: hosted-field vs direct PAN handling, runtime script inventory, third-party script risk, CSP/SRI/header evidence, PCI DSS evidence gaps. |
@@ -177,9 +183,11 @@ Source model: README lists routing and evidence documents; detailed citations li
 | --- | --- |
 | [`core-web-vitals-performance-contracts`](./skills/core-web-vitals-performance-contracts/SKILL.md) | Attributing a failing Core Web Vital (LCP, CLS, INP, TTFB) to a specific element, layout shift, or main-thread task before fixing — whole-page budgeting, not just the score. |
 | [`frontend-data-fetching-cache-contracts`](./skills/frontend-data-fetching-cache-contracts/SKILL.md) | Client data cache (React Query, SWR, RTK Query, Apollo) showing stale data after a mutation, request waterfalls, over/under-fetching, or pagination/revalidation cache bugs. |
+| [`browser-storage-durability-contracts`](./skills/browser-storage-durability-contracts/SKILL.md) | Browser-local data is reported saved but disappears, an IndexedDB schema upgrade is blocked, a transaction becomes inactive or aborts, quota/persistence evidence is misread, or recovery copy overstates durability. |
 | [`async-effect-race-contracts`](./skills/async-effect-race-contracts/SKILL.md) | Raw async effects misbehaving: fetch-on-deps races (stale response wins), missing cleanup/`AbortController`, StrictMode double-invoke, or stale closures in intervals/subscriptions. |
 | [`pwa-offline-cache-contracts`](./skills/pwa-offline-cache-contracts/SKILL.md) | Service-worker/offline caching going wrong: stale build after deploy, `ChunkLoadError`, precache gaps, cache versioning/eviction, SW update lifecycle, or caching authed responses. |
 | [`large-list-data-grid-contracts`](./skills/large-list-data-grid-contracts/SKILL.md) | A virtualized list/grid that jumps or loses scroll position, or find-in-page / screen-reader totals / focus breaking because off-screen rows are unmounted; pinned-column/header drift. |
+| [`resize-observer-layout-contracts`](./skills/resize-observer-layout-contracts/SKILL.md) | `ResizeObserver` size feedback loops, undelivered-notification errors, wrong-box measurements, flicker, and stale observed targets after remount. |
 
 ## Symptom map
 
@@ -189,14 +197,20 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 | --- | --- | --- |
 | Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app browser; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
 | A browser iframe/widget is blank, accepts spoofed messages, loses READY/init, flickers while resizing, lacks a required capability, or loses embedded sign-in. | `iframe-embed-contracts` | What are the exact parent/guest origins, delivered frame policies, authenticated message handshake, sizing protocol, and storage mode? |
+| Browser Back/Forward restores stale or private UI, or a timer/socket/observer is dead or duplicated after return. | `browser-page-lifecycle-bfcache-contracts` | Was this a persisted restore, what state/resource needs idempotent reconciliation, and what does the real history traversal show? |
+| SPA Back/Forward or same-document hash navigation returns to the wrong scroll position, scrolls twice after content renders, or fails to reveal the fragment target. | `history-scroll-restoration-contracts` | Which same-document history entry owns the position, who performs restoration, and when is the target layout stable? |
+| Camera or microphone works once but fails after permission changes, device switching, track interruption, or closing and reopening the capture UI. | `media-capture-device-contracts` | What are the permission, selected-device, track-state, teardown, and reacquisition transitions? |
 | HTML structure itself looks suspect: div buttons, wrong links, labels/headings/lists, invalid interactive nesting. | `semantic-markup-contracts` | Can native HTML express this before ARIA, CSS, or JavaScript? |
 | Modal, drawer, sheet, popover, menu, or command palette looks fine but focus, background interaction, Escape/backdrop, or scroll lock fails. | `overlay-focus-scroll-contracts` | What happens on open, nested open, close, unmount, and route change? |
+| A single-pointer drag, swipe, resize, or drawing interaction gets stuck, loses input at the element boundary, or fights native scrolling. | `pointer-gesture-contracts` | Does the sequence preserve one active `pointerId`, the intended event-delivery/capture path, terminal cleanup, and `touch-action`? Route pinch, rotate, or other multi-contact geometry elsewhere. |
 | Dialog, menu, combobox, tab, or custom widget needs accessibility regression coverage. | `a11y-contract-testing` | Can a test assert role, name, state, and focus contract? |
+| A contenteditable or rich-text editor loses or reverses the selection, applies one intent twice, breaks undo, inserts paste/drop at the wrong caret, or restores a stale range after remount. | `contenteditable-selection-contracts` | Which live editing host owns the selection, and does the browser or application own this one `beforeinput`/`input` transaction and its history? |
 | Korean, Japanese, or Chinese text/input behaves wrong: IME Enter, composition, grapheme length, wrapping, truncation. | `cjk-text-and-input` | Is the code mixing composition text, committed text, and displayed text? |
 | Translated copy breaks layout, pluralization, bidi/RTL, number/date formatting, or translation-key contracts. | `i18n-copy-and-layout` | Is the bug copy, layout, locale behavior, or input composition? |
 | Deep link, auth redirect, SPA/SSR route, or query params initialize the wrong screen. | `deeplink-hydration` | What is the URL state before router readiness, hydration, and auth bounce? |
 | WebSocket or SSE client breaks across a connection drop: reconnect storm, duplicated/missing events, out-of-order deltas, a frozen UI on an OPEN-but-dead socket, buffer growth, or a token that expired after the handshake. | `realtime-transport-contracts` | Is this reconnect/backoff, resume/cursor, delta folding, liveness/heartbeat, backpressure, or socket re-auth? |
-| Browser-facing auth UI has returnTo, OAuth/passkey, autocomplete, OTP, token storage, or CSRF-edge issues. | `frontend-auth-flow-contracts` | What browser contract should the auth flow preserve? |
+| Browser-facing auth UI has returnTo, OAuth/passkey, autocomplete, OTP expiry/retry, safe-error, or fresh-verification issues. | `frontend-auth-flow-contracts` | What browser contract should the auth flow preserve? |
+| Popup, clipboard, share, picker, fullscreen, or payment API works from a direct click but fails after async work or another gated call. | `user-activation-contracts` | Which API is activation-gated, and where does transient activation expire or get consumed? |
 | Raw HTML, sanitizer, CSP, opener, storage, URL parsing, or third-party script risk appears outside a payment page. | `frontend-security-baseline` | Is there a concrete browser security source-to-sink path? |
 | A frontend-owned server route proxies client-selected paths, uploads, headers, or business actions to an upstream API. | `bff-proxy-security-contracts` | What route-method-auth capability is exposed, and can another ingress bypass it? |
 | Checkout/payment page needs client-side evidence: hosted fields, direct PAN/CVV handling, runtime scripts, CSP/SRI/header controls. | `payment-page-client-security` | What evidence shows the payment data boundary and runtime script surface? |
@@ -216,9 +230,11 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 | The wrong image file ships, an image over-downloads, the hero is lazy-loaded, or images cause layout shift. | `responsive-image-contracts` | Does `srcset` have a `sizes` matching the real layout, correct width descriptors, LCP `eager`/`fetchpriority`, and `width`/`height`? |
 | A page's LCP/CLS/INP fails and you need to attribute it, not just report the score. | `core-web-vitals-performance-contracts` | Which element is LCP (discoverable/prioritized?), what sources each layout shift, and which long tasks inflate INP? |
 | Client-cached data is stale after a mutation, or requests waterfall / over-fetch (React Query/SWR/RTK Query/Apollo). | `frontend-data-fetching-cache-contracts` | Which query key should invalidate, and are reads parallelized with the right stale/gc timing? |
+| Browser-local records disappear, an IndexedDB upgrade hangs behind another tab, a later request aborts after the UI says Saved, or persistence is described as a permanent backup. | `browser-storage-durability-contracts` | Which stage failed: open/upgrade ownership, transaction activity, commit/abort, quota/persistence, unexpected close, or recovery? |
 | An async effect shows the wrong data, fires twice, leaks, or reads a stale value. | `async-effect-race-contracts` | Is there take-latest/`AbortController` + cleanup, and is the effect idempotent under StrictMode? |
 | Users get a stale build after deploy, `ChunkLoadError`, or a service worker serves wrong/stale bytes offline. | `pwa-offline-cache-contracts` | Is there an SW update flow, complete precache, cache versioning, and a do-not-cache rule for authed HTML/API? |
 | A virtualized list/grid jumps or loses scroll, or Ctrl+F / screen-reader totals / focus break under virtualization. | `large-list-data-grid-contracts` | Is `estimateSize`/overscan right, and are `aria-setsize`/`aria-posinset` (or `aria-rowcount`) set for unmounted rows? |
+| `ResizeObserver` reports undelivered notifications, flickers, grows forever, measures the wrong box, or observes stale elements after remount. | `resize-observer-layout-contracts` | Which callback write feeds back into the observed size, and does setup/cleanup own the current target? |
 | Report is vague, crosses multiple domains, or you are not sure which specialized skill should own it. | `frontend-report-triage` | What are the top 1-3 likely failure classes, and what evidence would distinguish them? |
 
 ## Evidence
@@ -230,7 +246,9 @@ Where evidence lives:
 - [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md) — public OSS cases used to sanity-check skill boundaries and PR shapes.
 - [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md) — public OSS research candidates with file/line evidence. Re-check the current default branch and reproduce locally before filing.
 - [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md) — WebView-specific prior art, bridge libraries, host behavior references, and ecosystem notes.
+- [`docs/public-skill-landscape.md`](./docs/public-skill-landscape.md) — opened public skill packs that directly overlap, nearly match, or complement this pack, with keep/split/defer decisions.
 - [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) — per-skill map showing whether support comes from validated cases, candidate leads, primary-source references, or routing examples.
+- [`docs/skill-quality-standard.md`](./docs/skill-quality-standard.md) — portable format, routing, workflow, evidence, output, evaluation, and new-skill admission criteria used by this pack.
 - [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md) — integrated report triage contract and examples.
 - `skills/*/SKILL.md` and `skills/*/references/*.md` — per-skill official docs, prior art, examples, false-positive notes, and implementation-specific evidence.
 
@@ -248,7 +266,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` only delegates to the repo script, so contributors can run the same checks without lefthook. The script audits skill metadata, README links/counts, plugin manifests, local markdown links, overclaim wording, and bundled script syntax. It also runs `git diff --check`, and verifies the source links in the markdown you are pushing (skipped when offline; `SKIP_LINK_CHECK=1` forces a skip). To check every external URL instead, run `python3 scripts/audit-skill-pack.py --check-links`; `.github/workflows/link-check.yml` runs that weekly and files a `link-rot` issue when a citation dies. The link-replacement procedure lives in [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md), and `.github/workflows/checks.yml` runs the pack checks on every push and pull request.
+`lefthook.yml` only delegates to the repo script, so contributors can run the same checks without lefthook. The script audits skill metadata and quality sections, direct reference reachability, eval-file shape, README links/counts, plugin manifests, local markdown links, overclaim wording, and bundled script syntax. It also runs `git diff --check`, and verifies the source links in the markdown you are pushing (skipped when offline; `SKIP_LINK_CHECK=1` forces a skip). To check every external URL instead, run `python3 scripts/audit-skill-pack.py --check-links`; `.github/workflows/link-check.yml` runs that weekly and files a `link-rot` issue when a citation dies. The link-replacement procedure lives in [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md), and `.github/workflows/checks.yml` runs the pack checks on every push and pull request.
 
 ## FAQ
 

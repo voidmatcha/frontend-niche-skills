@@ -1,4 +1,4 @@
 interface:
   display_name: "Realtime Transport Contracts"
-  short_description: "Audits WebSocket/SSE clients for the recovery contracts around a dropped connection \u2014..."
+  short_description: "Review WebSocket and SSE recovery contracts."
   default_prompt: "Use $realtime-transport-contracts: Review this WebSocket/SSE client for transport-resilience contract violations across a connection drop: reconnect backoff/jitter and non-retryable-close handling, Last-Event-ID/cursor resume, delta dedupe/order/gap folding, heartbeat/zombie (1006) detection, bufferedAmount backpressure, and auth refresh on a long-lived socket. Report only where a contract is actually violated and a symptom follows, with a failure-sequence test that would catch the regression."

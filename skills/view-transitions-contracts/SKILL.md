@@ -47,7 +47,11 @@ Count a finding only when all hold:
 3. The current code lacks the guard: unique name, decode/data readiness, a reduced-motion block, correct Transition wrapping, name cleanup, or overlay z-index.
 4. The fix is narrow: one id-suffixed name, one reduced-motion block, one `startTransition` wrap, one hoist above Suspense, or one name cleanup.
 
-Do not over-file: a transition that simply does not animate in Firefox < 144 / Safari < 18 is graceful degradation, not a bug. A single static `view-transition-name` that is never duplicated at runtime is fine. `skipTransition`/interruption dropping an animation is by design as long as the DOM change lands.
+Reject weak findings: a transition that simply does not animate in an unsupported
+browser is graceful degradation, not a bug. A single static
+`view-transition-name` that is never duplicated at runtime is fine.
+`skipTransition`/interruption dropping an animation is by design as long as the
+DOM change lands.
 
 ## Output shape
 
@@ -71,4 +75,4 @@ Do not over-file: a transition that simply does not animate in Firefox < 144 / S
 - React — startTransition (updates after an await or in setTimeout are not marked as Transitions): https://react.dev/reference/react/startTransition
 - Next.js — View transitions guide (experimental.viewTransition config, fixed-header z-index, next-view-transitions): https://nextjs.org/docs/app/guides/view-transitions
 - next-view-transitions — Vercel community library for View Transitions in the Next.js App Router (the implement-side skill to defer to): https://github.com/shuding/next-view-transitions
-- caniuse — View Transitions API (browser support: Chrome 111+, Safari 18+, Firefox 144+): https://caniuse.com/view-transitions
+- caniuse — View Transitions API (consult current target-browser support and pair it with feature detection): https://caniuse.com/view-transitions

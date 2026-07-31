@@ -195,6 +195,26 @@ When DOM alignment depends on viewport dimensions, observe `window.resize`,
 viewport size after the next animation frame or a short settle delay. Do not document
 page-specific CSS transforms as a general fix.
 
+## PR-worthiness gate
+
+Require evidence from the host tier implicated by the claim: browser-only
+layout evidence cannot establish native bridge or lifecycle behavior, and an
+app tap cannot establish missing paint. Capture the URL/params, host and engine version,
+bridge/lifecycle sequence, and layout/paint/hit-test evidence before selecting
+the smallest web-side fix.
+
+Reject weak findings: User-Agent-only WebView detection, a desktop-browser
+simulation presented as app integration proof, a native-host responsibility
+rewritten into a web mega-wrapper, a one-frame blank on a low-stakes page with
+no product impact, or a forced fallback branch presented as old-engine
+compatibility evidence.
+
+## Output shape
+
+Report the host and engine, page URL/inputs, ownership boundary, exact
+bridge/lifecycle/layout/paint/hit-test evidence, verification tier reached,
+smallest web-side change, and any native-app test still required.
+
 ## References
 
 | File | Covers |

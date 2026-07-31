@@ -27,12 +27,17 @@ teardown() {
 run_browser_smoke() {
   local mode="$1"
   local playwright_cli
-  playwright_cli="$(command -v playwright)" || return 127
+  playwright_cli="${PLAYWRIGHT_CLI:-}"
+  if [ -z "$playwright_cli" ]; then
+    playwright_cli="$(command -v playwright)" || return 127
+  fi
   PLAYWRIGHT_CLI="$playwright_cli" node "$BATS_TEST_DIRNAME/browser_smoke.cjs" "$SERVER_INFO" "$mode"
 }
 
 @test "two-origin iframe contract authenticates, resizes, and tears down" {
-  command -v playwright >/dev/null 2>&1 || skip "Playwright CLI not installed"
+  if [ -z "${PLAYWRIGHT_CLI:-}" ] && ! command -v playwright >/dev/null 2>&1; then
+    skip "Playwright CLI not installed"
+  fi
 
   run run_browser_smoke allowed
   if [ "$status" -ne 0 ]; then
@@ -48,7 +53,9 @@ run_browser_smoke() {
 }
 
 @test "frame-ancestors blocks the same fixture from a disallowed parent origin" {
-  command -v playwright >/dev/null 2>&1 || skip "Playwright CLI not installed"
+  if [ -z "${PLAYWRIGHT_CLI:-}" ] && ! command -v playwright >/dev/null 2>&1; then
+    skip "Playwright CLI not installed"
+  fi
 
   run run_browser_smoke blocked
   if [ "$status" -ne 0 ]; then

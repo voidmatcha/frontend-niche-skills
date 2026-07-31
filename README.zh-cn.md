@@ -5,7 +5,7 @@
 # Frontend Niche Skills
 
 <p align="center">
-<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-41-1FC07C?style=flat-square&amp;labelColor=black" /></a>
 <a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
 <a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
 <a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
@@ -105,7 +105,7 @@ Verification
 
 ## 技能
 
-33 个技能，按其针对的前端失败类型分组。如果报告混乱或跨越多个领域，从 `frontend-report-triage` 开始。
+41 个技能，按其针对的前端失败类型分组。如果报告混乱或跨越多个领域，从 `frontend-report-triage` 开始。
 
 实用优先级：
 
@@ -127,6 +127,9 @@ Verification
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | 构建或调试加载在原生 WebView 内的页面：桥接契约、安全区域/视口布局、生命周期、命中测试与绘制/合成的区别、应用宿主的各种怪癖。 |
 | [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | 构建或调试浏览器 iframe/widget：父页-客体消息、可嵌入响应头、sandbox/Permissions Policy、READY/init 握手、动态尺寸、分区存储与销毁。 |
+| [`browser-page-lifecycle-bfcache-contracts`](./skills/browser-page-lifecycle-bfcache-contracts/SKILL.md) | 返回/前进导航后页面冻结或复用陈旧连接、计时器、状态时：`pageshow`/`pagehide`、bfcache 恢复、暂停/恢复、缓存资格。 |
+| [`history-scroll-restoration-contracts`](./skills/history-scroll-restoration-contracts/SKILL.md) | SPA 返回/前进或同一文档内 hash 导航后恢复到错误位置、异步渲染后滚动两次，或找不到 fragment 目标时：history entry 标识、恢复责任和渲染就绪。 |
+| [`media-capture-device-contracts`](./skills/media-capture-device-contracts/SKILL.md) | 权限拒绝、设备切换、track 中断或结束后摄像头/麦克风采集失败时：`getUserMedia`、设备枚举/变化、track 状态、清理和重新获取。 |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | 调试在路由器水合就绪之前丢失查询参数或落在错误状态的 SPA/SSR 深链接。 |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | 诊断由 locale/时间/随机性/仅浏览器 API、存储、鉴权状态、响应式分支或数据竞态引起的水合不匹配。 |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | 调试经历连接中断的 WebSocket/SSE 客户端：重连退避/抖动、SSE Last-Event-ID/游标续传、乱序/重复/有缺口的增量、心跳/僵尸连接检测、bufferedAmount 背压，以及在已打开的套接字上刷新鉴权。 |
@@ -137,6 +140,7 @@ Verification
 | --- | --- |
 | [`semantic-markup-contracts`](./skills/semantic-markup-contracts/SKILL.md) | 审查原生 HTML 结构：按钮与链接的取舍、标题、地标、标签、表格/列表、非法的交互元素嵌套、先原生后 ARIA 的修复。 |
 | [`overlay-focus-scroll-contracts`](./skills/overlay-focus-scroll-contracts/SKILL.md) | 审查模态框、抽屉、Sheet、Popover、菜单和命令面板的运行时契约：焦点陷阱/恢复、inert/aria-hidden 时序、嵌套堆叠、滚动锁定清理。 |
+| [`pointer-gesture-contracts`](./skills/pointer-gesture-contracts/SKILL.md) | 单个 pointer 的拖拽、滑动、调整尺寸或绘制卡住/取消、在元素外丢失输入或与页面滚动冲突时：active pointer 所有权、事件传递/capture、取消、`touch-action` 和清理。真正的双指缩放、旋转和多点接触几何不在范围内。 |
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | 把可访问性语义转化为回归测试：角色、名称、状态、焦点、对话框、菜单、组合框、标签页。 |
 | [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | 审查静默中止、冻结在陈旧快照上、忽略 reduced-motion 或产生鬼影的 View Transitions API 动画——这是审查/判断是否值得提 PR 的视角，而非重新实现指南。 |
 | [`css-transition-animation-contracts`](./skills/css-transition-animation-contracts/SKILL.md) | 审查对话框/Popover/顶层（top-layer）的进入/退出过渡（`@starting-style`、`allow-discrete`、`overlay`），以及依赖过渡结束才执行的清理逻辑（`transitionend` 与 `getAnimations().finished` 的取舍）。 |
@@ -146,6 +150,7 @@ Verification
 
 | 技能 | 适用场景 |
 | --- | --- |
+| [`contenteditable-selection-contracts`](./skills/contenteditable-selection-contracts/SKILL.md) | contenteditable 或富文本编辑宿主丢失/跳动光标或选区、重复编辑、破坏撤销/重做、把粘贴/拖放内容插入错误位置、在重新渲染时破坏输入组合，或在销毁后恢复陈旧焦点/选区时。 |
 | [`cjk-text-and-input`](./skills/cjk-text-and-input/SKILL.md) | 处理韩文、日文或中文文本/输入：换行、IME 组合、Enter 键处理、字素安全的长度计算、校验时机。 |
 | [`i18n-copy-and-layout`](./skills/i18n-copy-and-layout/SKILL.md) | 审查本地化文案/布局：复数规则、文本膨胀、双向文本/RTL、locale 格式化、翻译键契约。 |
 | [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | 审计日期/时间代码：时区、夏令时（DST）、解析、格式化、`datetime-local`、相对时间、服务端/客户端时钟问题。 |
@@ -157,7 +162,8 @@ Verification
 | --- | --- |
 | [`constraint-validation-contracts`](./skills/constraint-validation-contracts/SKILL.md) | 原生 HTML Constraint Validation API 契约：`setCustomValidity`、`reportValidity`、`:user-invalid`、从无效到有效的生命周期。 |
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form、Formik、Final Form、vee-validate、Valibot 或自定义 JS 表单流程：陈旧的错误信息、被禁用的提交按钮、异步/服务端竞态、服务端字段错误映射。 |
-| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 加固面向浏览器的鉴权：returnTo 重定向、OAuth/passkey/autocomplete 契约、token 存储边界、CSRF 边缘情况。 |
+| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 加固面向浏览器的鉴权：returnTo 重定向、OAuth/passkey/autocomplete、OTP、敏感操作前重新验证契约。 |
+| [`user-activation-contracts`](./skills/user-activation-contracts/SKILL.md) | 用户点击后 `window.open()`、剪贴板、全屏或文件选择被拒绝时：瞬时/持续用户激活、异步边界、消耗激活的 API。 |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | 检查前端 XSS、DOM 注入、sanitizer 误用、CSP、第三方脚本、存储以及 URL 解析基础。 |
 | [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | 审查前端拥有的 BFF/API 代理：客户端选择目标造成的 SSRF、route/method/auth capability allowlist、替代 ingress 漂移、multipart 限额与 boundary、redirect/error 处理，以及 upstream business-flow 责任。 |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | 审查结账/支付页面的客户端证据：托管字段与直接处理 PAN 的区别、运行时脚本清单、第三方脚本风险、CSP/SRI/响应头证据、PCI DSS 证据缺口。 |
@@ -179,9 +185,11 @@ Verification
 | --- | --- |
 | [`core-web-vitals-performance-contracts`](./skills/core-web-vitals-performance-contracts/SKILL.md) | 在修复之前，把不达标的 Core Web Vitals 指标（LCP、CLS、INP、TTFB）归因到具体元素、布局偏移或主线程任务——做整页预算，而不只是看分数。 |
 | [`frontend-data-fetching-cache-contracts`](./skills/frontend-data-fetching-cache-contracts/SKILL.md) | 客户端数据缓存（React Query、SWR、RTK Query、Apollo）在变更后展示陈旧数据、请求瀑布、过度/不足获取，或分页/重新验证的缓存缺陷。 |
+| [`browser-storage-durability-contracts`](./skills/browser-storage-durability-contracts/SKILL.md) | 浏览器本地数据被标记为已保存后却消失、IndexedDB 模式升级受阻、事务失活或中止、quota/persistence 证据被误读，或恢复文案夸大持久性时。 |
 | [`async-effect-race-contracts`](./skills/async-effect-race-contracts/SKILL.md) | 原始异步 effect 行为异常：依赖变化触发请求的竞态（陈旧响应胜出）、缺失清理/`AbortController`、StrictMode 双重调用，或定时器/订阅中的陈旧闭包。 |
 | [`pwa-offline-cache-contracts`](./skills/pwa-offline-cache-contracts/SKILL.md) | Service Worker/离线缓存出错：部署后仍是旧构建、`ChunkLoadError`、预缓存缺口、缓存版本化/淘汰、SW 更新生命周期，或缓存了带鉴权的响应。 |
 | [`large-list-data-grid-contracts`](./skills/large-list-data-grid-contracts/SKILL.md) | 虚拟化列表/网格跳动或丢失滚动位置，或因屏幕外行被卸载导致页内查找/屏幕阅读器总数/焦点损坏；固定列/表头漂移。 |
+| [`resize-observer-layout-contracts`](./skills/resize-observer-layout-contracts/SKILL.md) | 出现 `ResizeObserver loop` 错误、不稳定自动尺寸或测量-写入反馈时：观察目标、box 选项、交付时序、写入批处理、清理。 |
 
 ## 症状对照表
 
@@ -191,14 +199,20 @@ Verification
 | --- | --- | --- |
 | 页面运行在 React Native WebView、WKWebView、Android WebView、Flutter WebView 或应用内浏览器中；安全区域、键盘、恢复（resume）、桥接或绘制与桌面 Chrome 表现不同。 | `webview-bridge-pages` | 这是布局、命中测试、绘制/合成、桥接时序，还是宿主生命周期问题？ |
 | 浏览器 iframe/widget 为空、接受伪造消息、丢失 READY/init、调整尺寸时闪烁、缺少所需能力，或丢失嵌入式登录状态。 | `iframe-embed-contracts` | 准确的父页/客体 origin、实际下发的 frame 策略、已认证消息握手、尺寸协议和存储模式分别是什么？ |
+| 返回或前进后页面冻结，或复用陈旧的套接字、计时器和状态。 | `browser-page-lifecycle-bfcache-contracts` | 这是新加载还是 bfcache 恢复？哪些资源应暂停和恢复？ |
+| SPA 返回/前进或同一文档内 hash 导航后落在错误滚动位置、内容渲染后滚动两次，或无法显示 fragment 目标。 | `history-scroll-restoration-contracts` | 哪个 same-document history entry 拥有位置、由谁执行恢复、目标布局何时稳定？ |
+| 摄像头或麦克风首次可用，但在权限变化、设备切换、track 中断或关闭并重新打开采集界面后失败。 | `media-capture-device-contracts` | 权限、所选设备、track 状态、清理和重新获取之间如何转换？ |
 | HTML 结构本身可疑：div 按钮、用错的链接、标签/标题/列表问题、非法的交互元素嵌套。 | `semantic-markup-contracts` | 在动用 ARIA、CSS 或 JavaScript 之前，原生 HTML 能否表达这个语义？ |
 | 模态框、抽屉、Sheet、Popover、菜单或命令面板看起来正常，但焦点、背景交互、Escape/遮罩或滚动锁定失效。 | `overlay-focus-scroll-contracts` | 在打开、嵌套打开、关闭、卸载和路由切换时分别发生了什么？ |
+| 单个 pointer 的拖拽、滑动、调整尺寸或绘制卡住、在元素边界丢失输入，或与原生滚动冲突。 | `pointer-gesture-contracts` | 序列是否保持一个 active `pointerId`、预期的事件传递/capture 路径、终止清理和 `touch-action`？双指缩放、旋转和多点接触几何应交给其他工作流。 |
 | 对话框、菜单、组合框、标签页或自定义控件需要可访问性回归覆盖。 | `a11y-contract-testing` | 测试能否断言角色、名称、状态和焦点契约？ |
+| contenteditable 或富文本编辑器丢失/反转选区、一次意图被应用两次、撤销失效、粘贴/拖放插入到错误光标位置，或重新挂载后恢复了陈旧 Range。 | `contenteditable-selection-contracts` | 哪个 live editing host 拥有选区？这次 `beforeinput`/`input` 事务及其历史由浏览器还是应用拥有？ |
 | 韩文、日文或中文文本/输入行为异常：IME 的 Enter、组合输入、字素长度、换行、截断。 | `cjk-text-and-input` | 代码是否混淆了组合中文本、已提交文本和显示文本？ |
 | 翻译后的文案破坏了布局、复数规则、双向文本/RTL、数字/日期格式化或翻译键契约。 | `i18n-copy-and-layout` | 这个缺陷属于文案、布局、locale 行为，还是输入组合问题？ |
 | 深链接、鉴权重定向、SPA/SSR 路由或查询参数初始化到了错误的界面。 | `deeplink-hydration` | 在路由器就绪、水合和鉴权跳转之前，URL 状态是什么？ |
 | WebSocket 或 SSE 客户端在连接中断后出问题：重连风暴、事件重复/丢失、乱序增量、套接字状态为 OPEN 实际已死导致 UI 冻结、缓冲区增长，或握手后 token 过期。 | `realtime-transport-contracts` | 这是重连/退避、续传/游标、增量折叠、存活/心跳、背压，还是套接字重新鉴权问题？ |
-| 面向浏览器的鉴权 UI 存在 returnTo、OAuth/passkey、autocomplete、OTP、token 存储或 CSRF 边缘问题。 | `frontend-auth-flow-contracts` | 鉴权流程应当保持哪个浏览器契约？ |
+| 面向浏览器的鉴权 UI 存在 returnTo、OAuth/passkey、autocomplete、OTP 或敏感操作前重新验证问题。 | `frontend-auth-flow-contracts` | 鉴权流程应当保持哪个浏览器契约？ |
+| 点击处理器启动的弹窗、剪贴板、全屏或文件选择在异步工作后被拒绝。 | `user-activation-contracts` | 调用 API 时瞬时用户激活是否仍存在，之前的调用是否已消耗它？ |
 | 在支付页面之外出现原始 HTML、sanitizer、CSP、opener、存储、URL 解析或第三方脚本风险。 | `frontend-security-baseline` | 是否存在具体的浏览器安全 source-to-sink 路径？ |
 | 前端拥有的服务器路由把客户端选择的 path、upload、header 或 business action 代理到 upstream API。 | `bff-proxy-security-contracts` | 暴露了哪个 route-method-auth capability，其他 ingress 能否绕过它？ |
 | 结账/支付页面需要客户端证据：托管字段、直接处理 PAN/CVV、运行时脚本、CSP/SRI/响应头控制。 | `payment-page-client-security` | 什么证据能展示支付数据边界和运行时脚本暴露面？ |
@@ -218,9 +232,11 @@ Verification
 | 发布了错误的图片文件、图片下载过大、首屏主图被懒加载，或图片导致布局偏移。 | `responsive-image-contracts` | `srcset` 是否配有与真实布局匹配的 `sizes`、正确的宽度描述符、LCP 的 `eager`/`fetchpriority` 以及 `width`/`height`？ |
 | 页面的 LCP/CLS/INP 不达标，你需要做归因，而不只是报告分数。 | `core-web-vitals-performance-contracts` | LCP 元素是哪个（可发现/已提权？）、每次布局偏移的来源是什么、哪些长任务推高了 INP？ |
 | 客户端缓存的数据在变更后仍然陈旧，或请求出现瀑布/过度获取（React Query/SWR/RTK Query/Apollo）。 | `frontend-data-fetching-cache-contracts` | 哪个查询键应当失效？读取是否并行化，stale/gc 时序是否正确？ |
+| 浏览器本地记录消失、IndexedDB 升级被另一个标签页卡住、UI 显示已保存后续请求却导致事务中止，或把 persistence 描述成永久备份。 | `browser-storage-durability-contracts` | 失败发生在哪一阶段：open/upgrade 所有权、事务活性、commit/abort、quota/persistence、意外 close，还是恢复？ |
 | 异步 effect 展示了错误的数据、触发两次、泄漏，或读到陈旧值。 | `async-effect-race-contracts` | 是否有 take-latest/`AbortController` 加清理逻辑？该 effect 在 StrictMode 下是否幂等？ |
 | 部署后用户拿到的仍是旧构建、出现 `ChunkLoadError`，或 Service Worker 在离线时返回错误/陈旧的字节。 | `pwa-offline-cache-contracts` | 是否有 SW 更新流程、完整的预缓存、缓存版本化，以及对带鉴权 HTML/API 的不缓存规则？ |
 | 虚拟化列表/网格跳动或丢失滚动位置，或 Ctrl+F/屏幕阅读器总数/焦点在虚拟化下损坏。 | `large-list-data-grid-contracts` | `estimateSize`/overscan 是否正确？是否为已卸载的行设置了 `aria-setsize`/`aria-posinset`（或 `aria-rowcount`）？ |
+| 出现 `ResizeObserver loop` 错误、自动尺寸组件抖动，或测量回调再次改变尺寸。 | `resize-observer-layout-contracts` | 正在测量哪个目标和 box？同一交付周期中的哪次 DOM 写入又改变了尺寸？ |
 | 报告含糊不清、跨越多个领域，或你不确定该由哪个专门技能负责。 | `frontend-report-triage` | 最可能的 1-3 个失败类别是什么？什么证据能把它们区分开？ |
 
 ## 证据
@@ -232,7 +248,9 @@ Verification
 - [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md)——用于校验技能边界和 PR 形态的公开开源案例。
 - [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md)——附带文件/行号证据的公开开源研究候选项。提交之前请重新核对当前默认分支并在本地复现。
 - [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md)——WebView 相关的既有成果、桥接库、宿主行为参考和生态笔记。
+- [`docs/public-skill-landscape.md`](./docs/public-skill-landscape.md)——实际打开并比较与本技能包直接重叠、近似或互补的公开技能包，并记录保留/拆分/暂缓结论。
 - [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md)——按技能划分的映射表，展示支撑来自已验证案例、候选线索、一手来源引用，还是路由示例。
+- [`docs/skill-quality-standard.md`](./docs/skill-quality-standard.md)——本技能包中“好技能”的标准，以及新技能准入和现有技能维护门槛。
 - [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md)——集成的报告分诊契约与示例。
 - `skills/*/SKILL.md` 和 `skills/*/references/*.md`——每个技能的官方文档、既有成果、示例、误报说明和特定实现的证据。
 
@@ -250,7 +268,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`，并检查本次 push 涉及的 markdown 中的来源链接（离线时跳过，`SKIP_LINK_CHECK=1` 可强制跳过）。若要检查全部外部 URL，请运行 `python3 scripts/audit-skill-pack.py --check-links`；`.github/workflows/link-check.yml` 每周运行该检查，发现失效引用时创建 `link-rot` issue。链接替换流程见 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)，`.github/workflows/checks.yml` 会在每次 push 和 pull request 时运行打包检查。
+`lefthook.yml` 只是委托给仓库脚本，因此贡献者不装 lefthook 也能运行同样的检查。该脚本审计技能元数据、README 链接/数量、插件清单、本地 Markdown 链接、必需的质量契约（PR 价值门槛、拒绝薄弱发现、输出格式）、直接链接的参考资料、可选 eval 集、夸大措辞以及捆绑脚本的语法，还会运行 `git diff --check`，并检查本次 push 涉及的 markdown 中的来源链接（离线时跳过，`SKIP_LINK_CHECK=1` 可强制跳过）。若要检查全部外部 URL，请运行 `python3 scripts/audit-skill-pack.py --check-links`；`.github/workflows/link-check.yml` 每周运行该检查，发现失效引用时创建 `link-rot` issue。链接替换流程见 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)，`.github/workflows/checks.yml` 会在每次 push 和 pull request 时运行打包检查。
 
 ## 常见问题
 

@@ -70,13 +70,13 @@ What the web page sees:
   and host layout are inside that support envelope, take insets from the app (query
   params or injected CSS variables; divide injected pixel values by `initial-scale`
   when ≠ 1).
-- **Viewport height can be wrong in specific old-engine cases.** Public Chromium bug
-  reports/repros point to pre-M139 `clientHeight`/visual-viewport issues around
-  keyboard-during-navigation, and separate reports exist for non-keyboard
-  `dvh`-too-tall-at-load cases. Treat this as an affected-version bug, not a blanket
-  Android rule. Fallback candidates are JS `--vh` from `innerHeight` and anchoring
-  critical bottom UI inside that measured container (→ [page-implementation](./page-implementation.md)).
-  A modern emulator may not reproduce it — test the affected version.
+- **Viewport height can be wrong in target-specific cases.** Chromium issue
+  331326389 documents a `clientHeight` failure around navigation and keyboard
+  state; separate reports cover other `dvh`-too-tall-at-load symptoms. These
+  reports do not establish one version cutoff or one repair. Capture layout and
+  visual viewport values on the failing host before choosing a JS-measured
+  height or moving critical bottom UI into a measured container
+  (→ [page-implementation](./page-implementation.md)).
 - Keyboard (M139+): IME resizes the **visual viewport only**, bottom edge only.
   Don't clear element focus in resize handlers — focus-loss/keyboard-dismiss loop.
 - **System font scale maps to `textZoom`** (community-documented: ~85 at the smallest
@@ -181,7 +181,9 @@ classify the artifact:
   (base implementation returns false → request dropped).
 - Dark theme: [Darken web content in WebView](https://developer.android.com/develop/ui/views/layout/webapps/dark-theme)
   (`setAlgorithmicDarkeningAllowed`, `color-scheme` meta requirement, `setForceDark` deprecation).
-- Window-insets / viewport / keyboard behavior across Chromium milestones and
-  `textZoom`: [Chrome for Developers — Web on Android](https://developer.chrome.com/docs/android)
+- Window-insets / viewport / keyboard behavior across Chromium milestones:
+  [Android Developers — Understand window insets in WebView](https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets).
+  Browser viewport behavior and WebView background:
+  [Chrome for Developers — Web on Android](https://developer.chrome.com/docs/android)
   and [viewport resize behavior](https://developer.chrome.com/blog/viewport-resize-behavior);
   additional inset/viewport source anchors → [page-implementation](./page-implementation.md) Sources.

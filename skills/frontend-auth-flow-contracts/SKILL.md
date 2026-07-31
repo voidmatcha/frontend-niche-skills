@@ -58,6 +58,19 @@ For detailed checklists, read
 | Sensitive actions | Require fresh identity verification before password/email/passkey/account destructive changes. |
 | Tests | Direct-navigation auth URLs, accessible errors, autocomplete attributes, invalid-return rejection, expired-code and passkey-cancel paths. |
 
+## PR-worthiness gate
+
+Require one concrete auth flow and a browser-visible contract failure: lost or
+unsafe return destination, incorrect credential/autocomplete behavior,
+enumerating error, expired/retry state with no recovery, passkey fallback
+failure, or missing fresh verification for a sensitive action. Add the smallest
+flow test.
+
+Reject weak findings: token/cookie/CSP/CSRF primitives owned by
+`frontend-security-baseline`, backend cryptography choices, generic form
+validation with no auth-specific contract, or a passkey/OTP API mention whose
+cancel, expiry, fallback, and error paths already work.
+
 ## Output shape
 
 A good auth-flow review deliverable names the specific flow under review (login,

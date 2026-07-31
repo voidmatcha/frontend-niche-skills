@@ -130,19 +130,26 @@ exactly where CMS/markdown XSS lands.
 
 ## Trusted Types
 
-Sanitize-and-encode depends on every developer remembering, at every sink, forever. **Trusted
-Types** removes that dependency. It originated in Chromium (Chrome/Edge 83+) and has since
-shipped in Safari 26+ and Firefox 148+ (MDN marks `require-trusted-types-for` Baseline 2026);
-treat it as defense-in-depth that degrades gracefully — older browsers ignore the directive:
+Sanitize-and-encode depends on every developer remembering every sink. **Trusted Types** can
+enforce that supported injection sinks receive policy-produced values instead of raw strings.
+Browser and directive coverage changes over time, so treat enforcement as defense-in-depth:
+check current target-browser compatibility, feature-test `trustedTypes`, and keep the
+sanitized data path safe when a browser does not enforce the directive.
 
 - Send `Content-Security-Policy: require-trusted-types-for 'script'`. Injection sinks
-  (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `script.src`,
-  `iframe.srcdoc`, …) then reject raw strings and accept only typed `TrustedHTML`/
-  `TrustedScript` values produced by a vetted policy (e.g. one wrapping DOMPurify).
+  then reject raw strings. HTML sinks such as `innerHTML`, `outerHTML`,
+  `insertAdjacentHTML`, `document.write`, and `iframe.srcdoc` accept
+  `TrustedHTML`; executable script-text sinks accept `TrustedScript`; script URL
+  sinks such as `script.src` accept `TrustedScriptURL`. Match each policy to its
+  sink type. A DOMPurify-backed `createHTML` policy covers HTML sinks, not script
+  text or script URL sinks.
 - Roll out with `Content-Security-Policy-Report-Only` first to surface violations before
   enforcing. Trusted Types don't sanitize for you — they *enforce* that every sink value came
-  from a vetted policy, and that policy's `createHTML` is where sanitization actually happens
-  (e.g. wrapping `DOMPurify.sanitize(s, { RETURN_TRUSTED_TYPE: true })`). web.dev: *"Trusted
+  from a vetted policy. For an HTML policy, that policy's `createHTML` is where
+  sanitization can happen. DOMPurify's policy example uses
+  `DOMPurify.sanitize(input, { RETURN_TRUSTED_TYPE: false })` because
+  `createHTML` receives and returns a string before the policy produces
+  `TrustedHTML`. web.dev: *"Trusted
   Types give you the tools to write, security review, and keep applications free of DOM XSS
   vulnerabilities by making dangerous web API functions secure by default."*
 
@@ -166,13 +173,17 @@ The agent layer adds judgment scanners cannot: whether data attacker-controlled,
   (right-sink-over-encoding; `eval`/dangerous-sources)
 - OWASP — [XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html)
   (context-specific output encoding; "OWASP recommends DOMPurify"; patch regularly)
-- cure53 — [DOMPurify README](https://github.com/cure53/DOMPurify) (sanitize last; don't
-  modify or re-parse sanitized markup afterward)
+- cure53 — [DOMPurify README](https://github.com/cure53/DOMPurify/blob/9365501773d6665aaf334d8afa55081b9930a684/README.md) (sanitize last; don't
+  modify or re-parse sanitized markup afterward; Trusted Types policy return configuration)
 - React — [Common components: `dangerouslySetInnerHTML`](https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html)
 - Vue — [Security best practices](https://vuejs.org/guide/best-practices/security.html)
   (HTML injection / `v-html`; user-provided HTML never 100% safe; backend URL sanitization)
 - Angular — [Security](https://angular.dev/best-practices/security) (auto-sanitization;
   `bypassSecurityTrust*`; construct SafeValue close to input; `DomSanitizer.sanitize`)
+- MDN — [Trusted Types API](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API)
+  (policy-produced values, CSP enforcement, and feature detection for non-supporting browsers)
+- MDN — [`require-trusted-types-for`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/require-trusted-types-for)
+  (CSP enforcement at DOM XSS injection sinks and current compatibility)
 - web.dev — [Prevent DOM-based XSS with Trusted Types](https://web.dev/articles/trusted-types)
 - Mozilla — [`eslint-plugin-no-unsanitized`](https://github.com/mozilla/eslint-plugin-no-unsanitized) (unsafe DOM sink lint prior art)
 - GitHub — [CodeQL](https://github.com/github/codeql) and Semgrep — [Semgrep](https://github.com/semgrep/semgrep) (static-analysis candidate generators)

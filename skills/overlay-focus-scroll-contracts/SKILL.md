@@ -58,7 +58,7 @@ Count an overlay finding only when all are true:
 3. Evidence includes runtime state on a realistic code path, not only a grep hit.
 4. The proposed change is narrow and testable.
 
-Do not over-file:
+Reject weak findings:
 
 - Decorative `aria-hidden` icons are not overlay focus defects by themselves.
 - Libraries such as Radix, Headless UI, Element Plus, Melt UI, or `focus-trap` may already manage part of the contract; inspect configuration and rendered behavior before filing.

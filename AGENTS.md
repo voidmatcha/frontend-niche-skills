@@ -43,9 +43,11 @@ python3 scripts/audit-skill-pack.py --check-links
 - **README parity:** `README.md`, `README.ko.md`, `README.ja.md`, and
   `README.zh-cn.md` share badge counts, table structure, and skill links. A
   change to one is a change to all four.
-- **New skill checklist:** add a row to `docs/skill-evidence-coverage.md`, the
-  routing table in `skills/frontend-report-triage/SKILL.md`, all four READMEs,
-  and both plugin manifests. The audit enforces most of this.
+- **New skill checklist:** satisfy `docs/skill-quality-standard.md`, add at
+  least three realistic eval cases, add a row to
+  `docs/skill-evidence-coverage.md`, the routing table in
+  `skills/frontend-report-triage/SKILL.md`, all four READMEs, and both plugin
+  manifests. The audit enforces the structural parts.
 - **Preserve the gates.** Each skill's PR-worthiness gate and "reject weak
   findings" list are the pack's main value — never trim them for brevity.
 - **Non-trivial commits carry the trailer block** (`Constraint:`, `Rejected:`,

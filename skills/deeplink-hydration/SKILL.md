@@ -64,6 +64,24 @@ router's state lags the real URL. If this page renders inside a native WebView, 
 - Deep-link bugs that "can't be reproduced" in dev navigation but appear from
   notification/share links — that's the cold-start path nobody tests.
 
+## PR-worthiness gate
+
+Require a cold direct navigation, refresh, callback, or auth-bounce sequence
+whose URL state is correct but whose screen or redirect becomes wrong before
+router/loader readiness. Capture the URL and readiness state, then add the
+smallest direct-navigation regression.
+
+Reject weak findings: an in-app navigation that never crosses the cold path, a
+missing parameter that is genuinely absent from the URL, a server/client DOM
+divergence owned by `ssr-hydration-mismatch`, or an auth open-redirect policy
+owned by `frontend-auth-flow-contracts` and `frontend-security-baseline`.
+
+## Output shape
+
+Report the entry URL, cold-start and readiness sequence, first wrong decision,
+router/framework evidence, smallest gating or URL-preservation fix, and the
+direct-navigation test that confirms the final screen and URL.
+
 ## Sources
 
 - Next.js Pages Router `useRouter` docs (`query`, `isReady`): <https://nextjs.org/docs/pages/api-reference/functions/use-router>

@@ -75,6 +75,24 @@ number/date/currency formatting, RTL and `lang`/`dir` markup — use
   "validate after input, do not slice mid-string" policy rather than pretending
   `String.length` is a character count.
 
+## PR-worthiness gate
+
+Require a real CJK string or IME sequence and a user-visible failure: a broken
+composition buffer, premature shortcut/submit, incorrect grapheme limit, or
+layout that makes actual copy unreadable. Add the smallest native-input or
+rendered-text regression.
+
+Reject weak findings: `keyCode === 229` used only as a compatibility guard,
+`String.length` on protocol bytes or internal identifiers, a generic narrow
+container with no CJK reproduction, or translation expansion that belongs to
+`i18n-copy-and-layout`.
+
+## Output shape
+
+Report the language/input method, composition or layout sequence, event and
+rendered evidence, smallest guard/style/segmentation fix, browser or WebView
+matrix, and the regression that uses real CJK text.
+
 ## Sources
 
 - MDN `word-break`: <https://developer.mozilla.org/en-US/docs/Web/CSS/word-break>

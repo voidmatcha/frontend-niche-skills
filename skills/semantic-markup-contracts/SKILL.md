@@ -82,7 +82,7 @@ Count a markup finding only when all are true:
 3. **Small fix path**: a native element/structure change can preserve behavior,
    or the remaining custom pattern has a clear `a11y-contract-testing` follow-up.
 
-Do not over-file:
+Reject weak findings:
 
 - A decorative wrapper without user interaction is not a semantic defect by
   itself.

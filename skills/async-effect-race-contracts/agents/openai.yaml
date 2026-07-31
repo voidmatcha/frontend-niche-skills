@@ -1,4 +1,4 @@
 interface:
   display_name: "Async Effect Race Contracts"
-  short_description: "Audit raw useEffect/async primitives: fetch races, cleanup leaks, stale closures"
+  short_description: "Review async effects for races, leaks, and stale closures."
   default_prompt: "Use $async-effect-race-contracts: Review this raw useEffect / async-primitive code for concurrency contract bugs: does every fetch-on-deps effect take-latest (an ignore flag or AbortController) so a slow earlier response cannot overwrite a newer one, does every subscribe/listen/schedule/open have a cleanup that mirrors it (no leak or setState after unmount), is setup idempotent under StrictMode's dev double-invoke, are values read inside long-lived callbacks kept fresh (updater / useEffectEvent / ref) instead of stale-closed, and do dependency arrays avoid both stale reads and re-run loops? Flag only user-visible or resource breakages and propose the smallest fix plus a failing race/teardown test. When a data library owns the fetch, route to frontend-data-fetching-cache-contracts."

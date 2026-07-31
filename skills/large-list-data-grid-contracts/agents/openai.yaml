@@ -1,4 +1,4 @@
 interface:
   display_name: "Large List Data Grid Contracts"
-  short_description: "Review virtualized list and data-grid failures around scroll, accessibility, focus, and pinned layout."
+  short_description: "Review virtualized list scroll, focus, and a11y contracts."
   default_prompt: "Use $large-list-data-grid-contracts to review the code for the failure modes it covers, reporting only PR-worthy findings with file:line evidence and the narrowest fix."

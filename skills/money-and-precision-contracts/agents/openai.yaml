@@ -1,4 +1,4 @@
 interface:
   display_name: "Money and precision contracts"
-  short_description: "Catch browser money/quantity arithmetic bugs: IEEE-754 float drift, toFixed/Math.round..."
+  short_description: "Review money and quantity precision, rounding, and parsing."
   default_prompt: "Use $money-and-precision-contracts: Review this pricing/checkout code for money-precision bugs: float drift in totals, toFixed/Math.round used as the rounding rule, an unstated or wrong rounding mode, per-line vs total rounding order, splits that don't sum back, minor-unit overflow, and localized-amount parsing."

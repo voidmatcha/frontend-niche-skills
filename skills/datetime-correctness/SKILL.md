@@ -65,6 +65,12 @@ boundary, or pure locale display formatting (grouping, `MM/DD` vs `DD/MM`) — t
 Minimal useful PR: make the zone explicit at the boundary (store epoch/offset, keep date-only
 date-only, pin `Intl` `timeZone`) and add a test that runs in a non-UTC zone or across a DST transition.
 
+## Output shape
+
+Report the value type (instant, zoned wall clock, floating local date-time, or
+date-only), the parse/store/render boundary, failing zone or DST example,
+smallest representation fix, and a pinned-zone regression.
+
 ## References
 
 | File | Covers |

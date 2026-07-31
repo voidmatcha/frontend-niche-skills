@@ -47,7 +47,7 @@ Count a Core Web Vitals finding only when all hold:
 2. The finding is attributed to a specific element, shift, or task, not to the aggregate score.
 3. The fix is narrow: one preload/`fetchpriority`/de-lazy on the true LCP element, one reserved-box/`aspect-ratio`/`font-display`, or one handler split/yield.
 
-Do not over-file:
+Reject weak findings:
 
 - A hero image with `fetchpriority="high"` and no lazy attribute is a positive control, not a defect.
 - `loading="lazy"` on below-the-fold images is correct and expected.

@@ -70,6 +70,12 @@ Minimal useful PR: make initial HTML deterministic, render a placeholder until m
 explicit locale/timeZone for SSR text, or isolate the widget as no-SSR; add a test that fails on
 recoverable hydration errors.
 
+## Output shape
+
+Report the SSR path, exact server/client first-render divergence, hydration or
+recoverable-error evidence, blast radius, smallest determinism or containment
+fix, and the test that fails on the mismatch without suppressing it.
+
 ## References
 
 | File | Covers |

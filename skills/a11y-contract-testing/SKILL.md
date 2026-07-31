@@ -160,12 +160,19 @@ A role/ARIA grep hit is not enough. Count a finding only when all three are true
 3. **Small regression test exists**: a `getByRole(..., { name })` / keyboard-state test would
    fail before the patch and pass after it.
 
-Do **not** count these as defects without more evidence:
+Reject weak findings:
 
 - A missing `role` on a native element that already has the correct implicit role.
 - A wrapper with no ARIA because semantics are supplied by a child component or headless library.
 - A visual navigation list that is not actually a tab interface; do not force APG tabs onto links.
 - A pure copy/name preference where the role/state/focus contract already works.
+
+## Output shape
+
+Report the operated surface, rendered role/name/state/focus evidence, user
+impact, smallest semantic or test change, and the regression assertion. Keep
+copy preferences and visual-only concerns separate from the accessibility
+contract.
 
 ## Sources
 

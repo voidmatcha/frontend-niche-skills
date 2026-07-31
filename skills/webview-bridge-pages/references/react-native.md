@@ -91,8 +91,8 @@ Official pattern: app wires `BackHandler.addEventListener('hardwareBackPress')` 
 
 ## Sources
 
-- react-native-webview [Reference](https://github.com/react-native-webview/react-native-webview/blob/master/docs/Reference.md)
-  and [Guide](https://github.com/react-native-webview/react-native-webview/blob/master/docs/Guide.md):
+- react-native-webview [Reference](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md)
+  and [Guide](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Guide.md):
   `onMessage`/`postMessage` string contract, `injectedJavaScriptBeforeContentLoaded`,
   `injectedJavaScriptObject`, `injectJavaScript`, `onLoadEnd`, `startInLoadingState`,
   `originWhitelist`, Android `textZoom`.

@@ -5,7 +5,7 @@
 # Frontend Niche Skills
 
 <p align="center">
-<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-33-1FC07C?style=flat-square&amp;labelColor=black" /></a>
+<a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-41-1FC07C?style=flat-square&amp;labelColor=black" /></a>
 <a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
 <a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
 <a href="#skills"><img alt="Frontend edge cases" src="https://img.shields.io/badge/WebView_%7C_IME_%7C_a11y_%7C_payment-included-37B0E6?style=flat-square&amp;labelColor=black" /></a>
@@ -103,7 +103,7 @@ Verification
 
 ## Skills
 
-33개의 skill을, 각 skill이 겨냥하는 프론트엔드 실패 유형별로 묶었습니다. 리포트가 어수선하거나 여러 도메인에 걸쳐 있다면 `frontend-report-triage`부터 시작하세요.
+41개의 skill을, 각 skill이 겨냥하는 프론트엔드 실패 유형별로 묶었습니다. 리포트가 어수선하거나 여러 도메인에 걸쳐 있다면 `frontend-report-triage`부터 시작하세요.
 
 실용적인 우선순위:
 
@@ -125,6 +125,9 @@ Verification
 | --- | --- |
 | [`webview-bridge-pages`](./skills/webview-bridge-pages/SKILL.md) | 네이티브 WebView 안에서 로드되는 페이지를 만들거나 디버깅할 때: bridge 계약, safe-area/뷰포트 레이아웃, 생명주기, 히트 테스트 vs 페인트/컴포지팅, 앱 호스트별 특이 동작. |
 | [`iframe-embed-contracts`](./skills/iframe-embed-contracts/SKILL.md) | 브라우저 iframe/widget을 만들거나 디버깅할 때: 부모-게스트 메시지, 임베드 허용 헤더, sandbox/Permissions Policy, READY/init 핸드셰이크, 동적 크기, 파티션 스토리지(`partitioned storage`), 리스너 정리(teardown). |
+| [`browser-page-lifecycle-bfcache-contracts`](./skills/browser-page-lifecycle-bfcache-contracts/SKILL.md) | 뒤로/앞으로 탐색 후 페이지가 멈추거나 오래된 연결·타이머·상태를 재사용할 때: `pageshow`/`pagehide`, bfcache 복원, 일시 중지/재개, 저장 적격성. |
+| [`history-scroll-restoration-contracts`](./skills/history-scroll-restoration-contracts/SKILL.md) | SPA 뒤로/앞으로 또는 같은 문서의 hash 탐색 뒤 잘못된 위치로 복원되거나, 비동기 렌더링 뒤 두 번 스크롤하거나, fragment 대상을 놓칠 때: history entry 식별, 복원 책임, 렌더 준비 상태. |
+| [`media-capture-device-contracts`](./skills/media-capture-device-contracts/SKILL.md) | 권한 거부, 장치 전환, track 중단, 종료 뒤 카메라·마이크 캡처가 실패할 때: `getUserMedia`, 장치 열거/변경, track 상태, 정리, 재획득. |
 | [`deeplink-hydration`](./skills/deeplink-hydration/SKILL.md) | 라우터 하이드레이션이 준비되기 전에 쿼리 파라미터를 잃거나 잘못된 상태에 도달하는 SPA/SSR 딥링크를 디버깅할 때. |
 | [`ssr-hydration-mismatch`](./skills/ssr-hydration-mismatch/SKILL.md) | 로케일/시간/난수/브라우저 전용 API, 스토리지, 인증 상태, 반응형 분기, 데이터 경쟁에서 비롯된 하이드레이션 불일치를 진단할 때. |
 | [`realtime-transport-contracts`](./skills/realtime-transport-contracts/SKILL.md) | 연결 끊김을 넘나드는 WebSocket/SSE 클라이언트를 디버깅할 때: 재연결 backoff/jitter, SSE Last-Event-ID/커서 재개, delta 순서 뒤바뀜/중복/누락, heartbeat/좀비 감지, `bufferedAmount` backpressure, 열린 소켓에서의 인증 갱신. |
@@ -135,6 +138,7 @@ Verification
 | --- | --- |
 | [`semantic-markup-contracts`](./skills/semantic-markup-contracts/SKILL.md) | 네이티브 HTML 구조를 리뷰할 때: 버튼 vs 링크, 제목(heading), 랜드마크, 레이블, 표/목록, 잘못된 인터랙티브 중첩, ARIA보다 네이티브를 우선하는 수정. |
 | [`overlay-focus-scroll-contracts`](./skills/overlay-focus-scroll-contracts/SKILL.md) | 모달, 드로어, 시트, 팝오버, 메뉴, 커맨드 팔레트의 런타임 계약을 리뷰할 때: 포커스 트랩/복원, inert/aria-hidden 타이밍, 중첩 스택, 스크롤 잠금 정리. |
+| [`pointer-gesture-contracts`](./skills/pointer-gesture-contracts/SKILL.md) | 단일 포인터 드래그, 스와이프, 리사이즈, 그리기가 멈추거나 취소되고, 요소 밖에서 입력을 잃거나 페이지 스크롤과 충돌할 때: 활성 pointer 소유권, 이벤트 전달/capture, 취소, `touch-action`, 정리. 실제 핀치, 회전, 다중 접촉 geometry는 범위 밖입니다. |
 | [`a11y-contract-testing`](./skills/a11y-contract-testing/SKILL.md) | 접근성 시맨틱을 회귀 테스트로 바꿀 때: role, name, state, 포커스, 다이얼로그, 메뉴, 콤보박스, 탭. |
 | [`view-transitions-contracts`](./skills/view-transitions-contracts/SKILL.md) | 조용한 중단(silent abort), 오래된 스냅샷, reduced-motion 무시, 고스트 잔상이 발생하는 View Transitions API 애니메이션을 리뷰할 때. 재구현 가이드가 아니라 리뷰와 PR 가치 판단용입니다. |
 | [`css-transition-animation-contracts`](./skills/css-transition-animation-contracts/SKILL.md) | 다이얼로그/팝오버/top-layer의 진입/이탈 트랜지션(`@starting-style`, `allow-discrete`, `overlay`)과 트랜지션 완료에 걸어 둔 정리 로직(`transitionend` vs `getAnimations().finished`)을 리뷰할 때. |
@@ -144,6 +148,7 @@ Verification
 
 | Skill | 사용 시점 |
 | --- | --- |
+| [`contenteditable-selection-contracts`](./skills/contenteditable-selection-contracts/SKILL.md) | contenteditable 또는 rich-text 편집기에서 캐럿·선택 영역이 사라지거나 이동하고, 편집이 중복되거나, 실행 취소/다시 실행이 깨지고, 붙여넣기·드롭 위치가 틀리거나, 리렌더링 중 조합 입력 또는 종료 뒤 포커스·선택 복원이 손상될 때. |
 | [`cjk-text-and-input`](./skills/cjk-text-and-input/SKILL.md) | 한국어, 일본어, 중국어 텍스트/입력을 다룰 때: 줄바꿈, IME 조합(composition), Enter 처리, grapheme 안전 길이, 검증 타이밍. |
 | [`i18n-copy-and-layout`](./skills/i18n-copy-and-layout/SKILL.md) | 현지화 카피/레이아웃을 리뷰할 때: 복수형 처리, 텍스트 확장, bidi/RTL, 로케일 포맷팅, 번역 키 계약. |
 | [`datetime-correctness`](./skills/datetime-correctness/SKILL.md) | 날짜/시간 코드를 감사할 때: 시간대, DST, 파싱, 포맷팅, `datetime-local`, 상대 시간, 서버/클라이언트 시계 문제. |
@@ -155,7 +160,8 @@ Verification
 | --- | --- |
 | [`constraint-validation-contracts`](./skills/constraint-validation-contracts/SKILL.md) | 네이티브 HTML Constraint Validation API 계약: `setCustomValidity`, `reportValidity`, `:user-invalid`, invalid에서 valid로 이어지는 생명주기. |
 | [`js-form-validation-contracts`](./skills/js-form-validation-contracts/SKILL.md) | React Hook Form, Formik, Final Form, vee-validate, Valibot 또는 커스텀 JS 폼 플로우: `stale` 오류 상태, 비활성화된 제출 버튼, 비동기/서버 경쟁, 서버 필드 오류 매핑. |
-| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 브라우저를 향한 인증을 강화할 때: returnTo 리다이렉트, OAuth/passkey/autocomplete 계약, 토큰 저장 경계, CSRF 엣지. |
+| [`frontend-auth-flow-contracts`](./skills/frontend-auth-flow-contracts/SKILL.md) | 브라우저를 향한 인증을 강화할 때: returnTo 리다이렉트, OAuth/passkey/autocomplete, OTP, 민감한 작업 전 재인증 계약. |
+| [`user-activation-contracts`](./skills/user-activation-contracts/SKILL.md) | 사용자 클릭 뒤 `window.open()`, 클립보드, 전체 화면, 파일 선택기가 조용히 거부될 때: 일시적/지속적 사용자 활성화, 비동기 경계, 소비 동작. |
 | [`frontend-security-baseline`](./skills/frontend-security-baseline/SKILL.md) | 프론트엔드 XSS, DOM 주입, sanitizer 오용, CSP, 서드파티 스크립트, 스토리지, URL 파싱 기본기를 점검할 때. |
 | [`bff-proxy-security-contracts`](./skills/bff-proxy-security-contracts/SKILL.md) | 프론트엔드가 소유한 BFF/API 프록시를 점검할 때: 클라이언트가 target을 고르는 SSRF, route/method/auth capability allowlist, 우회 유입 경로(ingress), multipart 예산/boundary, redirect/오류 처리, upstream 비즈니스 플로우 책임 구분. |
 | [`payment-page-client-security`](./skills/payment-page-client-security/SKILL.md) | 체크아웃/결제 페이지의 클라이언트 증거를 리뷰할 때: hosted field vs 직접 PAN 처리, 런타임 스크립트 인벤토리, 서드파티 스크립트 위험, CSP/SRI/헤더 증거, PCI DSS 증거 공백. |
@@ -177,9 +183,11 @@ Verification
 | --- | --- |
 | [`core-web-vitals-performance-contracts`](./skills/core-web-vitals-performance-contracts/SKILL.md) | Core Web Vitals(LCP, CLS, INP) 또는 TTFB가 나쁠 때, 수정에 앞서 원인을 특정 요소, 레이아웃 이동, 메인 스레드 작업으로 좁힙니다. 점수 확인이 아니라 페이지 전체 `performance budget`을 관리하기 위한 skill입니다. |
 | [`frontend-data-fetching-cache-contracts`](./skills/frontend-data-fetching-cache-contracts/SKILL.md) | 클라이언트 데이터 캐시(React Query, SWR, RTK Query, Apollo)가 뮤테이션 후 오래된 데이터를 보여 주거나, 요청 워터폴, 과다/과소 fetch, 페이지네이션/재검증 캐시 버그가 있을 때. |
+| [`browser-storage-durability-contracts`](./skills/browser-storage-durability-contracts/SKILL.md) | 브라우저 로컬 데이터가 저장됐다고 표시된 뒤 사라지고, IndexedDB 스키마 업그레이드가 막히고, 트랜잭션이 비활성화되거나 중단되며, quota/persistence 증거 또는 복구 문구가 실제 내구성을 과장할 때. |
 | [`async-effect-race-contracts`](./skills/async-effect-race-contracts/SKILL.md) | 직접 작성한 async Effect가 오동작할 때: 의존성 변경 시 발생하는 fetch 경쟁(오래된 응답이 이기는 경우), 누락된 cleanup/`AbortController`, StrictMode 이중 호출, interval/구독의 `stale closure`. |
 | [`pwa-offline-cache-contracts`](./skills/pwa-offline-cache-contracts/SKILL.md) | Service Worker/오프라인 캐싱이 잘못될 때: 배포 후 오래된 빌드, `ChunkLoadError`, precache 공백, 캐시 버전 관리/축출(cache eviction), SW 업데이트 생명주기, 인증된 응답 캐싱. |
 | [`large-list-data-grid-contracts`](./skills/large-list-data-grid-contracts/SKILL.md) | 가상화된 리스트/그리드가 튀거나 스크롤 위치를 잃을 때, 또는 화면 밖 행이 unmount되어 페이지 내 찾기 / 스크린 리더 총계 / 포커스가 깨질 때; 고정 컬럼/헤더 드리프트. |
+| [`resize-observer-layout-contracts`](./skills/resize-observer-layout-contracts/SKILL.md) | `ResizeObserver loop` 오류, 불안정한 자동 크기 조정, 측정-쓰기 피드백이 있을 때: 관찰 대상 선택, box 옵션, 전달 타이밍, 쓰기 배치, 정리. |
 
 ## 증상 맵
 
@@ -189,14 +197,20 @@ Verification
 | --- | --- | --- |
 | 페이지가 React Native WebView, WKWebView, Android WebView, Flutter WebView 또는 인앱 브라우저 안에서 실행되며, safe area, 키보드, 재개(resume), bridge, 페인트가 데스크톱 Chrome과 다릅니다. | `webview-bridge-pages` | 레이아웃, 히트 테스트, 페인트/컴포지팅, bridge 타이밍, 호스트 생명주기 중 무엇의 문제인가? |
 | 브라우저 iframe/widget이 비어 있거나, 위조 메시지를 받거나, READY/init을 놓치거나, 크기 조절 중 깜빡이거나, 필요한 권한이 없거나, 임베드 로그인 상태를 잃습니다. | `iframe-embed-contracts` | 정확한 부모/게스트 origin, 전달된 frame 정책, 인증된 메시지 핸드셰이크, 크기 프로토콜, 스토리지 모드는 무엇인가? |
+| 뒤로 가기 또는 앞으로 가기 후 페이지가 멈추거나 오래된 소켓·타이머·상태를 재사용합니다. | `browser-page-lifecycle-bfcache-contracts` | 새 로드인가 bfcache 복원인가, 어떤 자원이 일시 중지·재개되어야 하는가? |
+| SPA 뒤로/앞으로 또는 같은 문서의 hash 탐색 뒤 잘못된 스크롤 위치로 돌아가거나, 콘텐츠 렌더링 뒤 두 번 스크롤하거나, fragment 대상을 보여 주지 못합니다. | `history-scroll-restoration-contracts` | 어느 same-document history entry가 위치를 소유하고, 누가 복원하며, 대상 레이아웃은 언제 안정되는가? |
+| 카메라나 마이크가 처음에는 동작하지만 권한 변경, 장치 전환, track 중단, 캡처 UI를 닫았다 다시 연 뒤 실패합니다. | `media-capture-device-contracts` | 권한, 선택 장치, track 상태, 정리, 재획득 전이는 어떻게 이어지는가? |
 | HTML 구조 자체가 의심스럽습니다: div 버튼, 잘못된 링크, 레이블/제목/목록, 잘못된 인터랙티브 중첩. | `semantic-markup-contracts` | ARIA, CSS, JavaScript보다 먼저 네이티브 HTML로 표현할 수 있는가? |
 | 모달, 드로어, 시트, 팝오버, 메뉴, 커맨드 팔레트가 겉보기에는 멀쩡한데 포커스, 배경 상호작용, Escape/backdrop, 스크롤 잠금이 실패합니다. | `overlay-focus-scroll-contracts` | 열기, 중첩 열기, 닫기, unmount, 라우트 변경 시 각각 무슨 일이 일어나는가? |
+| 단일 포인터 드래그, 스와이프, 리사이즈, 그리기가 멈추거나, 요소 경계에서 입력을 잃거나, 네이티브 스크롤과 충돌합니다. | `pointer-gesture-contracts` | 시퀀스가 하나의 활성 `pointerId`, 의도한 이벤트 전달/capture 경로, 종료 정리, `touch-action`을 지키는가? 핀치, 회전, 다중 접촉 geometry는 다른 워크플로로 보냅니다. |
 | 다이얼로그, 메뉴, 콤보박스, 탭, 커스텀 위젯에 접근성 회귀 커버리지가 필요합니다. | `a11y-contract-testing` | 테스트가 role, name, state, 포커스 계약을 assert할 수 있는가? |
+| contenteditable 또는 rich-text 편집기에서 선택 영역이 사라지거나 반전되고, 한 번의 입력이 두 번 적용되고, 실행 취소가 깨지며, 붙여넣기·드롭 위치가 틀리거나 리마운트 뒤 오래된 Range가 복원됩니다. | `contenteditable-selection-contracts` | 어느 live editing host가 선택 영역을 소유하며, 이 `beforeinput`/`input` 트랜잭션과 이력을 브라우저와 애플리케이션 중 누가 소유하는가? |
 | 한국어, 일본어, 중국어 텍스트/입력이 잘못 동작합니다: IME Enter, 조합(composition), grapheme 길이, 줄바꿈, 말줄임. | `cjk-text-and-input` | 코드가 조합 중 텍스트, 확정된 텍스트, 표시되는 텍스트를 뒤섞고 있는가? |
 | 번역된 카피가 레이아웃, 복수형 처리, bidi/RTL, 숫자/날짜 포맷팅, 번역 키 계약을 깨뜨립니다. | `i18n-copy-and-layout` | 버그가 카피, 레이아웃, 로케일 동작, 입력 조합 중 어디에 있는가? |
 | 딥링크, 인증 리다이렉트, SPA/SSR 라우트, 쿼리 파라미터가 잘못된 화면으로 초기화됩니다. | `deeplink-hydration` | 라우터 준비, 하이드레이션, 인증 바운스 이전의 URL 상태는 무엇인가? |
 | WebSocket 또는 SSE 클라이언트가 연결 끊김을 넘기지 못합니다: 재연결 폭풍, 중복/누락 이벤트, 순서가 뒤바뀐 델타, OPEN이지만 죽은 소켓에서 멈춘 UI, 버퍼 증가, 핸드셰이크 후 만료된 토큰. | `realtime-transport-contracts` | 재연결/backoff, 재개/커서, delta folding, liveness/heartbeat, backpressure, 소켓 재인증 중 무엇의 문제인가? |
-| 브라우저를 향한 인증 UI에 returnTo, OAuth/passkey, autocomplete, OTP, 토큰 저장, CSRF 엣지 문제가 있습니다. | `frontend-auth-flow-contracts` | 인증 플로우가 지켜야 할 브라우저 계약은 무엇인가? |
+| 브라우저를 향한 인증 UI에 returnTo, OAuth/passkey, autocomplete, OTP 또는 민감한 작업 전 재인증 문제가 있습니다. | `frontend-auth-flow-contracts` | 인증 플로우가 지켜야 할 브라우저 계약은 무엇인가? |
+| 클릭 핸들러에서 시작한 팝업, 클립보드, 전체 화면 또는 파일 선택기가 비동기 작업 뒤 거부됩니다. | `user-activation-contracts` | API 호출 시점에 일시적 사용자 활성화가 남아 있으며, 앞선 호출이 이를 소비했는가? |
 | 결제 페이지 밖에서 raw HTML, sanitizer, CSP, opener, 스토리지, URL 파싱, 서드파티 스크립트 위험이 나타납니다. | `frontend-security-baseline` | 구체적인 브라우저 보안 source-to-sink 경로가 있는가? |
 | 프론트엔드 소유 서버 라우트가 클라이언트가 고른 path, upload, header, business action을 upstream API로 프록시합니다. | `bff-proxy-security-contracts` | 어떤 route-method-auth capability가 노출되고, 다른 ingress가 정책을 우회할 수 있는가? |
 | 체크아웃/결제 페이지에 클라이언트 측 증거가 필요합니다: hosted field, 직접 PAN/CVV 처리, 런타임 스크립트, CSP/SRI/헤더 통제. | `payment-page-client-security` | 결제 데이터 경계와 런타임 스크립트 표면을 보여 주는 증거는 무엇인가? |
@@ -216,9 +230,11 @@ Verification
 | 잘못된 이미지 파일이 배포되거나, 이미지가 과도하게 다운로드되거나, 히어로 이미지가 lazy 로딩되거나, 이미지가 레이아웃 이동을 일으킵니다. | `responsive-image-contracts` | `srcset`에 실제 레이아웃과 일치하는 `sizes`, 올바른 너비 서술자, LCP `eager`/`fetchpriority`, `width`/`height`가 있는가? |
 | 페이지의 LCP/CLS/INP가 실패하고, 점수 보고가 아니라 원인을 특정해야 합니다. | `core-web-vitals-performance-contracts` | LCP 요소는 무엇이고(발견 가능한가/우선순위가 잡혔는가), 각 레이아웃 이동의 출처는 무엇이며, 어떤 long task가 INP를 부풀리는가? |
 | 뮤테이션 후 클라이언트 캐시 데이터가 오래되었거나, 요청이 워터폴을 이루거나 과다 fetch합니다(React Query/SWR/RTK Query/Apollo). | `frontend-data-fetching-cache-contracts` | 어느 query key를 무효화해야 하고, 읽기가 올바른 stale/gc 타이밍으로 병렬화되어 있는가? |
+| 브라우저 로컬 레코드가 사라지거나, IndexedDB 업그레이드가 다른 탭 때문에 멈추거나, UI가 저장 완료를 표시한 뒤 후속 요청으로 트랜잭션이 중단되거나, persistence를 영구 백업으로 설명합니다. | `browser-storage-durability-contracts` | 실패한 단계는 open/upgrade 소유권, 트랜잭션 활성 상태, commit/abort, quota/persistence, 예기치 않은 close, 복구 중 무엇인가? |
 | 비동기 effect가 잘못된 데이터를 보여 주거나, 두 번 실행되거나, 누수되거나, 오래된 값을 읽습니다. | `async-effect-race-contracts` | take-latest/`AbortController` + cleanup이 있는가, 그리고 effect가 StrictMode에서 멱등한가? |
 | 배포 후 사용자에게 오래된 빌드가 전달되거나, `ChunkLoadError`가 나거나, service worker가 오프라인에서 잘못된/오래된 바이트를 제공합니다. | `pwa-offline-cache-contracts` | SW 업데이트 플로우, 완전한 precache, 캐시 버전 관리, 인증된 HTML/API에 대한 캐시 금지 규칙이 있는가? |
 | 가상화된 리스트/그리드가 튀거나 스크롤을 잃거나, 가상화 아래에서 Ctrl+F / 스크린 리더 총계 / 포커스가 깨집니다. | `large-list-data-grid-contracts` | `estimateSize`/overscan이 올바른가, 그리고 unmount된 행에 `aria-setsize`/`aria-posinset`(또는 `aria-rowcount`)가 설정되어 있는가? |
+| `ResizeObserver loop` 오류가 보이거나, 자동 크기 조정 위젯이 흔들리고, 측정 콜백이 다시 크기 변경을 유발합니다. | `resize-observer-layout-contracts` | 어떤 관찰 대상과 box를 측정하며, 어떤 DOM 쓰기가 같은 전달 주기에서 다시 크기를 바꾸는가? |
 | 리포트가 모호하거나, 여러 도메인에 걸쳐 있거나, 어떤 전문 skill이 맡아야 할지 확신이 없습니다. | `frontend-report-triage` | 가능성 높은 실패 유형 상위 1-3개는 무엇이고, 이를 구별해 줄 증거는 무엇인가? |
 
 ## 증거
@@ -230,7 +246,9 @@ Verification
 - [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md): skill 경계와 PR 형태를 점검(sanity-check)하는 데 사용한 공개 OSS 사례.
 - [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md): 파일/라인 증거가 있는 공개 OSS 리서치 후보. 제보 전에 현재 기본 브랜치를 다시 확인하고 로컬에서 재현하세요.
 - [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md): WebView 특화 선행 사례, bridge 라이브러리, 호스트 동작 레퍼런스, 생태계 노트.
+- [`docs/public-skill-landscape.md`](./docs/public-skill-landscape.md): 이 팩과 직접 겹치거나, 거의 비슷하거나, 상호 보완적인 공개 skill pack을 실제로 열어 비교하고 유지/분리/보류 판단을 기록한 문서.
 - [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md): skill별로 근거가 검증된 사례, 후보 단서, 1차 출처 레퍼런스, 라우팅 예시 중 어디에서 오는지 보여 주는 맵.
+- [`docs/skill-quality-standard.md`](./docs/skill-quality-standard.md): 이 팩에서 “좋은 skill”의 기준과 신규 skill 채택·기존 skill 유지보수 게이트.
 - [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md): 통합 리포트 트리아지 계약과 예시.
 - `skills/*/SKILL.md` 및 `skills/*/references/*.md`: skill별 공식 문서, 선행 사례, 예시, 오탐 노트, 구현 특화 증거.
 
@@ -248,7 +266,7 @@ lefthook install
 lefthook run pre-push
 ```
 
-`lefthook.yml`은 저장소 스크립트에 위임만 하므로, 기여자는 lefthook 없이도 같은 검사를 실행할 수 있습니다. 이 스크립트는 skill 메타데이터, README 링크/개수, plugin manifest, 로컬 마크다운 링크, 과장 표현, 번들 스크립트 문법을 감사하고 `git diff --check`도 실행하고, push하려는 마크다운 파일의 출처 링크를 검사합니다(오프라인이면 건너뛰며, `SKIP_LINK_CHECK=1`로 강제로 건너뛸 수 있습니다). 외부 URL 전체를 검사하려면 `python3 scripts/audit-skill-pack.py --check-links`를 실행하세요. `.github/workflows/link-check.yml`이 이 검사를 매주 실행해 죽은 인용이 발견되면 `link-rot` 이슈를 등록합니다. 링크 교체 절차는 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)에 있고, `.github/workflows/checks.yml`이 모든 push와 pull request마다 팩 검사를 실행합니다.
+`lefthook.yml`은 저장소 스크립트에 위임만 하므로, 기여자는 lefthook 없이도 같은 검사를 실행할 수 있습니다. 이 스크립트는 skill 메타데이터, README 링크/개수, plugin manifest, 로컬 마크다운 링크, 필수 품질 계약(PR 가치 게이트·약한 발견 거부·출력 형식), 직접 연결된 레퍼런스, 선택적 eval 세트, 과장 표현, 번들 스크립트 문법을 감사하고 `git diff --check`도 실행하고, push하려는 마크다운 파일의 출처 링크를 검사합니다(오프라인이면 건너뛰며, `SKIP_LINK_CHECK=1`로 강제로 건너뛸 수 있습니다). 외부 URL 전체를 검사하려면 `python3 scripts/audit-skill-pack.py --check-links`를 실행하세요. `.github/workflows/link-check.yml`이 이 검사를 매주 실행해 죽은 인용이 발견되면 `link-rot` 이슈를 등록합니다. 링크 교체 절차는 [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md)에 있고, `.github/workflows/checks.yml`이 모든 push와 pull request마다 팩 검사를 실행합니다.
 
 ## FAQ
 

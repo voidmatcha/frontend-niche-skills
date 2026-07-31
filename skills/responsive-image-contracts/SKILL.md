@@ -52,7 +52,7 @@ Count a finding only when all are true:
 3. **A narrow fix exists**: one `sizes` value, one `loading`/`fetchpriority` change, one `width`/`height` pair, or a `<picture>`/`<img>` swap.
 4. **The mechanical linters do not already catch and gate it.**
 
-Reject likely false positives:
+Reject weak findings:
 
 - Valid syntax the linter already owns, with no measured over/under-download.
 - A fixed-size icon, logo, or sprite that legitimately needs no `srcset`.

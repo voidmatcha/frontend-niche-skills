@@ -1,4 +1,4 @@
 interface:
   display_name: "Optimistic Update Rollback Contracts"
-  short_description: "Audit optimistic-UI mutations for the snapshot -> rollback -> reconcile lifecycle:..."
+  short_description: "Review optimistic updates, rollback, and reconciliation."
   default_prompt: "Use $optimistic-update-rollback-contracts: Review this optimistic-update / mutation code for reconciliation contract bugs: does every optimistic write take a snapshot and roll back to it on failure, cancel in-flight refetches first, swap temp client ids for server ids (no duplicate rows), reconcile against server truth on settle, and serialize concurrent writes to the same resource? Flag only user-visible breakages and propose the smallest fix plus a failing test."

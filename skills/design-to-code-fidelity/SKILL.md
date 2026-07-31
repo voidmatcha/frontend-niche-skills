@@ -87,6 +87,18 @@ AE_FUZZ=10% STRUCT_GATE=1 bash scripts/visual-diff.sh ref.png impl.png diff.png
 8. **Diagnose with source/setup evidence.** Use node metadata, spacing extraction, DOM/computed styles, native layout inspector, accessibility/layout trees, and source code to investigate the largest drift candidates. Call them defects only after state/source evidence rules out capture/setup causes such as loaders, timing, fonts, media, theme, chrome, or fixture mismatch. Walk the design QA hot spots and visual regression gate in [mismatch-checklist](./references/mismatch-checklist.md), then use code-mapping triage in [figma-adapters](./references/figma-adapters.md).
 9. **Report by tier.** Include commands, artifact paths, file/line evidence, expected vs actual, and unknowns.
 
+## PR-worthiness gate
+
+Require an exact design node/frame/image and a deterministic implementation
+capture for the same state, viewport, scale, content, theme, and chrome policy.
+Promote a mismatch only after capture/setup differences are ruled out and the
+implementation source offers a bounded fix.
+
+Reject weak findings: visual judgment from memory, mismatched crops or states,
+loading/font/timer drift, undocumented masks, a T3/T4 static observation
+presented as pixel proof, or a component-extraction preference with no measured
+fidelity change.
+
 ## Boundary with sibling skills
 
 - For translated-copy overflow and RTL mirroring see **i18n-copy-and-layout**; this skill flags only that the rendered UI does not match the design reference.

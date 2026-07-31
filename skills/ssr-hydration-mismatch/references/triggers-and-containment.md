@@ -110,7 +110,7 @@ something different from the server."
   `suppressHydrationWarning` is one level deep)
 - React — [`<Suspense>`](https://react.dev/reference/react/Suspense) (boundary behavior during
   hydration)
-- React 18 RFC — [server-errors in React 18](https://github.com/reactjs/rfcs/blob/main/text/0215-server-errors-in-react-18.md)
+- React 18 RFC — [server-errors in React 18](https://github.com/reactjs/rfcs/blob/c15bc9df5afa8fd1dca6e5fd1c2ed073f7a9bd79/text/0215-server-errors-in-react-18.md)
   (hydration mismatch as a recoverable error; client-render fallback)
 - Next.js — [Hydration error guide](https://nextjs.org/docs/messages/react-hydration-error)
   and [`next/dynamic` `{ ssr: false }`](https://nextjs.org/docs/app/guides/lazy-loading)

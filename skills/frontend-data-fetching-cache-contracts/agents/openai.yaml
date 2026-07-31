@@ -1,4 +1,4 @@
 interface:
   display_name: "Frontend Data Fetching Cache Contracts"
-  short_description: "Review client data-fetching cache reads: invalidation keys, waterfalls, staleTime."
+  short_description: "Review client-cache invalidation, staleness, and waterfalls."
   default_prompt: "Use $frontend-data-fetching-cache-contracts: Review this client data-fetching / cache-read code (React Query / SWR / RTK Query / Apollo / hand-rolled). Does a mutation invalidate the exact query key or cache tag the reader subscribes to, so reads refresh instead of going stale? Are query keys stable and serialized so the cache hits rather than missing or colliding? Are independent requests parallelized or prefetched instead of run as a waterfall? Are staleTime/gcTime, focus/reconnect refetch, pagination append-vs-replace + maxPages, and Apollo fetchPolicy/nextFetchPolicy set on purpose? Flag only user-visible staleness, cache misses, or latency, and propose the smallest fix plus a test or trace."

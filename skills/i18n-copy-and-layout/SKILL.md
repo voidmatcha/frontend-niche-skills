@@ -72,6 +72,12 @@ Reject weak findings:
 Minimal useful PR: move the message into the existing i18n mechanism, add at least one non-English
 or plural-form test/story, and keep layout flexible with wrapping/min-inline-size/logical props.
 
+## Output shape
+
+Report the locale and user-facing surface, copy/grammar/layout/formatting
+contract, concrete rendered or message evidence, smallest i18n-system change,
+and a non-English, plural, RTL, or pseudo-localized regression as appropriate.
+
 ## References
 
 | File | Covers |
