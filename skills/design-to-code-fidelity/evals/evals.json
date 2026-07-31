@@ -1,0 +1,65 @@
+{
+  "skill_name": "design-to-code-fidelity",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Design handoff is this link: https://www.figma.com/files/1a2b3c/recents-and-sharing . The frame is publicly visible in the browser. Run a fidelity check against our /pricing page and tell us if it matches.",
+      "expected_output": "Reports T4 blocked because no exact frame reference exists yet, explains that a recents-and-sharing URL identifies a workspace surface rather than a design node, and states exactly what is needed to unblock: a /design/<FILE_KEY> URL with a node-id plus API access for the token.",
+      "expectations": [
+        "The run is graded T4 blocked and no diff, score, or match verdict is produced.",
+        "The response explains that `/files/<id>/recents-and-sharing` is a workspace/recents surface, not an exportable frame, and asks for a `/design/<FILE_KEY>/...?node-id=<NODE>` URL.",
+        "It states that public browser visibility is not API access — the Figma token's account must be able to read the file, and `403`/`404`/`429` from the images endpoint keeps the case blocked.",
+        "It refuses to substitute an oEmbed response, OpenGraph image, file cover thumbnail, or editor screenshot for an Images API export.",
+        "It notes the URL node id uses dashes (`3-809`) while the API uses colons (`3:809`), and that the bundled export script normalizes this."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I ran ImageMagick and got AE=0 comparing the design export to our build, so the page is pixel-perfect verified. I did crop out the sticky header and the promo countdown from both images before comparing.",
+      "expected_output": "Downgrades the claim from T1 to T2 because the masks/exclusions were applied ad hoc and undocumented, and explains that a raw AE pass is a screening signal rather than proof of design completeness.",
+      "expectations": [
+        "The claim is downgraded to T2 and explicitly not reported as strict raster-diff validated.",
+        "The response states that masks and exclusions are part of the test definition, and that an undocumented mask downgrades the result — the crops must be recorded as artifacts with the manifest.",
+        "It explains that `STATUS=PASS` on raw AE is mainly meaningful for identical-source baselines and asks for structural gating (`AE_FUZZ` plus `STRUCT_GATE=1`) with `STRUCT=ALIGNED|DRIFT` reviewed alongside the ref/impl/diff artifacts.",
+        "It flags the excluded regions as unverified rather than passing, so the sticky header and countdown remain uncovered rows in the comparison matrix.",
+        "It asks for the recorded viewport, DPR/scale, state, theme, locale, and fixture on both sides before any strict claim is made."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The screen is a React Native onboarding step. We have the exact Figma node export and the component source, but no simulator or device is available on this machine. Give me the fidelity verdict.",
+      "expected_output": "Reports T3 static design-vs-code audit rather than T4, because an exact design export plus source evidence supports a static audit, and names the missing implementation capture adapter explicitly instead of producing a diff result.",
+      "expectations": [
+        "The verdict is T3 static design-vs-code audit, and the response states that T3 is not a strict tier and is not a pixel claim.",
+        "It applies the T3-vs-T4 fallback rule correctly: T3 because exact design export plus source code evidence exists; T4 would apply if that evidence were missing too.",
+        "It names the missing adapter concretely — a simulator/device screenshot path such as `xcrun simctl io booted screenshot` or `adb exec-out screencap`, or a deterministic fixture screen — rather than inventing a diff number.",
+        "It does not attempt to force the bundled web capture script onto the React Native screen, since that script is the web/Storybook adapter.",
+        "The findings it does report are tied to design node metadata (frame size, padding, gaps, text styles) mapped against source values."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our hero has a GSAP-driven headline reveal and a Lottie badge. The capture script screenshot diffs clean against the design export, so I want to close the ticket saying the animation matches the design.",
+      "expected_output": "Rejects the animation claim: the clean diff only covers a static frame, CSS neutralization does not stop JS-driven motion, and transition fidelity needs triggered, sampled frame evidence rather than one settled screenshot.",
+      "expectations": [
+        "The response separates the two claims — static parity may hold at T1/T2 for the captured frame, but transition fidelity is unvalidated.",
+        "It states that the capture script neutralizes CSS animations and transitions by default and that this does not stop JS-driven motion: Web Animations API, requestAnimationFrame loops, canvas/WebGL, and libraries like GSAP keep writing inline styles.",
+        "It requires trigger plus sampled-frame evidence for the reveal (capturing with `ALLOW_ANIMATION=1`, or pinning time/animation state through `INIT_SCRIPT`), and says a single final-state screenshot cannot validate a transition.",
+        "It treats the Lottie badge as a separate dynamic-fidelity check needing play/load evidence, not a still comparison.",
+        "It warns that forcing final-state CSS such as `opacity:1`, `transform:none`, or `transition:none` to make the diff pass would hide the behavior under test and downgrade the evidence."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Fidelity review on the de-DE build turned up three things: the section background gradient is missing, the CTA label wraps to two lines and pushes the button taller than the design, and the reviewer also thinks PlanCard and AddonCard should be merged since they now look the same. Report it.",
+      "expected_output": "Keeps the missing gradient as the in-scope rendered-vs-reference mismatch, routes the translated-label overflow to i18n-copy-and-layout, and routes the merge question to component-extraction-judgment instead of deciding it here.",
+      "expectations": [
+        "The missing section background/gradient is kept in scope as a rendered UI mismatch against the design reference, reported with its tier and artifact paths.",
+        "The German CTA label wrapping and the resulting height change is routed to i18n-copy-and-layout as translated-copy overflow rather than judged as a design defect here.",
+        "The PlanCard/AddonCard merge question is routed to component-extraction-judgment, and the response notes that a component-extraction preference with no measured fidelity change is a weak finding for this skill.",
+        "Before calling the gradient a defect, the response rules out capture and setup causes such as fixture, theme, locale, font loading, or a crop/state mismatch between the two sides.",
+        "Each finding carries its own tier and evidence rather than one blanket verdict for the whole review."
+      ]
+    }
+  ]
+}

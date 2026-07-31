@@ -1,0 +1,42 @@
+{
+  "skill_name": "responsive-image-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our category page renders product cards in a 3-column CSS grid on desktop (each card about 33vw minus gutters), 2 columns on tablet, 1 column on mobile. The card markup is <img src=\"/p/123-800.jpg\" srcset=\"/p/123-400.jpg 400w, /p/123-800.jpg 800w, /p/123-1600.jpg 1600w\" alt=\"...\" loading=\"lazy\">. Analytics says desktop users on this page download about 2.4MB of images. Design also filed a separate ticket that the card photos are cropped tighter than the Figma frame.",
+      "expected_output": "Identifies that a w-descriptor srcset with no sizes makes the browser assume 100vw, so a card rendering at roughly 33vw pulls the 1600w candidate on desktop; prescribes one sizes value matching the real measured layout across the three breakpoints, keeps loading=\"lazy\" for the below-the-fold cards, and routes the crop mismatch against the Figma frame to design-to-code-fidelity rather than treating it as a srcset defect.",
+      "expectations": [
+        "The response states that a w-descriptor srcset without sizes defaults to 100vw, causing the widest fitting candidate to be downloaded for a card that only renders at about a third of the viewport.",
+        "The fix is a single sizes attribute whose media-condition list matches the real rendered width at each breakpoint, with a bare fallback length last, derived from measurement rather than a guess.",
+        "It keeps loading=\"lazy\" on these below-the-fold card images and does not prescribe fetchpriority for them.",
+        "Evidence is the candidate actually downloaded, checked via currentSrc or the request URL in the Network panel at the target viewport, and re-checked after the change.",
+        "The tighter-than-Figma crop is routed to design-to-code-fidelity as a visual fidelity concern, not folded into the selection contract."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "PageSpeed Insights gives our gallery page a performance score of 71 and lists \"Properly size images\" with our thumbnails, and a couple of people said the thumbnails look a bit soft. So the srcset descriptors must be wrong. Add fetchpriority=\"high\" to all 24 thumbnails and drop loading=\"lazy\" so they load faster, and bump every descriptor by one size.",
+      "expected_output": "Rejects the prescription: a lab performance score plus a generic audit label is not proof that any specific candidate is wrong, and \"looks soft\" is not evidence without checking currentSrc against the measured rendered width and DPR. Explains that fetchpriority=\"high\" on 24 elements defeats prioritization (cap it at one or two) and that removing loading=\"lazy\" from genuinely below-the-fold thumbnails is a regression. Names the evidence that would change the verdict and routes the whole-page score question to core-web-vitals-performance-contracts and true visual drift to design-to-code-fidelity.",
+      "expectations": [
+        "The response rejects the blanket change and states that a lab performance score and an audit label are not evidence that a specific image's descriptors or sizes are wrong.",
+        "It explains that fetchpriority=\"high\" only works as a relative signal and must be capped at one or two elements per page, so applying it to 24 thumbnails prioritizes nothing.",
+        "It states that keeping loading=\"lazy\" on genuinely below-the-fold thumbnails is correct, and removing it is a regression rather than a fix.",
+        "It names the evidence that would change the verdict: the candidate actually selected (currentSrc or the requested URL) compared against the measured rendered width and device pixel ratio at the reported viewport, plus verification of each descriptor label against the real decoded width of the file it points at.",
+        "Whether the page's Core Web Vitals are actually failing, and the whole-page budget behind the score, is routed to core-web-vitals-performance-contracts.",
+        "If the rendered image differs from the design reference rather than being under-resolved, that is routed to design-to-code-fidelity."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The hero on our landing page has srcset with 640w/1280w/2560w candidates, sizes=\"100vw\", width and height attributes, loading=\"eager\", and fetchpriority=\"high\". The image request now starts in the first few hundred milliseconds and finishes early. Mobile field LCP is still 3.6s at p75. What else should we change on the <img>?",
+      "expected_output": "States that nothing more on the <img> is worth changing: the image contract is already correct and the request evidence shows it is discovered and prioritized, so the remaining LCP time is not attributable to the image markup. Requires an LCP attribution trace to identify what the actual LCP element is on that load, and routes whole-page budgeting (render-blocking CSS or scripts, TTFB, fonts, a text or non-image LCP element) to core-web-vitals-performance-contracts before any further image change is proposed.",
+      "expectations": [
+        "The response declines to prescribe further <img> changes and states that the current markup already satisfies the responsive image contract: honest descriptors, sizes matching a true full-viewport hero, reserved dimensions, eager loading, and a single high-priority element.",
+        "It uses the request timing as evidence that the image is discoverable and prioritized, so the image is not the remaining bottleneck even if it is the LCP element.",
+        "It asks for an LCP attribution trace naming the actual LCP element for that load, noting the LCP element may be a text block or another paint rather than the hero image.",
+        "Whole-page causes such as render-blocking CSS or synchronous scripts, slow TTFB, and font behavior are routed to core-web-vitals-performance-contracts as the owner of the budget.",
+        "It explicitly rejects speculative image tweaks (adding more candidates, changing sizes, adding sizes=\"auto\") as unverifiable without attribution, and notes sizes=\"auto\" would be invalid here anyway because the image is not lazy-loaded."
+      ]
+    }
+  ]
+}

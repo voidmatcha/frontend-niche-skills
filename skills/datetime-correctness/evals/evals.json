@@ -1,0 +1,40 @@
+{
+  "skill_name": "datetime-correctness",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our booking list renders a reservation dated 2026-06-14 as June 13 for users in America/Chicago, but correctly in Europe/Berlin. The API returns the string \"2026-06-14\" and the component calls new Date(value).toLocaleDateString(). Propose the smallest safe frontend fix.",
+      "expected_output": "Identifies the date-only ISO form being parsed as UTC midnight and then rendered in a negative-offset zone as the previous day, keeps the value date-only instead of promoting it to an instant, and routes the choice of displayed format to i18n-copy-and-layout.",
+      "expectations": [
+        "The response names date-only ISO \"2026-06-14\" being parsed as UTC midnight as the cause, and explains why it renders as the previous day in a negative-offset zone such as America/Chicago.",
+        "A date-only value is distinguished from an instant, rather than the fix being framed as an offset or formatting adjustment.",
+        "The smallest fix keeps the value date-only by parsing components or using a plain-date type, instead of round-tripping through new Date.",
+        "Which locale format to display, such as MM/DD versus DD/MM ordering or separators, is routed to i18n-copy-and-layout.",
+        "The regression test pins a negative-offset zone instead of running only in UTC."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A reviewer filed a bug that our dashboard shows 06/14/2026 to German users who expect 14.06.2026, and labeled it a datetime-correctness defect because dates are involved. Confirm it here and fix the storage layer.",
+      "expected_output": "Rejects the routing because no stored, compared, or rendered instant is wrong and only the locale display format differs, routes ownership to i18n-copy-and-layout, and states the evidence that would reclassify it.",
+      "expectations": [
+        "The response rejects this as a datetime-correctness defect because the underlying instant or calendar day is unchanged and only locale display format differs.",
+        "Locale display formatting ownership is routed to i18n-copy-and-layout.",
+        "A storage, parsing, or representation change is not proposed for a purely cosmetic format difference.",
+        "The response states what evidence would move it back into this skill, such as the rendered calendar day differing from the intended zone's day."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A nightly reminder is scheduled by adding 86_400_000 milliseconds to the previous run timestamp, and the due time is rendered with toLocaleString() during server render. Users in Europe/Berlin report the reminder drifting by an hour twice a year, and the displayed time differing from what the mobile app shows for the same reminder.",
+      "expected_output": "Separates two distinct defects, non-zone-aware 24 hour arithmetic across a DST transition and rendering in the runtime's ambient zone, fixes the calendar math zone-aware and pins an explicit Intl timeZone, and routes server-versus-client render divergence to ssr-hydration-mismatch.",
+      "expectations": [
+        "Adding 86_400_000 milliseconds is identified as unsafe calendar math across a DST transition, and a zone-aware add-one-day operation is required instead.",
+        "toLocaleString() without an explicit timeZone is separately identified as rendering the runtime's ambient zone rather than the user's intended zone.",
+        "The two defects are treated as distinct causes rather than both being attributed to a single root cause.",
+        "Server-versus-client divergence from zone-dependent text computed during render is routed to ssr-hydration-mismatch.",
+        "Regression coverage runs across an actual DST transition in a zone that observes one, not only in UTC."
+      ]
+    }
+  ]
+}

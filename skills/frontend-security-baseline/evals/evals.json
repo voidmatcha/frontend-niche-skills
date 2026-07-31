@@ -1,0 +1,55 @@
+{
+  "skill_name": "frontend-security-baseline",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our comment renderer does `const clean = DOMPurify.sanitize(markdownToHtml(body))`, then runs `clean.replace(URL_RE, (u) => `<a href=\"${u}\">${u}</a>`)` to linkify bare URLs, and assigns the result to `el.innerHTML`. DOMPurify is in the dependency list and the security scanner is quiet. The `body` string comes from our own Next.js route handler at `app/api/comments/route.ts`, which fetches the CMS. Find the smallest safe fix.",
+      "expected_output": "Identifies post-sanitize mutation as the trap: the linkifier runs after `sanitize()` and re-introduces attacker-controlled markup into the innerHTML sink, so DOMPurify's presence proves nothing. Fixes by moving every transform before the sanitizer and assigning the exact returned string, and routes the CMS proxy route's target/header/allowlist review to bff-proxy-security-contracts.",
+      "expectations": [
+        "The response names the ordering as the defect: the linkify regex mutates DOMPurify's output before it reaches `innerHTML`, so the sanitized string is no longer what gets parsed.",
+        "It shows the source-to-sink boundary concretely, including a payload shape (for example a `javascript:` or attribute-breaking URL that the regex re-wraps) rather than filing on the presence of `innerHTML` alone.",
+        "The smallest fix reorders the pipeline so markdown conversion and linkification happen before `DOMPurify.sanitize()`, and the exact returned string or TrustedHTML value is inserted with no further rewriting.",
+        "It does not accept 'we already use DOMPurify' or a clean scanner run as evidence of safety.",
+        "Review of the frontend-owned `app/api/comments/route.ts` proxy — upstream target allowlist, forwarded headers, and response handling — is routed to bff-proxy-security-contracts rather than resolved here."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "An auditor filed a critical finding against our CSP: `script-src 'nonce-r4nd0m' 'strict-dynamic' https: 'unsafe-inline'`. Their report says `'unsafe-inline'` plus the `https:` host source means inline script and any HTTPS origin can execute, so the CSP is worthless. They want it merged before release. Confirm and write the fix.",
+      "expected_output": "Rejects the finding as written: in a CSP3 browser a nonce plus `'strict-dynamic'` causes host-source expressions and `'unsafe-inline'` to be ignored, so those tokens are the intentional, security-neutral legacy fallback rather than the bypass. States the evidence that would change the verdict and routes nothing away from this skill except where the real weakness turns out to live.",
+      "expectations": [
+        "The response explains that `'strict-dynamic'` makes CSP3 browsers ignore `https:` and `'unsafe-inline'`, so their presence after the nonce is a backward-compatibility fallback for older browsers, not an executable bypass.",
+        "It refuses to merge the finding as a critical bypass on the policy string alone and says so plainly.",
+        "It names the evidence that would actually make this a real finding: no nonce or hash present, `'strict-dynamic'` absent, a nonce reused across responses or predictable, or a bare host allowlist used instead of nonce/hash.",
+        "It flags the adjacent trap worth checking instead: whether the nonce is injected by a string-rewriting middleware that could stamp it onto attacker-injected `<script>` tags, versus generated per response in the template or render path that owns trusted scripts.",
+        "It recommends any CSP tightening be rolled out under `Content-Security-Policy-Report-Only` first rather than flipped in enforcement mode before release."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We store the access JWT in `localStorage` and you flagged it. The obvious fix is to move it to an `HttpOnly; Secure; SameSite=Strict` session cookie, so we scheduled that. Problem: this app is also shipped as a cross-origin widget that partner sites embed in an `<iframe>`, and after the cookie change the embedded build signs users out on every load. Tell us how to finish the migration.",
+      "expected_output": "Confirms the cookie direction is right for the top-level app but explains why the fix cannot land as-is in the embedded build: a `SameSite=Strict` cookie is never sent in a cross-site frame, and `SameSite=None; Secure` then runs into third-party cookie blocking and storage partitioning. Routes the embed-side session exchange, partitioned storage, and Storage Access recovery path to iframe-embed-contracts.",
+      "expectations": [
+        "The response states that `SameSite=Strict` (and `Lax`) cookies are not sent on cross-site subresource requests, so the embedded iframe build cannot see the session cookie at all.",
+        "It notes that switching to `SameSite=None; Secure` is necessary but not sufficient, because third-party cookie blocking and storage partitioning can still withhold the cookie in the embedded context.",
+        "It keeps the token-storage ruling in this skill — the JWT should not live in `localStorage`, and the top-level app should move to an opaque `HttpOnly; Secure` session or BFF pattern.",
+        "The blocking condition — the parent-to-guest session exchange, partitioned storage behavior, and the Storage Access API recovery path with a top-level sign-in fallback — is routed to iframe-embed-contracts.",
+        "It does not propose reverting to `localStorage` or handing the token to the parent frame as a workaround.",
+        "It keeps a signed anti-CSRF token in a request header for high-risk cookie-authenticated mutations rather than treating SameSite as the whole CSRF defense."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Pre-release sweep of a marketing site. Our grep found 47 `<a target=\"_blank\">` links with no `rel`, one `window.open(partnerUrl)` in a share button, and `NEXT_PUBLIC_ANALYTICS_KEY` in the client bundle. Rank these as release blockers.",
+      "expected_output": "Downgrades the bare anchors, keeps `window.open()` as the real finding, and refuses to call the public analytics key a secret without a demonstrated privilege or quota impact.",
+      "expectations": [
+        "The 47 anchors are treated as low signal on their own because modern browsers generally apply implicit `noopener` to `target=\"_blank\"` anchors, and are counted only as a hardening or policy-consistency item.",
+        "It names the conditions that would raise the anchors back to a real finding: the project requires `noreferrer` for referrer suppression, it supports older browsers or WebViews without implicit `noopener`, or it mutates the rendered HTML after render.",
+        "`window.open(partnerUrl)` is kept as the higher-signal finding because it does not imply `noopener` unless `'noopener,noreferrer'` is passed in the features string.",
+        "It asks whether `partnerUrl` is attacker- or URL-parameter-controlled, and if so treats destination validation as server-side URL parsing against an explicit allowlist rather than a `startsWith` or deny-list string check.",
+        "The `NEXT_PUBLIC_` analytics key is not filed as a leaked secret without evidence of privilege or quota impact, since documented public identifiers are not secrets even though everything in the bundle is public.",
+        "Each retained finding is stated with a verification probe that would catch reintroduction, not just a patch."
+      ]
+    }
+  ]
+}

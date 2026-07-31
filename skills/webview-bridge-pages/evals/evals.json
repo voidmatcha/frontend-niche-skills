@@ -1,0 +1,80 @@
+{
+  "skill_name": "webview-bridge-pages",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our in-app subscription page posts `{ type: 'REQUEST_PURCHASE' }` to the native bridge and immediately sets the CTA to disabled so users cannot double-tap. QA says that if you cancel the App Store sheet, the button stays dead until you kill the app. The proposed fix is a 30-second re-enable timer plus a hidden retry link.",
+      "expected_output": "Identifies that a one-way bridge cannot observe a native cancel or failure, so the button must never be permanently disabled without an explicit native ack/result or a web-side timeout, and pushes duplicate-request suppression into the contract with the app team.",
+      "expectations": [
+        "The response explains that in a one-way (web to native) design the web side cannot observe cancellation or failure of the native purchase sheet, so a disable-on-send with no re-enable signal is the defect.",
+        "It presents the two legitimate contract options — an explicit native ack/result message, or a bounded web-side timeout that re-enables the CTA — rather than treating the timer as a hack.",
+        "It states that duplicate-request handling belongs in the contract (native ignores duplicates while one request is in flight, since the OS payment sheet is modal anyway) instead of being solved by permanently disabling the button.",
+        "It records that native closes the screen on success, so the web side needs no success-path UI it cannot verify.",
+        "The hidden retry link is rejected as a workaround that leaves the real re-enable contract undefined."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Users report the WebView page goes blank after the app has been backgrounded for a while — not on cold start. A teammate wants the app to re-fire `onPageFinished`/`onLoadEnd` and, if the page is still blank, run a `setTimeout` repaint hack in the page.",
+      "expected_output": "Attributes the mid-session blank to renderer process death, assigns recreate/reload to the native side, and gives the web-side rule as keeping the screen reconstructable from params and re-posting READY on every load rather than a repaint hack.",
+      "expectations": [
+        "The blank-after-background symptom is attributed to renderer process death rather than a paint bug: iOS WKWebView's out-of-process WebContent can be killed under memory pressure, and Android fires `onRenderProcessGone` (API 26+).",
+        "It states that on Android the WebView cannot be reused after `onRenderProcessGone` and must be recreated, so the recreate/reload is native-side work, not a page fix.",
+        "It notes that the iOS termination callback (`webViewWebContentProcessDidTerminate`) has been reported not to fire in some cases, so the page must not depend on being told.",
+        "The web-side rule is stated as: keep the screen fully reconstructable from URL params or native-supplied data, assume no in-memory DOM/JS state survived, and re-post the `READY`-type message on every load so native can re-handshake.",
+        "The `setTimeout` repaint hack is rejected, and the response explains that load-finished callbacks are not render signals and fire on failure too, so they cannot detect this state."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The bridge signup page needs a 'Continue with Google' button. Plan says: open Google's OAuth authorize URL in the same WebView, and after the callback the app will hand the access token back to the page as a `?token=` query param.",
+      "expected_output": "Rejects both halves — embedded WebViews are blocked from Google's authorization endpoint with 403: disallowed_useragent, and a query-param token is treated as exposed — and routes login through the system browser via a bridge message or deep link.",
+      "expectations": [
+        "The response states that Google rejects authorization requests from embedded WebViews with `403: disallowed_useragent`, consistent with RFC 8252 guidance for native apps, and that the page has no web-side recovery from that dead end.",
+        "It requires routing login through the system browser — Android Custom Tabs or iOS `ASWebAuthenticationSession` — triggered by a bridge message or deep link, with the app re-entering the page once the session exists.",
+        "The `?token=` handoff is rejected because URLs leak into server logs, history, and referrer headers, so any token that touched a URL is treated as exposed.",
+        "It names the acceptable identity sources in preference order — none (render purely from params), a shared cookie session, or a bridge-injected token after a handshake — and notes the inbound listener cost of the last option.",
+        "Login/signup/returnTo flow design is routed to frontend-auth-flow-contracts, and token storage, CSP, and cookie SameSite questions to frontend-security-baseline."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Patch under review: it gates the app-only UI with `if (/wv|MyApp/i.test(navigator.userAgent))`, and fixes a clipped bottom sheet by swapping `height: 100vh` for `height: 100dvh`, with a comment saying this is safe on every Android WebView from M139 onward.",
+      "expected_output": "Replaces User-Agent sniffing with a host-global presence check, keeps the viewport-unit change but rejects the blanket version guarantee, and requires measured viewport values from the failing host plus app-passed insets for the bottom area.",
+      "expectations": [
+        "The User-Agent gate is rejected in favor of a presence check on the injected host global, and the response gives a concrete reason: WebView UAs are Safari-shaped, apps override them, and a React Native app's custom userAgent has been reported to apply only to the first page request on Android and revert on later in-funnel navigations.",
+        "Moving off `100vh` is endorsed, with `100svh` recommended for a stable full-height layout and `100dvh` reserved for when reflow as chrome shows/hides is actually wanted.",
+        "The 'safe from M139 onward' claim is rejected as a blanket rule: `svh`/`dvh` can still disagree with visible geometry on a failing target, and the response asks for recorded `innerHeight`, `documentElement.clientHeight`, `visualViewport.height`, and the event that changes them on the affected app/WebView pair.",
+        "It notes that a modern emulator that does not reproduce the geometry is a control, not proof that an older supported target is fixed.",
+        "For the clipped bottom area it requires insets from app-passed params as the canonical source, with `env(safe-area-inset-*)` only as progressive enhancement via a `max()` combination, since Android WebView inset support depends on the Chromium milestone and whether the WebView is fullscreen.",
+        "It warns against reusing one variable name for both a global token and the app override, because a `var()` fallback only applies when the property is undefined."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "After the app returns from background, the promo card's title and price text are invisible on some Android devices, but tapping where the card is still opens the detail screen correctly. The current patch adds 24px of extra padding, bumps a container height, and forces a repaint after a 300ms timeout.",
+      "expected_output": "Splits the symptom by axis and concludes that a working hit area with missing child text points at paint or compositing rather than layout height, so the padding/height/timeout patch is treating the wrong axis.",
+      "expectations": [
+        "The response separates the axes explicitly: DOM existence, geometry/layout via `getBoundingClientRect()`, hit testing, paint, and compositing/layering including WebView resume timing.",
+        "It reasons that because the tap target works at the expected location, layout height and padding are the less likely cause and paint/compositing/layering is the stronger suspect.",
+        "It asks for a small confirming probe first — computed styles and box metrics, a temporary solid background color, removing a gradient, or isolating the child layer — before any JS remeasurement, timeout, or extra safe-area padding is added.",
+        "The 24px padding, height bump, and 300ms forced repaint are rejected as workarounds applied to an unverified axis.",
+        "It requires device evidence and keeps any eventual layer-promotion workaround local to the affected component rather than promoting it to a general WebView rule.",
+        "It states the evidence tier needed: an app WebView or actual-engine capture on the affected device, since a desktop browser cannot establish this paint behavior."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Two capability bugs on the same bridge page: tapping `<input type=\"file\">` does nothing on Android (works in Chrome and on iOS), and a `<a target=\"_blank\">` help link silently does nothing on both platforms. Also, the team says legacy WebView support is verified because a Playwright run against `next dev` with the fallback marker forced renders correctly.",
+      "expected_output": "Attributes the file-input dead-tap to missing app-side onShowFileChooser and the dropped new-window navigation to the separate window-creation path, then rejects the dev-server Playwright run as legacy-engine evidence and names the actual-engine tier required.",
+      "expectations": [
+        "The Android file-input dead-tap is attributed to the host's `WebChromeClient.onShowFileChooser` not being implemented, and the response notes the request is silently dropped with no page-observable error, which is why it ships unnoticed.",
+        "The web-side response to that is to confirm support in the contract and gate or hide the upload UI on host capability, or route the upload through a bridge message — not to retry or detect the failure in the page.",
+        "The dropped `target=\"_blank\"` link is explained as the distinct new-window path: iOS cancels it unless the app implements the `WKUIDelegate` window-creation method, and Android requires `setSupportMultipleWindows(true)` plus `WebChromeClient.onCreateWindow`, bypassing the normal navigation interception hook.",
+        "The web-side rule is stated as: bridge pages emit no new-window navigations, using same-window navigation the app intercepts or an `OPEN_EXTERNAL`-type bridge message instead.",
+        "The Playwright-against-dev-server run is rejected as legacy-engine evidence, because a framework dev runtime and untranspiled `node_modules` ship modern syntax that the browserslist target does not downlevel, so a legacy WebView can fail even when the production build is clean.",
+        "It requires actual-engine evidence — an emulator or WebView Shell on the affected WebView version, plus one modern Android control — and says results should be reported by WebView/Chrome version before Android OS or device."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "skill_name": "optimistic-update-rollback-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Creating a comment: onMutate inserts { id: crypto.randomUUID(), ...draft } into the cached list, onSuccess appends the server's returned comment to the same list, and onSettled invalidates the list. Users briefly see the comment twice, and deleting the just-created comment sends DELETE /comments/<uuid> and gets a 404.",
+      "expected_output": "Names two failures of the same reconcile contract — the temp entry is never swapped for the server row, and a write-through plus an invalidation both run un-guarded — replaces the append with an id swap or drops to invalidate-only, and routes which key the invalidation must target to frontend-data-fetching-cache-contracts.",
+      "expectations": [
+        "The duplicate is identified as the temp-id entry never being replaced: onSuccess appends the server row beside it instead of swapping it in place.",
+        "The 404 delete is identified as the temp client id surviving into a later request, so the follow-up mutation addresses a record the server never had.",
+        "The fix replaces the temp entry with the server object by id, or removes the write-through and relies on the invalidation on settle, but does not leave both paths running un-guarded.",
+        "Whether the invalidated key or tag is the one the list actually subscribes to is routed to frontend-data-fetching-cache-contracts.",
+        "The verification applies the temp entry, resolves the server response, and asserts a single row under the real id with no duplicate after the refetch."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A shared board shows a card title reverting to an older value a few seconds after a teammate edits it. The report blames the optimistic rename: \"rollback is firing even though the mutation succeeded, so add a snapshot guard in onError.\" The board also applies WebSocket deltas into the same cache, and the reverts happen on cards the local user never edited.",
+      "expected_output": "Rejects the rollback diagnosis because no local mutation ran for those cards, identifies a replayed or reordered delta applied with no sequence check, and routes the fix to realtime-transport-contracts.",
+      "expectations": [
+        "The response points out that an onError rollback cannot run for a card the local user never mutated, so the optimistic lifecycle is not the source of the revert.",
+        "It attributes the revert to a delta applied without a monotonic sequence or version check, so a replayed or out-of-order message overwrites newer state.",
+        "Dropping deltas at or below the last applied sequence, buffering ahead-of-order ones, and resnapshotting on an unfillable gap are routed to realtime-transport-contracts.",
+        "The discriminating evidence is stated: whether the revert coincides with a local mutation settling, or with an inbound message whose sequence is not greater than the last applied one."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A \"Send invite\" button optimistically adds the invitee row. Some users end up with two invite rows for the same address, and both survive a refresh — the server really created two. The proposed fix is to add a snapshot in onMutate and roll back in onError.",
+      "expected_output": "Rejects rollback as the fix because both writes succeeded, identifies an unguarded double submit as the blocking condition, routes submit gating to js-form-validation-contracts, and states what remains in optimistic-reconcile scope.",
+      "expectations": [
+        "The response states that snapshot-and-rollback only addresses failed mutations, and that two invites surviving a refresh means two successful server writes.",
+        "It identifies the cause as the submit path firing twice — no in-flight gating on the control — producing two independent mutations rather than one mis-reconciled optimistic write.",
+        "Submit gating and double-submit prevention are routed to js-form-validation-contracts, with server-side idempotency named as the durable guard.",
+        "The response states the part that stays here: the optimistic entry must still reconcile to exactly the rows the server confirms, so the extra row cannot be papered over with cache surgery."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A form backed by a server action uses useOptimistic to append a message. The message appears, then disappears when the action resolves; the server returns 200 and the row is in the database. The team wants to pin the optimistic value so it stays visible after the action completes.",
+      "expected_output": "Explains that useOptimistic intentionally drops its value when the transition ends and the real state must already hold the persisted value by then, fixes the missing revalidation of the underlying state, refuses to pin the optimistic value, and routes announcing the change to a11y-contract-testing.",
+      "expectations": [
+        "The response explains that the optimistic value only lives for the duration of the pending action or transition and is discarded once it settles, falling back to the state passed to useOptimistic.",
+        "The fix makes the action's completion update the real source of truth — revalidating or refetching the list the optimistic reducer builds from — instead of holding the optimistic value longer.",
+        "The response refuses to pin or persist the optimistic value as a workaround, since that would keep unconfirmed state on screen and hide a failed write.",
+        "The optimistic reducer is required to compute from the current base state, because it re-runs while the transition is in flight.",
+        "Announcing the message's appearance or removal to assistive technology is routed to a11y-contract-testing."
+      ]
+    }
+  ]
+}

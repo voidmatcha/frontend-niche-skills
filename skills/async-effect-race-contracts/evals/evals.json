@@ -1,0 +1,52 @@
+{
+  "skill_name": "async-effect-race-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A search page runs useEffect(() => { fetch(`/api/search?q=${query}`).then(r => r.json()).then(setResults) }, [query]). Typing \"react\" quickly leaves the list showing hits for \"rea\" after the response for \"react\" already rendered. The effect returns nothing and no signal is passed to fetch. Give the smallest safe fix.",
+      "expected_output": "Names the missing take-latest guard as the broken contract, adds a per-run ignore flag flipped in cleanup or an AbortController aborted in cleanup (swallowing AbortError while still surfacing real errors), and routes moving the read onto a data library to frontend-data-fetching-cache-contracts.",
+      "expectations": [
+        "The response attributes the wrong list to a slower earlier response resolving after the newer one, not to a rendering or state-batching problem.",
+        "The fix is a per-run ignore flag flipped in the effect cleanup and checked before setState, or an AbortController whose signal is passed to fetch and which is aborted in cleanup.",
+        "If AbortController is used, the response says the resulting AbortError must be swallowed rather than surfaced as a real request failure.",
+        "It distinguishes the two options: the ignore flag only discards a result, while abort actually cancels the in-flight request.",
+        "Replacing the hand-written effect with a query keyed by the search term, and its dedupe/cancellation behavior, is routed to frontend-data-fetching-cache-contracts rather than solved here.",
+        "The verification fires two dependency changes and resolves the first response last, asserting the newer result wins."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A todo list still shows a deleted row after the delete request succeeds. The reporter says the component's useEffect is missing a take-latest guard and asks you to add an AbortController. The list is rendered from useQuery({ queryKey: ['todos', filter] }) and there is no fetch call in any effect in that file.",
+      "expected_output": "Rejects the effect-race diagnosis because no hand-written fetch-in-effect owns this read, states the evidence that would change the verdict, and routes the stale list to frontend-data-fetching-cache-contracts as an invalidation key/tag mismatch.",
+      "expectations": [
+        "The response declines to add an AbortController because the read is owned by useQuery, whose cancellation and dedupe are that layer's contract rather than a hand-rolled effect guard.",
+        "It states that an out-of-order-response race requires two overlapping in-flight requests for the same read, with the older one resolving last and overwriting newer state.",
+        "The stale-after-delete symptom is routed to frontend-data-fetching-cache-contracts, because the deciding evidence is which key or tag the delete invalidated versus the key the list subscribes to.",
+        "The response says that showing a raw fetch-in-effect on this path would move ownership back to the effect-race contract."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A live activity feed subscribes in useEffect and unsubscribes in the cleanup using the same handler reference, with deps [roomId]. After a laptop sleeps and the socket drops, the feed permanently misses every event that happened while it was down; events created after the reconnect do render. A teammate proposes fixing the effect: add an AbortController, widen the dependency array, and re-run the effect on window focus.",
+      "expected_output": "Confirms the effect's setup/cleanup contract is already satisfied and that re-running it cannot recover missed events, identifies reconnect-without-resume as the blocking condition, and routes the fix to realtime-transport-contracts.",
+      "expectations": [
+        "The response confirms the effect already mirrors setup with cleanup and that a missing take-latest guard or abort is not the cause, since post-reconnect events still arrive.",
+        "It explains that re-subscribing on a new connection replays nothing by itself: events missed during the drop are recoverable only if the client resumes from a last-applied cursor or an SSE Last-Event-ID that the server honors.",
+        "Reconnect, resume, and gap detection on the transport are routed to realtime-transport-contracts rather than fixed by effect dependency changes.",
+        "The response warns that re-running the effect on focus only tears down and rebuilds the subscription, and could duplicate events if a resume path were added without a dedupe rule."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "In development, navigating to /checkout/confirm creates two orders. The POST lives in useEffect(() => { createOrder(cart) }, []). An engineer wants to add a useRef guard (if (didRun.current) return) so the second StrictMode invocation is skipped.",
+      "expected_output": "Identifies non-idempotent setup exposed by StrictMode's dev double-invoke, rejects the useRef run-once guard as masking, and moves the order creation into the user's event handler or makes the request idempotent server-side.",
+      "expectations": [
+        "The response explains that StrictMode's extra dev setup-and-cleanup cycle exposed the defect rather than caused it, and that a non-idempotent POST in an effect can fire again on any remount or effect re-run.",
+        "It rejects the useRef run-once guard because it hides the missing idempotency instead of establishing it.",
+        "The smallest fix moves the order creation into the event handler for the user action that should cause it, since the request is not synchronizing the component with an external system.",
+        "If the request must stay in the effect, the response requires server-side idempotency such as an idempotency key rather than a client-side flag.",
+        "The response does not treat a dev-only double-invoke of a plain GET, with no duplicated side effect, as a finding on its own."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "skill_name": "realtime-transport-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "WebSocket client: ws.onclose = () => setTimeout(connect, 1000), and the attempt counter is reset to 0 inside ws.onopen. After a server restart, ops sees a synchronized reconnect spike every second. Separately, a user whose session was revoked loops forever against a close with code 1008.",
+      "expected_output": "Names three broken parts of the reconnect contract — fixed un-jittered interval, counter reset on open instead of after a stability window, and retrying a policy close — gives a capped jittered backoff plus a close-code allowlist, and routes obtaining a fresh token to frontend-auth-flow-contracts.",
+      "expectations": [
+        "The fixed one-second retry is identified as a thundering-herd source and replaced with capped exponential backoff carrying jitter, for example sleep = random(0, min(cap, base * 2 ** attempt)).",
+        "Resetting the attempt counter in onopen is called out, because a flapping server briefly opens and resets backoff; the counter must reset only after the connection stays up past a stability window.",
+        "Close-code handling is made explicit: retry transient closes such as 1006, 1011, 1012 and 1013, and stop on auth/policy closes (1008 and application 4xxx) and protocol errors.",
+        "Acquiring or rotating the token itself is routed to frontend-auth-flow-contracts; this skill keeps only the reauth-required signal and how a new token re-enters the socket.",
+        "The verification asserts that delays grow, cap, and vary between attempts, and that a 1008 close schedules no retry."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A metrics tile stops updating for some users. The report says the socket is a 1006 zombie and asks for an application-level heartbeat. The client is socket.io-client with default options; instrumentation shows inbound events still arriving with fresh timestamps while the tile renders an old value. The tile reads from a TanStack Query cache that the socket handler never writes to.",
+      "expected_output": "Rejects the zombie diagnosis because messages are still arriving, notes Socket.IO already owns reconnection and heartbeat by default, and routes the stale tile to frontend-data-fetching-cache-contracts as a delta path that never reaches the cache entry being rendered.",
+      "expectations": [
+        "The response rejects the 1006 zombie hypothesis on the evidence that inbound events keep arriving with fresh timestamps, which proves the transport is alive.",
+        "It notes that socket.io-client already provides reconnection with randomized backoff and its own heartbeat, so a hand-rolled ping is redundant unless its configuration is shown to disable them.",
+        "The stale rendered value is routed to frontend-data-fetching-cache-contracts, because the deltas never write to or invalidate the cache entry the tile subscribes to.",
+        "The response states what evidence would revive the transport diagnosis: a gap in inbound message timestamps, or readyState reading OPEN with no messages and no close event."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A trading feed dies after roughly one hour. The team added a heartbeat with a five-second pong timeout; it now correctly detects the dead socket and reconnects, but every reconnect closes immediately with application code 4401 and the feed stays down until the user reloads the page.",
+      "expected_output": "Confirms the heartbeat works and is not the blocker, identifies the expired handshake credential as the blocking condition, routes refresh/rotation to frontend-auth-flow-contracts, and keeps pre-expiry in-band refresh, an explicit reauth signal, and not retrying 4xxx as this skill's part.",
+      "expectations": [
+        "The response confirms liveness detection is working — the heartbeat closed and reconnected — so the remaining failure is authentication at the handshake, not a dead socket.",
+        "It identifies the roughly one-hour lifetime as a token that authenticated only at connect time and expired while the socket stayed open, so each reconnect presents a dead credential.",
+        "Obtaining a fresh token, rotation, and the behavior when refresh itself fails are routed to frontend-auth-flow-contracts.",
+        "This skill's remaining work is stated: refresh before expiry in-band or reconnect with a new token, define an explicit reauth-required signal, and stop retrying the 4401 close instead of looping.",
+        "The verification advances to just before expiry and asserts the stream survives without processing any message on an expired token."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "An order book applies every inbound message with book.set(msg.id, msg) and renders the Map. After a brief disconnect, users see prices older than the exchange's, and one row stays wrong until reload. The server sends a monotonically increasing seq on every message and replays the last 500 messages on resume.",
+      "expected_output": "Names the missing sequence discipline in the apply path, makes apply idempotent with a drop rule, adds a bounded reorder buffer and resnapshot on an unfillable gap, and routes the server-rendered initial book versus first client render to ssr-hydration-mismatch.",
+      "expectations": [
+        "The response identifies last-writer-wins Map assignment with no sequence check as the defect: replayed messages after resume apply older state over newer state.",
+        "The apply path is made idempotent by dropping messages whose seq is not greater than the last applied seq for that stream or key.",
+        "Messages arriving ahead of the expected sequence are held in a bounded reorder buffer, and a gap that cannot be filled triggers a fresh snapshot rather than interpolation or a silent skip.",
+        "The initial snapshot and the stream are reconciled on one version axis, applying only deltas newer than the snapshot version.",
+        "Divergence between a server-rendered first paint and the first client render is routed to ssr-hydration-mismatch.",
+        "The verification feeds duplicated, reordered, and gapped sequences and asserts the client converges to the same state."
+      ]
+    }
+  ]
+}

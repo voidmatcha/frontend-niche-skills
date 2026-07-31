@@ -1,0 +1,40 @@
+{
+  "skill_name": "core-web-vitals-performance-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Field CrUX data for our marketing route shows LCP at p75 of 4.1s on mobile. The team already added <link rel=\"preload\" as=\"image\" href=\"/hero-photo.avif\"> and fetchpriority=\"high\" to the <img> inside the hero, and LCP did not move. A DevTools trace on the same route marks the LCP element as the <section class=\"hero\"> whose background-image is set in a stylesheet rule. Tell us the smallest fix and who owns the srcset work.",
+      "expected_output": "Names the CSS background-image section as the true LCP element rather than the preloaded <img>, explains that a late-discovered background-image needs its own preload plus fetchpriority (preloads default to low priority) or promotion into HTML markup, notes the misaimed preload can compete with the real LCP resource, and routes srcset/sizes/descriptor mechanics for whatever image ends up serving the hero to responsive-image-contracts.",
+      "expectations": [
+        "The response identifies the CSS background-image on the hero section as the LCP element from the trace, and states that the preload and fetchpriority were aimed at a different element.",
+        "It explains that a CSS background-image is discovered late because the preload scanner cannot see it, and that a preloaded image still needs fetchpriority=\"high\" because preload alone does not raise priority.",
+        "It flags that the misaimed preload spends bandwidth on a non-LCP resource and can delay the real one, so the wrong preload should be removed or retargeted rather than kept alongside the new one.",
+        "srcset, sizes, and intrinsic-width descriptor correctness for the hero image are routed to responsive-image-contracts rather than resolved here.",
+        "The fix is narrow (retarget discovery and priority to the actual LCP resource) and verification is a re-run trace confirming the LCP marker and its request timing moved."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our CI Lighthouse run on a preview build dropped from 94 to 78 after the last release. That proves INP regressed for users. Please wrap every click handler in the app in scheduler.yield() and open the PR.",
+      "expected_output": "Refuses to treat a Lighthouse lab score as evidence of an INP regression, explains that a default lab run performs no real interactions so INP is not measured there (Total Blocking Time is the lab proxy), asks for field or CrUX INP data plus a Long Animation Frames attribution before prescribing anything, rejects the blanket handler rewrite as unattributed micro-tuning, and routes the missing field-capture wiring to client-error-observability-contracts.",
+      "expectations": [
+        "The response rejects the claim that a Lighthouse score change is proof of a user-visible INP regression.",
+        "It states that a standard Lighthouse lab run does not drive real user interactions, so it does not produce a measured INP; Total Blocking Time or long-task data is the lab proxy that can be compared instead.",
+        "It names the evidence that would change the verdict: field or CrUX INP at p75, or a Long Animation Frames attribution (blockingDuration) tying a specific script or handler to a slow interaction.",
+        "It rejects wrapping every handler in scheduler.yield() as unattributed micro-tuning, and notes that any yielding helper needs feature detection with a fallback because the Scheduler API is not available in every target browser.",
+        "Wiring web-vitals or RUM field capture so the regression can be measured at all is routed to client-error-observability-contracts."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "CLS on our product page is 0.24 at p75. The trace attributes almost all of it to one shift: the promo banner region at the top of the page. We added aspect-ratio and explicit width/height to every element in that region and shipped it, but the shift is unchanged. The banner is server-rendered, and the console shows a React recoverable hydration error naming that subtree.",
+      "expected_output": "Explains that reserving the box cannot fix this shift because the subtree is being discarded and re-rendered on the client after a hydration mismatch, so the second render replaces the banner with a differently-sized tree; treats the hydration mismatch as the blocking condition owned by ssr-hydration-mismatch, and says the reserved-box work should be re-verified only after the server and client first render agree.",
+      "expectations": [
+        "The response explains that the shift persists because the hydration mismatch makes React discard the server tree for that subtree and re-render it on the client, producing a post-hydration layout change that a reserved box on the server markup does not prevent.",
+        "It treats the recoverable hydration error as the primary evidence and names the exact first-render divergence as the thing to find, rather than adding more CLS-side patches.",
+        "The mismatch itself is routed to ssr-hydration-mismatch as the owner of the blocking condition.",
+        "It states that the aspect-ratio and width/height work is still correct but unverifiable until hydration is deterministic, and that CLS should be re-measured after the mismatch is fixed."
+      ]
+    }
+  ]
+}

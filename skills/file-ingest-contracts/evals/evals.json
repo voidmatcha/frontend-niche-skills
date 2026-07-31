@@ -1,0 +1,41 @@
+{
+  "skill_name": "file-ingest-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A React attachment drop zone renders `<div onDragOver={() => setHot(true)} onDragLeave={() => setHot(false)} onDrop={handleDrop}>`. `handleDrop` calls `e.preventDefault()` first thing. Support tickets say that when a user drags a PDF onto the composer, the tab navigates to the PDF and the half-written message is lost. Some users also report the highlight strobing while they move the pointer over the file-list children inside the zone. One dropped file is named `report_\\u202bTEST\\u202c.pdf` and renders with its extension in the wrong place in the file list.",
+      "expected_output": "Names the missing `preventDefault()` in the `dragover` handler as why `drop` never fires and the browser navigates, adds a window-level `dragover`+`drop` guard for near-miss drops, and fixes the strobe with an integer dragenter/dragleave counter toggled on `dragenter` rather than `dragover`. Routes the bidi filename rendering to i18n-copy-and-layout.",
+      "expectations": [
+        "The response identifies that `dragover` must be canceled for the element to be a drop target, so the existing `preventDefault()` inside `handleDrop` is too late and the browser handles the file itself.",
+        "It adds a window-level `dragover` and `drop` guard so a near-miss drop outside the zone does not navigate away and discard page state.",
+        "The strobe fix is an integer counter incremented on `dragenter` and decremented on `dragleave`, highlighting at 1 and clearing at 0, rather than toggling on `dragover`.",
+        "It notes the `drop` handler must also cancel the default so the browser does not open the file.",
+        "The bidi control characters in the displayed filename are routed to i18n-copy-and-layout."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A security review says: 'The uploader is vulnerable. It sets `accept=\"image/png,image/jpeg\"` and then does `if (!file.type.startsWith('image/')) return reject()`. An attacker can rename a webshell to .png and bypass this, so this is a client-side security hole we must fix in the browser with magic-byte sniffing.' The client only sends the file to POST /api/upload and never renders it. The Next.js route handler at app/api/upload/route.ts streams the body straight to object storage with no type or size checks.",
+      "expected_output": "Rejects the framing that client-side `accept`/`file.type` trust is itself the vulnerability: those are UX hints, and no amount of browser-side sniffing is a security control because the client is not the trust boundary. Keeps magic-byte sniffing as an optional UX pre-filter, and routes the real defect, the unvalidated frontend-owned upload route, to bff-proxy-security-contracts. States what would make it a client finding.",
+      "expectations": [
+        "The response refuses to accept client-side type trust as the security vulnerability, stating the server is the trust boundary.",
+        "It notes that `accept` only filters the OS picker and does not validate, and that drag-drop and paste bypass it entirely, while `file.type` is extension-derived, spoofable, and often an empty string.",
+        "Magic-byte sniffing in the browser is characterized as a UX or robustness pre-filter, not a security control, and header-only sniffing is noted as defeatable by polyglots.",
+        "The missing type, size, and content validation on the frontend-owned upload route is routed to bff-proxy-security-contracts as the actual defect.",
+        "It states what would make this a client-side finding, such as client code rendering the file as active content or downstream code treating the client-declared type as trusted."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "An avatar picker leaks memory over long sessions: `const url = URL.createObjectURL(file)` runs on every render and nothing revokes. You move it into a `useEffect` keyed on the file and revoke in the cleanup, and heap snapshots confirm the leak is gone. The same PR also swaps the preview from `<img src={url} />` to fetching the blob text and injecting it with `dangerouslySetInnerHTML` so uploaded SVG avatars inherit the theme's `currentColor`. The avatars are user-uploaded and come from arbitrary accounts.",
+      "expected_output": "Confirms the object-URL lifecycle fix is correct, including not revoking inside the `img` `onload` handler. Then blocks the inline-SVG swap: injecting untrusted SVG markup into the document makes it active content that can execute script, unlike the same SVG loaded through `<img>`. Routes that condition to frontend-security-baseline and notes the theming goal needs a sanitizer or a different approach before it can ship.",
+      "expectations": [
+        "The response affirms the `useEffect` cleanup revoke as the right object-URL lifecycle fix and warns against revoking inside the `img` `onload` handler, which breaks right-click and open-in-new-tab.",
+        "It identifies that inlining untrusted SVG into the document is a different risk class from rendering the same file through `<img>`, because the inlined markup becomes active content in the page.",
+        "The active-content decision is routed to frontend-security-baseline rather than resolved inside the ingest contract.",
+        "It does not present the memory fix as making the inline-SVG swap safe to ship.",
+        "It offers the smallest path forward for the theming goal, such as sanitizing the markup or keeping `<img>`, without owning that call."
+      ]
+    }
+  ]
+}

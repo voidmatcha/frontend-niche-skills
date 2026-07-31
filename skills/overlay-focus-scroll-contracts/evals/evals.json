@@ -1,0 +1,44 @@
+{
+  "skill_name": "overlay-focus-scroll-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A filter drawer runs `document.body.style.overflow = 'hidden'` on open and `document.body.style.overflow = ''` on close. From inside the drawer users can open a \"Discard changes?\" confirm dialog. QA reports that closing the confirm dialog unlocks page scroll while the drawer is still open, and that the page loses a pre-existing `body { overflow: clip }` from the app shell after the first open/close. Give the smallest safe fix.",
+      "expected_output": "Diagnoses a non-ref-counted scroll lock that also clobbers the previous body style, proposes a shared ref-counted lock that saves and restores prior overflow and padding values, defines the nested close order, and routes the trigger/content element choice to semantic-markup-contracts and the assertions to a11y-contract-testing.",
+      "expectations": [
+        "The response identifies two distinct defects: the lock is not ref-counted across nested overlays, and resetting to an empty string discards the app shell's prior body overflow value instead of restoring it.",
+        "The fix stores the previous overflow and padding values on the first lock and restores them only when the last overlay releases, rather than each overlay writing and clearing body style directly.",
+        "It states the expected nested close order: closing the child must leave the parent drawer's lock and focus containment intact, and must not return focus behind the parent.",
+        "Scrollbar-width compensation on the body is considered so the page does not shift horizontally when the lock engages.",
+        "Verification is a narrow runtime test that starts from a non-default body overflow, opens drawer then confirm, closes the child, and asserts the lock survives and the original value returns only after the last close.",
+        "Whether the drawer trigger and content use native button, dialog, or heading structure is routed to semantic-markup-contracts."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "An audit ticket says: \"Our Radix Popover-based column-settings menu is an accessibility bug. Tab moves out of the menu into the page behind it and the background still scrolls, so it needs a focus trap and a body scroll lock like our modal. Also every `aria-hidden=\"true\"` decorative icon inside it is a hidden-focus violation.\" Product says users are expected to keep adjusting the table while the menu is open.",
+      "expected_output": "Rejects both claims: a non-modal popover should not be forced into modal semantics when the product contract requires background interaction, and decorative aria-hidden icons are not overlay focus defects. States the evidence that would flip each verdict and routes the icon naming question elsewhere.",
+      "expectations": [
+        "The response refuses to add a focus trap or scroll lock, because the stated product contract requires the background to stay interactive, which makes the overlay non-modal by design.",
+        "It distinguishes what a non-modal popover still owns: Escape dismissal, light dismiss on outside interaction, and focus returning to the trigger on close.",
+        "It states that aria-hidden on a decorative icon that contains no focusable content is not a defect, and that the real hidden-focus defect is aria-hidden applied to an ancestor while focus remains inside it.",
+        "It names the evidence that would change the verdict, such as a product requirement that background interaction must stop, or a reproduction showing focus retained inside an aria-hidden subtree or a browser console warning about blocked aria-hidden.",
+        "Before proposing custom trap code it requires inspecting the library's existing configuration, since Radix already manages part of the dismissal and focus-return contract.",
+        "Assertions about the icons' accessible name or the menu's role and state are routed to a11y-contract-testing."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our modal restores focus and releases the scroll lock inside `onTransitionEnd` on the dialog element. When a user presses Escape while the open transition is still running, the modal disappears but the page stays scroll-locked and Tab still cycles inside the removed dialog. We already tried moving the `returnFocus()` call earlier in the close handler and adding `initialFocus`; neither helped. What now?",
+      "expected_output": "Explains that the focus-restore and unlock code is not reached at all because the interrupted transition never fires transitionend, so no ordering change inside the overlay lifecycle can fix it, and routes the completion-event gate to css-transition-animation-contracts while keeping the overlay contract here.",
+      "expectations": [
+        "The response identifies the blocking condition as the completion event: a cancelled or interrupted transition does not fire transitionend, so the cleanup callback never runs.",
+        "It states that transitioncancel is the event fired on the cancel path and that some removal or interrupt paths may emit no usable transition event at all.",
+        "It explains why the attempted fixes cannot work: reordering returnFocus or setting initialFocus changes behavior inside a callback that is never invoked.",
+        "Redesigning the completion gate, for example awaiting getAnimations().finished with cleanup on both settle paths plus a duration-based timeout fallback, is routed to css-transition-animation-contracts.",
+        "The overlay-owned part is kept here: the trap and lock lifecycle must be bound to overlay open/closed state so a missing animation event cannot wedge it, with the visual exit treated as cosmetic.",
+        "Verification includes the interrupt path specifically, pressing Escape mid-transition and reopening mid-exit, then asserting body overflow is restored and focus is back on the trigger."
+      ]
+    }
+  ]
+}

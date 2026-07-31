@@ -1,0 +1,61 @@
+{
+  "skill_name": "component-extraction-judgment",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A reviewer says ProductCard and UserProfileCard are 95% identical markup and asks to merge them into one Card with a `kind` prop. ProductCard renders a link to a product route with a price and an add-to-cart button; UserProfileCard renders a button that opens a profile dialog and shows an online status badge. Decide the refactor.",
+      "expected_output": "Classifies this as false-friend rather than prop-parameterizable, keeps the two components separate, and names the contract dimensions (semantic role, interaction/state model, accessible role/name/state, domain ownership) that differ despite matching visual structure.",
+      "expectations": [
+        "The response classifies the pair as `false-friend` and declines the merge instead of treating visual similarity as extraction evidence.",
+        "It names concrete diverging contracts: link-vs-button interaction, product route vs dialog open state, and the status badge as a variant axis the other card has no equivalent for.",
+        "It does not treat the shared card shell as unusable — repeated visual treatment is offered as a `style-token` or slot-composition option that leaves both components' semantics intact.",
+        "Accessible role, name, and state comparison for the two triggers is routed to a11y-contract-testing rather than asserted from markup similarity alone."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here are two screenshots of banners from our app that look the same, plus the class names `promo-banner` and `alert-banner`. Extract a shared Banner component and delete the duplicate.",
+      "expected_output": "Grades the evidence as T3 smell only, refuses to edit yet, and lists the exact missing evidence needed to reach T1: two concrete source locations plus matching semantics, state model, accessibility contract, and variant axis.",
+      "expectations": [
+        "The response assigns tier T3 (smell only) because source locations and contracts are unconfirmed, and states that no refactor is implemented at T3.",
+        "It requests the specific missing evidence: file paths for both banners, their props/slots, copy and i18n key ownership, loading/error/empty states, and the responsive/theme variants each supports.",
+        "It refuses to infer a shared contract from screenshots and class names, and does not propose a component API before the source is read.",
+        "If the banners turn out to differ only in live-region or dismissal behavior, the response says that would move the pair toward `false-friend` rather than extraction."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our Button has `isPrimary`, `isDanger`, `isGhost`, and `isSmall` boolean props, and a teammate cites a rule that three or more booleans always means the component must be split. Propose the API change.",
+      "expected_output": "Collapses the mutually exclusive appearance flags into one discriminated `variant` prop while keeping the orthogonal size axis separate, and corrects the cited rule as a rough smell rather than a hard threshold.",
+      "expectations": [
+        "The response corrects the claim that three booleans is a hard rule and frames the count as a rough smell, with mutual exclusivity being the property that actually matters.",
+        "`isPrimary`/`isDanger`/`isGhost` are collapsed into a single discriminated `variant` union because they are mutually exclusive appearance states.",
+        "`isSmall` is kept as a separate axis (for example a `size` prop) rather than folded into the same union, since size composes with every appearance.",
+        "The response requires locking behavior first with component tests or type tests over the union before the prop rename lands, and does not propose splitting Button into separate components."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A dashboard has a chart panel and a table panel that render completely different UI but contain near-identical polling, retry, and cache-key code. A proposed patch merges them into one `DataPanel` that takes a `renderMode` prop and a `className` escape hatch.",
+      "expected_output": "Classifies the duplication as logic-reuse, extracts the shared behavior into a hook/composable that imports no presentation, and rejects the merged DataPanel with its renderMode plus className escape hatch.",
+      "expectations": [
+        "The duplication is classified as `logic-reuse`, so the polling/retry/cache-key logic moves into a narrow hook, composable, or controller that renders nothing.",
+        "The chart and table components stay separate because their rendered structure and state models differ; duplicated behavior is stated not to require merging visual components.",
+        "The proposed `renderMode` prop plus `className` escape hatch is rejected as a red flag: an abstraction whose first API already needs caller-specific escape hatches.",
+        "The response warns against pulling copy/i18n keys, analytics events, or auth checks into the shared behavior module and keeps those at the call sites."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "We have real T1 evidence that two checkout summary rows are duplicates and want to extract a shared SummaryRow. The rows sit inside a fixed bottom bar, the labels come from translation keys, and one variant renders a discount ribbon. Plan the change.",
+      "expected_output": "Accepts the extraction as a T1 candidate, keeps old exported names as thin wrappers, and routes measured spacing/ribbon fidelity to design-to-code-fidelity and translated-label overflow to i18n-copy-and-layout instead of judging them here.",
+      "expectations": [
+        "The extraction is accepted as a T1 candidate scoped to one cluster with a rollback-friendly diff, not a repo-wide move or rename.",
+        "Existing exported names or routes are preserved as thin wrappers over the new primitive so callers and their tests do not all move at once.",
+        "Any measured change to spacing, fixed-bar geometry, radius, or ribbon clipping is routed to design-to-code-fidelity for before/after capture rather than judged by reading the diff.",
+        "Translated label expansion and RTL/logical-property behavior for the row labels is routed to i18n-copy-and-layout.",
+        "The plan names the regression it adds at the new boundary — component test over props/states plus an accessible-name assertion — before removing caller-level tests or stories."
+      ]
+    }
+  ]
+}

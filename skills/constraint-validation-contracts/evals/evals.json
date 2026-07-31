@@ -1,0 +1,40 @@
+{
+  "skill_name": "constraint-validation-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A plain HTML signup form has a password field with a blur handler: `pw.addEventListener('blur', () => { if (!isStrong(pw.value)) pw.setCustomValidity('Password must include a number'); })`. There is no `input` listener anywhere in the file. The submit button is enabled from `form.checkValidity()` on every keystroke. QA reports that once a user trips the weak-password path, the button never re-enables even after typing a strong password, and no error text is visible next to the field. The team also wants the message translated for the ko and ja locales.",
+      "expected_output": "Names the clearing contract as the owner, cites `validity.customError` staying true and `validationMessage` still holding the custom string after the value is corrected, gives the smallest fix as calling `setCustomValidity('')` on the `input` event before re-running `checkValidity()`, proposes an invalid-to-valid sequence test, and routes the translation request to i18n-copy-and-layout.",
+      "expectations": [
+        "The response identifies the missing `setCustomValidity('')` clear as the defect, not the blur timing or the button wiring.",
+        "It cites `validity.customError` remaining true (and `validationMessage` remaining non-empty) as the evidence that distinguishes this from a native constraint failure.",
+        "The fix is scoped to clearing custom validity on the next `input` event and re-checking, not to rewriting the validation flow or adding a form library.",
+        "It proposes a sequence test: set invalid, edit to a valid value, assert `validationMessage` is empty and submit succeeds.",
+        "Localization of the message wording for ko and ja is routed to i18n-copy-and-layout rather than handled here."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A reviewer files this against constraint validation: 'Required fields render red on first paint. Classic `:invalid` timing bug, switch every `:invalid` rule to `:user-invalid`.' The form is `<form noValidate>` driven by react-hook-form with `mode: 'all'` and a `useEffect(() => { trigger(); }, [])`. The red border comes from `className={errors.email ? 'field field--error' : 'field'}`. Grepping the stylesheets finds no `:invalid` or `:user-invalid` rule at all.",
+      "expected_output": "Rejects the routing: with `noValidate` set and no `:invalid` selector in the stylesheet, the native pseudo-class timing is not what paints the field, so this skill does not own the finding. States that an unscoped `:invalid` rule, or a form where no library owns validity, would put it back here, and routes the eager `mode`/`trigger()`-on-mount behavior to js-form-validation-contracts.",
+      "expectations": [
+        "The response refuses to accept `:invalid` timing as the cause when no `:invalid` selector exists in the stylesheet.",
+        "It notes that `noValidate` suppresses the native validation UI and submit blocking while leaving the API and `ValidityState` usable, so native styling is not the paint source here.",
+        "It states the evidence that would move the finding back into this skill: an `:invalid` rule not scoped behind an interaction or submitted state, or a form with no library owning validity.",
+        "The mount-time `trigger()` and eager `mode: 'all'` behavior is routed to js-form-validation-contracts."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A plain HTML checkout form paints required fields red on load. You change `input:invalid` to `input:user-invalid`, and you also gate `aria-invalid=\"true\"` so it is set only after a failed submit, with `aria-errormessage` pointing at the error `<span id=\"email-err\">`. The paint bug is fixed and sighted users are happy, but a screen reader user reports that submitting an empty form still announces nothing. The error `<span>` lives inside `<div class=\"form-decor\" aria-hidden=\"true\">`, a wrapper the design system adds for the field's decorative frame.",
+      "expected_output": "Confirms the validity-timing fix is correct and complete for this skill's contracts, then explains that the announcement is still blocked because an `aria-errormessage` target inside an `aria-hidden=\"true\"` subtree is not exposed to assistive tech. Routes that exposure/announcement condition to a11y-contract-testing rather than reaching for more constraint-validation changes.",
+      "expectations": [
+        "The response affirms that the `:user-invalid` switch and the gated `aria-invalid` are the right fix for the timing contract this skill owns.",
+        "It identifies the `aria-hidden=\"true\"` wrapper as the blocking condition that keeps the referenced error text from reaching assistive tech.",
+        "It does not propose further constraint-validation API changes (such as `reportValidity()` or `setCustomValidity`) as a workaround for the missing announcement.",
+        "Whether the referenced error node is exposed and announced is routed to a11y-contract-testing.",
+        "It keeps the `aria-invalid` clearing rule intact, noting `aria-errormessage` is only conveyed while `aria-invalid=\"true\"`."
+      ]
+    }
+  ]
+}

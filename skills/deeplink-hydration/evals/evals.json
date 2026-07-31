@@ -1,0 +1,44 @@
+{
+  "skill_name": "deeplink-hydration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Next.js Pages Router. `/invite` is a statically optimized page. Push notifications open `/invite?code=ABC123` and users land on the home feed instead of the invite screen. It never reproduces when we click through the app in dev. The page has:\n\n```js\nconst router = useRouter();\nuseEffect(() => {\n  if (!router.query.code) router.replace('/');\n}, []);\n```\n\nGive the smallest safe fix and how you would keep it fixed.",
+      "expected_output": "Explains that a statically optimized page renders first with an empty router.query, so the guard runs before the code param exists, fixes it by gating on router.isReady and adding the right dependencies, adds a cold direct-navigation e2e test, and routes the post-redirect scroll position complaint to history-scroll-restoration-contracts.",
+      "expectations": [
+        "The response states that under Automatic Static Optimization the page prerenders with an empty router.query and the params only arrive after hydration triggers an update.",
+        "It explains why in-app navigation never reproduces the bug: the router already has its state, so only the cold direct-navigation path hits the empty-query window.",
+        "The fix gates the guard on router.isReady and puts router.isReady and the param in the effect dependency array, instead of removing the guard or adding an arbitrary delay.",
+        "It notes router.isReady is client-only and must be read inside an effect rather than during server rendering.",
+        "It requires a direct-navigation e2e test that opens the full URL cold in a fresh context and asserts the reconstructed screen, and that the assertion waits for the final URL rather than the first response, since a client redirect can race it.",
+        "Param parsing is normalized in one place per page, handling the string, string array, and undefined shapes with explicit fallbacks.",
+        "The complaint that the page restores to the wrong scroll offset after the replace is routed to history-scroll-restoration-contracts."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Ticket: \"Shared links to `/reports/[id]?range=30d` are broken. The console shows `Hydration failed because the server rendered HTML didn't match the client` and the range filter resets to the default. This is a Next.js App Router page, so please add the `router.isReady` guard from the deep-link playbook before reading searchParams.\"",
+      "expected_output": "Rejects the proposed fix because App Router has no router.isReady flag, separates the hydration-mismatch error from param readiness, routes the mismatch to ssr-hydration-mismatch, and states what evidence would make the reset a deep-link finding.",
+      "expectations": [
+        "The response states that Next.js App Router has no router.isReady flag and that useSearchParams() is synchronous in client components, so the proposed guard cannot be written as asked.",
+        "It explains the App Router equivalent discipline: reading search params forces the subtree up to the nearest Suspense boundary into client rendering, so the param-reading component is wrapped in Suspense with a skeleton fallback.",
+        "The 'server rendered HTML didn't match the client' error is identified as server/client DOM divergence and routed to ssr-hydration-mismatch, not treated as evidence of param loss.",
+        "It states that the two symptoms may have separate causes and refuses to assume the mismatch explains the filter reset without evidence.",
+        "It names the evidence that would make this a deep-link finding: the cold entry URL captured as loaded, showing range=30d present while the first param-dependent decision still read a missing value.",
+        "It rules out the case where the param is genuinely absent from the shared URL, which is not a hydration defect at all."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We added the router.isReady gate and the params now survive hydration. But the original report persists: a logged-out user opening `/orders/8813?tab=refunds` from an email gets bounced to `/login` and, after signing in, lands on `/dashboard`. Our plan is to have the login page read a `returnTo` query param and `router.replace(returnTo)` after authentication. Ship that?",
+      "expected_output": "Confirms the deep link is still broken and the readiness fix cannot address it, since the destination is discarded at the auth boundary, but blocks the proposed unvalidated redirect because return-target validation is owned elsewhere. Specifies the deep-link-owned part and routes the rest.",
+      "expectations": [
+        "The response agrees a link that survives hydration but dies at the login wall is still a broken deep link, and that no amount of router-readiness gating fixes it.",
+        "It identifies the first wrong decision as the login bounce discarding the intended destination including its query string, and requires the full path plus search to be preserved rather than just the pathname.",
+        "It blocks shipping router.replace(returnTo) on an unvalidated parameter, naming the open-redirect exposure of navigating to an attacker-supplied target.",
+        "Return-target validation policy, such as allowlisting same-origin relative paths and deciding between a query param and session storage, is routed to frontend-auth-flow-contracts, with the open-redirect primitive owned by frontend-security-baseline.",
+        "The regression test opens the deep link cold while logged out, completes login, and asserts the final URL and rendered screen include the original id and tab param."
+      ]
+    }
+  ]
+}

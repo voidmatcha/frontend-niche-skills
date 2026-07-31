@@ -1,0 +1,78 @@
+{
+  "skill_name": "frontend-report-triage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Support ticket: 'The in-app promo page sometimes goes completely white after users come back from the payment sheet, and on some Android phones the bottom Continue button is cut off. Happens more on older phones.' No logs, no device list.",
+      "expected_output": "Ranks webview-bridge-pages as the likely owner for both the post-resume blank screen and the bottom-inset cut-off, names the discriminating evidence still missing (host engine version, loaded URL/params, whether the button still takes taps), and keeps the follow-up list to at most three skills.",
+      "expectations": [
+        "webview-bridge-pages is ranked `likely` for the blank-after-resume symptom, with renderer death and READY re-handshake named as the mechanism to check rather than asserted as the cause.",
+        "The bottom Continue button cut-off is attributed to safe-area/bottom-inset and viewport-height handling, also owned by webview-bridge-pages, rather than split into a separate design skill by default.",
+        "design-to-code-fidelity is listed as `unlikely` or conditional, only if an approved design reference mismatch is claimed.",
+        "The evidence gaps are concrete and small: host engine and WebView/Chrome version, exact loaded URL and query params, whether the cut-off area still receives taps, and a screenshot or recording at the moment of resume.",
+        "The route names at most three follow-up skills and states one first verification step instead of restating the whole failure-class map."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "PM says: 'The dashboard has felt broken since yesterday's deploy. Some people are complaining. Can you tell us which of our skills to run and what the root cause is?'",
+      "expected_output": "Declines to rank failure classes or name a root cause because the report has no symptom channel, and returns the smallest set of missing artifacts that would change the route instead of routing to a default list of skills.",
+      "expectations": [
+        "The response states plainly that the report does not yet contain enough evidence to rank failure classes, and does not produce a speculative top-3.",
+        "It refuses to name a root cause from the report alone.",
+        "It asks for a minimal, specific artifact set: one user-visible symptom described in observable terms, the affected route, browser/device, whether it reproduces on a fresh session, and what shipped in the deploy.",
+        "It does not route to security, payment, or compliance-adjacent skills such as frontend-security-baseline or payment-page-client-security, since no data-boundary or runtime-script evidence exists.",
+        "It offers the cheapest next step that would discriminate — for example reproducing on the named route and separating whether the failure is visual, network, or interaction — rather than an exhaustive audit."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "QA note: 'When I download the monthly report CSV, the filename contains another user's email address, and the file has columns we do not show in the table. This looks like a data breach, please run the security review.'",
+      "expected_output": "Routes download-export-safety as the primary owner for both the filename PII and the extra exported columns, and declines to escalate to frontend-security-baseline or payment-page-client-security without data-boundary or runtime-script evidence.",
+      "expectations": [
+        "download-export-safety is named the primary follow-up skill, covering both the export filename content and the export schema versus visible table state.",
+        "The response withholds the 'data breach' framing pending evidence of whether the other user's email came from the exporting user's own data or from a cross-tenant response.",
+        "frontend-security-baseline is not routed by default; the response says it would only apply if the evidence shows a broader token/CSP/HTML-sink problem.",
+        "payment-page-client-security is not routed, since no PAN/CVV, hosted field, or payment runtime-script evidence is present.",
+        "The first verification is concrete: inspect the export code path and the API response that feeds it to determine whether the extra fields and the email were ever authorized for this user.",
+        "If the response finds the API returned another tenant's row, it says that becomes a backend authorization question rather than an export-layer fix."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Bug report: 'Order date shows one day earlier for some users. The same date is also wrong in the CSV download. Reported by users in Auckland and Los Angeles.'",
+      "expected_output": "Ranks datetime-correctness first and download-export-safety second, and names the discriminating check — whether the date is already wrong in the rendered DOM or only in the exported file — as the thing that decides the order.",
+      "expectations": [
+        "datetime-correctness is ranked first for timezone and date-only parsing semantics behind the off-by-one day.",
+        "download-export-safety is ranked second and scoped to the export path, in case the exporter re-formats or re-serializes the value differently from the UI.",
+        "The response names one discriminating check: compare the rendered value and the exported cell for the same order, and if both are wrong the defect is upstream of the exporter.",
+        "It asks for the stored value's shape (date-only string versus instant) and the user timezones involved, rather than guessing which conversion is wrong.",
+        "It keeps the follow-up list short and does not route unrelated classes such as frontend-data-fetching-cache-contracts or ssr-hydration-mismatch without evidence."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Report: 'The signup form keeps showing \"Enter a valid email\" after the user has already corrected the address, and the Submit button stays disabled until you reload.'",
+      "expected_output": "Presents constraint-validation-contracts and js-form-validation-contracts as the two candidates and names the discriminator — whether native validity APIs or a form library owns the error state — instead of picking one blindly.",
+      "expectations": [
+        "Both constraint-validation-contracts and js-form-validation-contracts are named as candidates for the stale-error symptom.",
+        "The discriminator is stated explicitly: constraint-validation-contracts if the error comes from native validity APIs such as `setCustomValidity`, `reportValidity`, or `:user-invalid` styling; js-form-validation-contracts if a library like React Hook Form, Formik, Final Form, or vee-validate owns the form state and resolver.",
+        "The evidence requested is small and specific: the component code around the email field's validity/error source and what gates the Submit button's disabled state.",
+        "The response does not route both skills as a bundle when one file read would settle the ownership question.",
+        "It does not claim a root cause such as a stale resolver or a missing revalidation mode before that code has been read."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Report: 'Console is spamming \"ResizeObserver loop completed with undelivered notifications\" and the right-hand panel flickers wider and narrower a few times whenever you open it.'",
+      "expected_output": "Hands off immediately to resize-observer-layout-contracts as the clear owner, with one first verification step, rather than producing a ranked table across many failure classes.",
+      "expectations": [
+        "resize-observer-layout-contracts is named as the clear owner and the response hands off quickly instead of restating the full failure-class map.",
+        "The report signal is tied to the mechanism: an observer callback writing a size back into the box it measures, producing the loop warning and the width oscillation.",
+        "The response gives one concrete first verification — inspect the observer callback for a write to the observed element's size and check which box (content, border, or device-pixel content) it reads.",
+        "It does not pad the answer with unrelated candidates such as css-transition-animation-contracts or core-web-vitals-performance-contracts absent evidence for them.",
+        "It notes that the console warning alone does not prove a product-visible defect, but the observed flicker does, so the two pieces of evidence are kept distinct."
+      ]
+    }
+  ]
+}

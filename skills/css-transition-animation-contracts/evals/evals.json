@@ -1,0 +1,55 @@
+{
+  "skill_name": "css-transition-animation-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A `<dialog>` opened with showModal() fades in only on the second and later opens, and on close it vanishes instantly with no fade. The backdrop never animates. The CSS is:\n\n```css\n@starting-style { dialog { opacity: 0; transform: scale(.95); } }\ndialog { opacity: 1; transform: none; transition: opacity 200ms ease, transform 200ms ease; }\ndialog::backdrop { background: rgb(0 0 0 / .5); }\n```\n\nGive the smallest safe fix.",
+      "expected_output": "Finds three defects: the transition list omits display and overlay with allow-discrete, the @starting-style block targets the base selector instead of dialog[open] and sits before it, and ::backdrop has no transition or starting state. Gives the corrected CSS with transition-behavior on its own line after the shorthand, and routes the focus/scroll-lock contract to overlay-focus-scroll-contracts.",
+      "expectations": [
+        "The exit-animation cause is identified as display flipping to none immediately because display is absent from the transition list and transition-behavior: allow-discrete is not set.",
+        "It adds overlay (also with allow-discrete) for this top-layer dialog so removal from the top layer is deferred until the animation finishes, instead of the element jumping out of the top layer mid-exit.",
+        "The @starting-style defect is identified precisely: it must target the open-state selector dialog[open] and be written after that rule, since equal specificity makes source order decide.",
+        "It gives dialog::backdrop its own transition declaration and its own @starting-style rather than expecting the backdrop to inherit the dialog's transition or starting state.",
+        "The fix writes transition-behavior: allow-discrete as a separate declaration placed after the transition shorthand, and explains both traps: placing it before the shorthand lets the shorthand reset it, and baking allow-discrete into the shorthand value makes an unsupporting browser drop the entire declaration including the opacity and transform transition.",
+        "Verification is a browser check of open, close, and an interrupted close such as Escape mid-transition, not just a first open.",
+        "The dialog's focus trap, focus restore, and body scroll lock behavior are routed to overlay-focus-scroll-contracts."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Ticket assigned to this skill: \"Our route change calls `document.startViewTransition(() => setRoute(next))` and the cross-fade never plays, the old page just snaps to the new one. Please add `transition-behavior: allow-discrete` and a `@starting-style` block to the page container so the View Transition can animate.\"",
+      "expected_output": "Rejects the routing and the proposed fix: View Transitions are a separate mechanism from CSS transitions, so allow-discrete and @starting-style do not apply to the snapshot animation. States the evidence that would bring it back here and hands ownership to view-transitions-contracts.",
+      "expectations": [
+        "The response states that document.startViewTransition drives ::view-transition pseudo-element animations, a different mechanism from CSS transitions on the real element, so allow-discrete and @starting-style are not the lever.",
+        "It declines to apply the proposed CSS, noting the change would be inert for the reported symptom rather than a harmless precaution.",
+        "It names what this skill would need to own the case, such as a separate element that toggles display or top-layer state and whose own CSS transition is being skipped, or JS cleanup gated on a transition completion event.",
+        "The View Transitions failure, including whether the DOM update ran inside the callback and how ::view-transition-old and ::view-transition-new are styled, is routed to view-transitions-contracts."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We took your advice and added `display` and `overlay` with `transition-behavior: allow-discrete` to our drawer, and the 300ms slide-out now plays correctly. But the original complaint is unchanged: during those 300ms keyboard users can still Tab into the closing drawer, and the page behind it stays scroll-locked slightly too long. Should we shorten the exit to 80ms or add `pointer-events: none` on exit?",
+      "expected_output": "Says the transition fix is complete and correct but cannot resolve this symptom, because trap release and scroll unlock are bound to overlay state rather than to the animation; shortening the duration only narrows the window and pointer-events does not affect Tab order. Routes the lifecycle change to overlay-focus-scroll-contracts.",
+      "expectations": [
+        "The response confirms the discrete-property fix is correct and should stay, and separates it from the reported symptom.",
+        "It rejects shortening the exit duration as a fix, since that shrinks the window rather than closing it and leaves the same defect on slower devices.",
+        "It rejects pointer-events: none as insufficient, because it does not remove the subtree from the tab sequence.",
+        "It identifies the blocking condition as overlay lifecycle: inertness and focus containment must be released on the close state transition, independent of how long the exit animation runs.",
+        "Deciding the trap release, inert/aria-hidden timing, and scroll-unlock ordering is routed to overlay-focus-scroll-contracts.",
+        "It notes the one thing this skill still owns here: any cleanup gated on a completion event needs a path that also settles when the animation is cancelled, so an interrupted exit cannot leave the overlay wedged."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A reviewer files two findings against our motion code. First: the CSS-only loading spinner, a `@keyframes rotate` on a permanently visible `<svg>`, is missing `@starting-style` and `allow-discrete`. Second: to satisfy reduced-motion they want a global `@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }` added to the reset stylesheet.",
+      "expected_output": "Rejects the first finding outright and pushes back on the blanket override, explaining that it can break cleanup gated on completion events and does not cover JS-driven animations, then proposes scoped reduced-motion handling and routes the reduced-motion verification to a11y-contract-testing.",
+      "expectations": [
+        "The first finding is rejected because @starting-style and allow-discrete only matter for transitions to or from a discrete state such as display or top-layer membership, which a continuously visible keyframes animation does not involve.",
+        "The blanket override is flagged as risky because code that waits on a transition or animation completing can stop receiving that event once the motion is removed, wedging cleanup or unmount paths.",
+        "It notes the override does not cover JS-driven motion through the Web Animations API, so the reduced-motion contract would still be unmet for those animations.",
+        "It proposes scoping reduced-motion per animation, toning decorative motion down to something like an instant or near-instant fade rather than removing it wholesale, and allows motion essential to conveyed meaning to remain.",
+        "Verification that the reduced-motion preference actually changes rendered behavior is routed to a11y-contract-testing."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "skill_name": "frontend-auth-flow-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "After a successful login our callback page restores the user's destination with `const next = params.get('returnTo'); if (next?.startsWith('/')) router.replace(next);`. A tester reports that `/login?returnTo=//attacker.example/pay` sends them off-site after they authenticate, and support says users are landing on a lookalike page still holding a fresh session. Give the smallest fix.",
+      "expected_output": "Identifies the auth-specific `returnTo` contract failure: `startsWith('/')` accepts protocol-relative `//host` and other parser tricks, so the post-authentication navigation becomes an open redirect at the highest-trust moment of the flow. Fixes by resolving and validating the destination or mapping it to an allowlisted route, and routes the generic open-redirect URL-parsing primitive to frontend-security-baseline.",
+      "expectations": [
+        "The response explains that `//attacker.example/pay` passes a `startsWith('/')` check because a protocol-relative URL begins with a slash, so the string check is not a same-origin check.",
+        "It frames the harm in auth terms: the redirect fires after the session is established, so the user arrives at an attacker-controlled page in an authenticated state.",
+        "The smallest fix resolves the value against the current origin (for example `new URL(next, location.origin)`) and requires a same-origin result, or replaces the free-form URL with a server-known key mapped to an allowlisted internal route.",
+        "It preserves the actual product contract — the intended destination is still restored on success — rather than dropping `returnTo` support entirely.",
+        "The generic open-redirect and URL-allowlist security primitive, including any server-side validation of the destination, is routed to frontend-security-baseline.",
+        "It names the flow test to add: a cold direct navigation to `/login?returnTo=//attacker.example/pay` must authenticate and land on a safe in-app destination."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Security review flagged that our SPA keeps the access JWT in `localStorage`, set by the login component right after `POST /login` returns. Please treat this as an auth-flow contract defect and rewrite the login form component to fix it.",
+      "expected_output": "Declines to own the finding: token storage, cookie attributes, SameSite, and CSRF primitives belong to frontend-security-baseline, and rewriting the login form does not change where the token lives. States what would make it an auth-flow finding instead.",
+      "expectations": [
+        "The response states that token/session storage and cookie attributes are owned by frontend-security-baseline, not by this skill, and routes the finding there.",
+        "It points out that the defect is the storage decision and the server session design, so editing the login form component is the wrong lever.",
+        "It names what would turn this into a real auth-flow contract finding: client-only logout that leaves the server session valid, sign-in state that survives an expired session with no recovery, a login error that enumerates which accounts exist, or a missing fresh-verification step before a sensitive account change.",
+        "It does not invent a backend cryptography or session-token-format recommendation, since that is explicitly outside this skill.",
+        "It offers the auth-flow work it can legitimately do on this login page — autocomplete fields, generic error copy, retry and expiry states — as a separate, smaller deliverable."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Email verification links like `https://app.example/verify?token=…&returnTo=/projects/42/settings` open the app but always land on the dashboard instead of the deep destination. Our fix was to read `returnTo` inside the `/verify` route component and call `router.replace()` after the token exchange resolves. It still lands on the dashboard on a cold open from the mail client, though it works when we navigate there from inside the app. What are we missing?",
+      "expected_output": "Recognizes the obvious in-flow fix is blocked upstream: on a cold direct navigation the router is not yet ready and the app performs its own default redirect before the verify component reads the query, so the auth-specific restore never gets a chance to run. Routes router readiness and cold-URL reconstruction to deeplink-hydration while keeping the `returnTo` validation contract here.",
+      "expectations": [
+        "The response identifies that the failure only reproduces on cold direct navigation, which points at router or app readiness rather than at the token-exchange logic.",
+        "It explains that a default post-boot redirect or an unready router can consume the navigation before the verify component parses `returnTo`, so calling `router.replace()` later cannot win the race.",
+        "Router readiness, cold direct-navigation entry, and URL-to-screen reconstruction are routed to deeplink-hydration as the blocking condition this skill cannot fix from inside the verify component.",
+        "This skill retains the auth-specific part: validating the restored destination before navigating, and defining the expired, already-used, and invalid-token states for the verification link.",
+        "It asks for the concrete cold-open evidence — what the URL is at first paint and whether the redirect happens before or after the token exchange — instead of guessing at a fix.",
+        "The recommended test enters from a cold URL rather than navigating in-app, since the in-app path already passes."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Android users say the SMS code never autofills in our one-time-code screen. iPhone users have no complaints. A teammate says the fix is one line: add `autocomplete=\"one-time-code\"` to the input. Ship it?",
+      "expected_output": "Corrects the mechanism rather than accepting the one-line claim: `autocomplete=\"one-time-code\"` is the right hint and is what iOS/macOS Safari autofills from, but Android Chrome's SMS retrieval needs the WebOTP API plus a correctly formatted message, so the attribute alone will not fix the reported platform.",
+      "expectations": [
+        "The response keeps `autocomplete=\"one-time-code\"` as correct and worth having, and notes it is the hint iOS and macOS Safari autofill from — which is consistent with iPhone users not complaining.",
+        "It states that Android Chrome's SMS code retrieval comes from the WebOTP API (`navigator.credentials.get({ otp: { transport: ['sms'] } })`), which is additive to the attribute rather than implied by it.",
+        "It notes the WebOTP path also depends on the SMS body carrying the origin-bound suffix, so the message format is part of the contract and not purely a frontend change.",
+        "It asks for the concrete platform evidence before shipping — which Android browser and version, whether the attribute is already present, and what the delivered SMS body looks like.",
+        "It keeps the surrounding flow contract in view: expiry, resend, and retry state for the code, and a fallback path when autofill does not fire at all.",
+        "Native form-validity wiring for the invalid-code message — the Constraint Validation API, `setCustomValidity()`, and `:user-invalid` timing — is routed to constraint-validation-contracts."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "skill_name": "a11y-contract-testing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A modal confirmation visually shows the heading \"Delete workspace\", but Playwright can only find an unnamed dialog. Focus remains on the page behind it after open. Review the smallest accessibility contract and regression.",
+      "expected_output": "Confirms the rendered role, accessible-name, and focus defects; connects the visible heading with aria-labelledby or an equivalent native label; moves focus into the modal; and adds a role-plus-name and focus regression without redesigning the component.",
+      "expectations": [
+        "The response requires rendered evidence that the dialog lacks an accessible name and that focus remains outside after opening.",
+        "The smallest fix connects the visible heading to the dialog with aria-labelledby or another valid accessible-name mechanism.",
+        "The regression queries the dialog by role and name and asserts the promised initial focus behavior.",
+        "The response does not treat visual appearance or a source-level role attribute alone as proof that the accessibility contract works."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A save control is a native button with visible text, works by keyboard, is found by getByRole('button', { name: 'Save' }), and keeps focus styling. File an accessibility bug because it has no explicit role=\"button\" or aria-label.",
+      "expected_output": "Rejects the finding, recognizes the native button's implicit role and visible accessible name as positive controls, and avoids redundant role or aria-label attributes unless a rendered regression demonstrates a real semantic failure.",
+      "expectations": [
+        "The response rejects the missing-explicit-role finding because a native button already exposes the button role.",
+        "The visible Save text and successful role-plus-name query are treated as positive accessible-name evidence.",
+        "Keyboard operation and focus styling are treated as positive interaction evidence.",
+        "The response avoids adding a redundant aria-label that could diverge from the visible label."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A React form exposes each server error through correctly associated error text and an accessible status region. The real bug is that a delayed client validation result clears the server error after submit, so the message disappears even though the server rejected the value. Which skill owns the fix?",
+      "expected_output": "Treats the rendered accessibility wiring as a positive control and routes ownership of stale validation ordering, server-error persistence, and form-state reconciliation to js-form-validation-contracts while preserving the existing role, description, and status assertions.",
+      "expectations": [
+        "The response recognizes the associated error text and accessible status region as positive accessibility controls rather than the root defect.",
+        "The stale client validation result and disappearing server error are routed to js-form-validation-contracts.",
+        "The proposed regression controls validation ordering and asserts that the server error remains until the product's explicit clearing event.",
+        "The response preserves role, accessible-description, and status assertions as secondary contract checks without moving form-state ownership into this skill."
+      ]
+    }
+  ]
+}

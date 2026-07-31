@@ -1,0 +1,42 @@
+{
+  "skill_name": "ssr-hydration-mismatch",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Next.js App Router page. Our <FilterPanel> is server-rendered and dev shows \"Hydration failed because the server rendered HTML didn't match the client\", pointing at the tooltip markup. The component does: const tipId = `tip-${Math.random().toString(36).slice(2)}`; then renders <button aria-describedby={tipId}> and <span id={tipId}>. The same page also shows a \"last updated\" line rendering new Date(updatedAt).toLocaleString() during render, and the selected filter chips come from the URL query string.",
+      "expected_output": "Attributes the mismatch to Math.random() producing a different id on the server and the client, which is serialized into the id and aria-describedby attributes; prescribes React's useId() as the smallest fix since it produces a stable id across both renders. Flags the toLocaleString() call as a second, separate divergence whose fix (serialize a stable instant and pin locale and timeZone) is owned by datetime-correctness, and routes the query-string-driven first render readiness to deeplink-hydration.",
+      "expectations": [
+        "The response names Math.random() during render as the divergence, and explains that the value is serialized into the id and aria-describedby attributes so the server and client HTML cannot agree.",
+        "The smallest fix is React's useId(), which returns a matching identifier on the server and the client, rather than suppressHydrationWarning or a client-only wrapper.",
+        "It confirms the component participates in server rendering before filing the finding, rather than assuming it from the file location.",
+        "The toLocaleString() call during render is flagged as a separate timezone/locale divergence, with the formatting fix (stable serialized instant, explicit locale and timeZone) routed to datetime-correctness.",
+        "First-render readiness of the URL query parameters that drive the filter chips is routed to deeplink-hydration.",
+        "Verification is a test or hydration smoke check that fails on a recoverable hydration error, with onRecoverableError wired to monitoring so the production case is not silently recovered."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Code review finding to confirm: \"src/components/PriceTag.tsx is a hydration mismatch. It calls new Intl.NumberFormat(navigator.language, { style: 'currency', currency }).format(value), and navigator is browser-only, so the server render will differ.\" For context, PriceTag is rendered only from inside a useEffect-driven state branch after mount, and the parent is imported with next/dynamic(() => import('./PriceTag'), { ssr: false }).",
+      "expected_output": "Rejects the finding: a component behind a no-SSR dynamic import and only rendered after mount does not participate in the server's first render, so there is no server output to disagree with. Downgrades it to determinism cleanup at most, names the evidence that would change the verdict, and notes that if the real concern is which locale and currency the price should display, that judgment belongs to money-and-precision-contracts rather than to hydration.",
+      "expectations": [
+        "The response rejects the claim, stating that a component excluded from SSR via next/dynamic with ssr: false and rendered only after mount produces no server HTML that could mismatch.",
+        "It explicitly distinguishes reading a browser-only API during the first server-participating render from reading it after mount, and downgrades this to determinism cleanup rather than a hydration bug.",
+        "It names the evidence that would change the verdict: proof the component is reached during server render or initial HTML generation, plus an actual mismatch signal such as a dev server-vs-client diff or an onRecoverableError report naming the node.",
+        "Formatting and rounding judgment for the currency value is routed to money-and-precision-contracts instead of being resolved as a hydration concern.",
+        "It does not prescribe suppressHydrationWarning or additional client-only wrapping for a component that is already client-only."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We had \"text content did not match\" on our <PublishedAt> component, which server-renders new Date(post.publishedAt).toLocaleString() inside a <time> element. We added suppressHydrationWarning to that <time>. The console is clean now, but support still gets reports that the timestamp shown right after page load differs from what users see a second later, and QA in Sydney sees a date one day off from the server's rendering.",
+      "expected_output": "Explains that suppressHydrationWarning only silences the warning for that single element's own text and attributes, one level deep, and never makes the two values agree, so the visible flip and the off-by-one day are exactly the unfixed underlying divergence. Identifies the server rendering in its own timezone/locale while the client formats in the user's as the actual trigger, and routes the fix (serialize a stable instant, format with an explicit pinned locale and timeZone) to datetime-correctness, with a client-only two-pass render as the alternative containment if local time must be shown.",
+      "expectations": [
+        "The response states that suppressHydrationWarning applies one level deep to that element's own text and attributes and only suppresses the warning; it does not make the server and client values agree, so the rendered text can still change after hydration.",
+        "It identifies the real trigger as the server formatting in its own timezone and locale while the client formats in the user's, which is why the Sydney date is off by a day.",
+        "The formatting contract fix (serialize a stable instant such as an ISO string, and format with an explicitly pinned locale and timeZone for the SSR output) is routed to datetime-correctness as the owner.",
+        "If user-local time genuinely must be displayed, it prescribes the two-pass pattern: render a server-safe placeholder and set the localized text in useEffect after mount, and only then is suppressHydrationWarning unnecessary.",
+        "It notes that removing the suppression is part of the fix so a hydration test can fail on the mismatch again instead of hiding it."
+      ]
+    }
+  ]
+}

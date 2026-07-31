@@ -1,0 +1,47 @@
+{
+  "skill_name": "i18n-copy-and-layout",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We are adding de, ru, and ar to a file manager built English-only. The selection toolbar renders:\n\n```jsx\n<span className=\"w-24 truncate\">{count} {count === 1 ? 'file' : 'files'} selected</span>\n<button className=\"w-28\">Move to folder</button>\n```\n\nand the RU QA build shows \"21 files selected\" for a single-item grammar case while the German button clips. Give the smallest reviewable fix.",
+      "expected_output": "Replaces the code-side plural branch and the concatenated sentence with one full-sentence ICU message selected at runtime by locale plural rules, removes the fixed widths in favor of reflow with logical properties, and routes the resulting spacing drift against the design reference to design-to-code-fidelity.",
+      "expectations": [
+        "The response states that count === 1 encodes an English-only assumption and that CLDR defines six plural categories (zero, one, two, few, many, other) with each language using its own subset.",
+        "It gives the Russian evidence concretely, that 21 selects the 'one' category rather than a plural form, so no numeric branch written in application code can be correct across locales.",
+        "The fix is a single full-sentence ICU plural message with named placeholders, keeping the mandatory other arm and using # for the formatted count, so translators choose the arms their language needs.",
+        "It rejects building the sentence by concatenating fragments, because word order and agreement differ per language and translators cannot reorder the pieces.",
+        "The fixed w-24 and w-28 widths with truncate are flagged as a layout-contract defect, citing that short English strings expand the most, roughly 200 to 300 percent for strings up to about ten characters.",
+        "The layout fix allows reflow through min-inline-size or intrinsic sizing with wrapping instead of truncation, and uses CSS logical properties so the Arabic build mirrors under dir=rtl.",
+        "It notes that dir must be set explicitly on the html element alongside lang, since direction is not derivable from the language tag.",
+        "The complaint that the toolbar no longer matches the design reference's spacing once the fixed widths are removed is routed to design-to-code-fidelity."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Bug filed against this skill: \"German customers see the wrong delivery date. It renders as 3/14/2026 instead of German format, and for evening orders it is a full day earlier than what our ops dashboard shows. Fix by wrapping the value in `Intl.DateTimeFormat('de-DE').format(new Date(order.deliveryDate))`.\"",
+      "expected_output": "Splits the report: the hardcoded US pattern is a formatting-contract finding this skill owns, but the day-earlier discrepancy is instant and timezone correctness owned by datetime-correctness, and the proposed one-line change would relabel the wrong instant rather than fix it. States what evidence separates the two.",
+      "expectations": [
+        "The response separates the two symptoms rather than treating the proposed Intl call as fixing both.",
+        "It accepts the display-pattern half as in scope: a hardcoded MM/DD/YYYY output must be replaced by locale-aware formatting keyed to the user's locale.",
+        "It rejects the day-earlier half as owned by datetime-correctness, since an offset error is about which instant is stored and which timezone it is rendered in, not about the display pattern.",
+        "It warns that applying the formatter alone would make the wrong instant merely look correctly formatted, hiding the defect instead of fixing it.",
+        "It states that Intl formats but does not parse or store, so any locale-aware handling of user-entered or serialized date values needs a separate path.",
+        "It names the evidence that would settle ownership: comparing the stored value and its timezone against what ops sees, so a correct instant with a wrong pattern stays here while a wrong instant goes to datetime-correctness.",
+        "It notes that locale choice also affects calendar and date-order conventions, so the formatter must be keyed to the user's locale rather than pinned to one hardcoded tag."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Following the reflow guidance we removed the fixed height from our product cards and added `overflow-wrap: break-word; word-break: break-all;` so nothing clips. German compound nouns are fine now. But the Japanese build got worse: titles now break in the middle of words and phrases at arbitrary characters, and reviewers say it reads as broken Japanese. Should we just put the fixed height back and truncate with an ellipsis for ja?",
+      "expected_output": "Keeps the reflow fix, rejects reverting to fixed height plus truncation, and identifies word-break: break-all as the cause of the Japanese regression, whose correct line-breaking behavior is a blocking condition owned by cjk-text-and-input. Keeps the height and line-spacing part here.",
+      "expectations": [
+        "The response declines to restore the fixed height and per-locale truncation, since that reintroduces the clipping defect the reflow fix removed and hides real content from one locale.",
+        "It identifies word-break: break-all as the specific declaration causing arbitrary breaks in Japanese text, rather than blaming the removal of the fixed height.",
+        "It notes that break-word and break-all were added for the unbreakable German compound-noun case and should be scoped to that need rather than applied globally to all locales.",
+        "Choosing the correct Japanese line-breaking behavior, including word-break: keep-all and phrase-boundary breaking, is routed to cjk-text-and-input as the blocking condition.",
+        "It keeps the part this skill still owns: vertical space and line-height headroom, since Japanese, Thai, Arabic, and Devanagari glyphs need more line spacing than Latin and fixed-height rows clip them even at equal character counts.",
+        "Verification uses real translated copy or pseudo-localized strings in the affected locales rather than English or placeholder text."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "skill_name": "payment-page-client-security",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our `/checkout` page renders our own card form: `<input name=\"cardNumber\">` and `<input name=\"cvc\">` bound to a React `useState` object called `paymentForm`. On a failed authorization we call `captureException(err, { extra: { paymentForm } })` so support can debug, and we also push a `checkout_error` event to `dataLayer` with the same object. Review this.",
+      "expected_output": "Draws the PAN boundary and shows raw PAN and CVV crossing from merchant-controlled inputs into framework state, then out of the browser through error telemetry and the tag-manager data layer. Recommends hosted fields, iframe, or redirect tokenization as the structural fix with telemetry scrubbing as the interim control, routes reporter wiring to client-error-observability-contracts, and phrases PCI as an evidence gap rather than a scope verdict.",
+      "expectations": [
+        "The response classifies the payment architecture as a direct merchant card form, so merchant JavaScript sees raw PAN and CVV.",
+        "It traces the concrete exit paths for cardholder data: React state, the error-reporter `extra` payload, and the `dataLayer` push that a tag manager can forward to third parties.",
+        "It calls out CVV/CVC specifically as data that must not be retained or transmitted through merchant telemetry, separate from the PAN.",
+        "The structural fix moves card entry to provider hosted fields, a hosted iframe, or a redirect so merchant JS never handles raw card data, with masking limited to last4 after tokenization.",
+        "An interim control is named for code that ships before the migration: strip the payment fields from the error payload and the analytics event rather than relying on backend-side scrubbing as the boundary.",
+        "The reporter wiring itself — `beforeSend` hook placement, which capture surfaces exist, and grouping — is routed to client-error-observability-contracts.",
+        "PCI is framed only as a 6.4.3 / 11.6.1 evidence gap, with no statement about SAQ eligibility or compliance status.",
+        "It asks for the runtime script and telemetry inventory captured from the actual `/checkout` URL rather than concluding from the source snippet alone."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We finished migrating checkout to a full Stripe Checkout redirect — no card fields on our domain at all. Our acquirer's portal is asking us to attest. Confirm that we are SAQ A eligible and PCI DSS compliant so I can sign the attestation this afternoon.",
+      "expected_output": "Refuses the compliance and SAQ eligibility verdict outright — legal PCI scope, SAQ selection, and attestation are decisions for the acquirer, QSA, or payment owner, not an agent. Offers the frontend evidence pass it can actually deliver against the redirect architecture.",
+      "expectations": [
+        "The response declines to declare SAQ A eligibility, PCI compliance, or attestation readiness, and states plainly that this is outside what a frontend evidence pass can decide.",
+        "It directs the eligibility and attestation decision to the acquirer, QSA, or internal payment/security owner.",
+        "It still classifies the architecture as a full redirect and states what that means for the PAN boundary: card entry happens on the provider's domain, so merchant JavaScript should not see PAN or CVV.",
+        "It offers the concrete evidence it can produce instead: runtime script and iframe inventory captured from the pre-redirect payment page, owner and justification for each payment-path script, CSP/`form-action`/header evidence, and confirmation that no PAN, CVV, or card data appears in storage, URLs, logs, analytics, or replay tooling.",
+        "It notes that even a redirect flow leaves the pre-redirect page in scope for script-attack concerns, so 'we redirect, therefore nothing to check' is not accepted.",
+        "PCI references stay phrased as 6.4.3 / 11.6.1 evidence signals, explicitly not as a compliance verdict."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our provider's hosted card fields render as a blank frame in production. The frame element is `<iframe src=\"https://js.provider.example/fields\" sandbox=\"allow-scripts\">`. Our plan is to keep tightening the sandbox and add `allow=\"payment\"` later. Meanwhile, do the payment security review and tell us whether PAN is exposed.",
+      "expected_output": "Explains that the PAN-boundary and script-inventory evidence cannot be completed while the frame never loads, and that the blocking condition is the embed contract: `sandbox=\"allow-scripts\"` without `allow-same-origin` gives the guest an opaque origin that breaks the provider's own storage and postMessage origin checks. Routes the host/guest embed protocol and capability delegation to iframe-embed-contracts and holds the payment verdict until the frame renders.",
+      "expectations": [
+        "The response states that a blank provider frame blocks the evidence pass, because runtime script inventory and PAN-boundary observation both require the payment surface to actually render.",
+        "It identifies the sandbox as the likely blocker: `allow-scripts` without `allow-same-origin` puts the guest on an opaque origin, so provider storage, cookies, and `event.origin` checks fail.",
+        "It notes that tightening the sandbox further is the wrong direction here, and that capability grants come from two layers — the response `Permissions-Policy` ceiling and the iframe `allow` attribute that delegates within it.",
+        "The host/guest embed protocol, sandbox token selection, `frame-src` versus `frame-ancestors` ownership, and `allow` delegation are routed to iframe-embed-contracts as the sibling that owns the blocking condition.",
+        "It refuses to certify the PAN boundary as clean or as exposed on the current evidence, and says what it will check once the frame loads.",
+        "It resists the shortcut of moving card entry into merchant-controlled inputs to work around the blank frame."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "An automated scan flagged that `https://js.provider.example/v3` on our checkout page loads with no `integrity` attribute. The ticket says to compute the SHA-384 hash and pin it with SRI, and to add `script-src https:` so nothing else breaks. Implement it.",
+      "expected_output": "Rejects both halves: pinning SRI to a live provider script whose bytes change by design will break checkout and creates false confidence, and `script-src https:` widens rather than narrows script authorization. Proposes provider-compatible controls and change detection instead.",
+      "expectations": [
+        "The response rejects SRI pinning on the provider script because payment vendors commonly ship a live, mutable script and a hash pin will fail closed on the next provider deploy, taking checkout down.",
+        "It notes that a stale or incorrect SRI hash also produces false confidence in an integrity control that is not actually protecting anything.",
+        "It rejects `script-src https:` as a fix, explaining that a broad scheme source authorizes any HTTPS origin and weakens the script authorization the scan was trying to strengthen.",
+        "The proposed direction is provider-compatible: narrow `script-src`, `connect-src`, `frame-src`, and `form-action` origins, nonces or hashes for first-party inline code, and SRI reserved for third-party assets whose bytes are stable.",
+        "It requires a runtime script inventory captured from the live checkout URL, since a scanner hit on one tag does not describe the dynamically injected third-party chain.",
+        "Change and tamper detection for payment-page scripts and security-impacting headers is named as the 11.6.1-style evidence artifact that substitutes for SRI here.",
+        "It recommends rolling any CSP change out in report-only mode before enforcement on a revenue path.",
+        "General CSP hardening and XSS work outside the payment context is routed to frontend-security-baseline."
+      ]
+    }
+  ]
+}

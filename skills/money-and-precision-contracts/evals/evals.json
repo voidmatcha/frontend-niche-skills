@@ -1,0 +1,41 @@
+{
+  "skill_name": "money-and-precision-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A cart component holds prices as JS numbers from the API (`{ price: 19.99, qty: 3 }`) and computes `const total = items.reduce((s, i) => s + i.price * i.qty, 0)`, then renders `total.toFixed(2)`. Each line row separately renders `(i.price * i.qty).toFixed(2)`. Finance reports invoices where the sum of the printed line amounts is one cent off the printed total, and a debug log once showed `59.96999999999999`. The same page also needs to render as `1.234,56 EUR` for the de-DE storefront.",
+      "expected_output": "Names the float-drift and rounding-order contracts, showing that per-line rounding then summing disagrees with summing then rounding once, and that `toFixed` rounds the stored binary value rather than the decimal literal. Fix is to compute in integer minor units (or a decimal type), round once with an explicit mode, and format only at the display edge. Routes the de-DE grouping and currency presentation to i18n-copy-and-layout.",
+      "expectations": [
+        "The response identifies both the binary float accumulation and the per-line versus total rounding order as the reason the printed line amounts do not reconcile with the printed total.",
+        "It explains that `toFixed` rounds the stored binary double and is not a reliable half-up or banker's rule, citing a case such as `(1.005).toFixed(2)` returning \"1.00\".",
+        "The fix moves the arithmetic to integer minor units or a decimal type, rounds once, and states the rounding mode on purpose instead of inheriting a default.",
+        "It proposes a regression test on a known-drifty case and on the line-sum versus total reconciliation.",
+        "The de-DE grouping, decimal mark, and currency presentation is routed to i18n-copy-and-layout rather than solved with the math change."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A sweep flags 31 call sites and concludes: 'Every `.toFixed(2)` in this repo is a money-precision bug, replace them all with a decimal library.' Spot-checking the list, most hits are in the analytics dashboard, formatting a completion ratio for a chart axis label (`(done / total * 100).toFixed(1)`), and in test fixtures. The user-visible complaint that started the review was different: subscribers in Asia/Seoul see the invoice dated one day earlier than the charge date shown in the receipt email.",
+      "expected_output": "Rejects the blanket finding: a `toFixed` that never reaches a stored, compared, or charged money value does not meet the PR-worthiness bar, and test fixtures do not either. Names what would make an individual site PR-worthy, and routes the actual reported symptom, the invoice date shifting by a day across time zones, to datetime-correctness.",
+      "expectations": [
+        "The response refuses the repo-wide replacement, requiring each finding to reach a stored, compared, or displayed money value.",
+        "It explicitly excludes the chart-label percentage and the test fixtures as non-money outputs.",
+        "It states the evidence that would make a specific site PR-worthy, such as the rounded value feeding a charge, a stored total, or a reconciliation.",
+        "The day-shifted invoice date for Asia/Seoul users is routed to datetime-correctness as a value-correctness bug of a different type.",
+        "It does not recommend adopting a decimal library across the codebase on the strength of the grep count alone."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A donation form parses the typed amount with `parseFloat(input.value)`, so a de-DE donor typing `1.234,56` is charged 1.23. You replace it with a parser that derives the group and decimal separators from `Intl.NumberFormat(locale).formatToParts(12345.6)`, normalizes, and converts to integer minor units. Unit tests on the parser pass for de-DE, en-US, and ko-KR. In the browser the donor still cannot submit: the field shows 'Enter a valid amount' from a previous attempt and the message stays put no matter what they type. The form is react-hook-form and that string was written by a `setError('amount', { type: 'server', ... })` after a failed charge.",
+      "expected_output": "Confirms the formatToParts-based parser is the correct fix for the localized-parse contract, then explains the submit is blocked by something this skill does not own: a server-typed `setError` sits outside resolver ownership and does not clear on re-validation, so the field keeps the stale error regardless of what the parser returns. Routes that clearing lifecycle to js-form-validation-contracts.",
+      "expectations": [
+        "The response affirms the `formatToParts`-derived parser as the right fix for reading localized amounts, noting `Intl.NumberFormat` formats but does not parse.",
+        "It identifies the stale `setError` as the blocking condition rather than blaming the new parser or the field's numeric value.",
+        "It explains that a server or root error is outside resolver ownership and will not clear through re-validation alone.",
+        "The error-clearing lifecycle and submit gating is routed to js-form-validation-contracts.",
+        "It keeps this skill's scope to what the parsed value means, not to the field's error UI."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "skill_name": "pwa-offline-cache-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "After each deploy, returning users hit \"Failed to fetch dynamically imported module\" when they open a lazy-loaded route. The CDN serves index.html with Cache-Control: max-age=31536000, immutable, hashed chunks are purged on deploy, and there is no update prompt for the service worker. Give the smallest fix.",
+      "expected_output": "Attributes the failure to a long-cached HTML document requesting chunk filenames the deploy removed, makes HTML revalidate while hashed assets stay immutable, adds a capped single reload on the preload error, and routes capturing the error in monitoring to client-error-observability-contracts.",
+      "expectations": [
+        "The response explains the mismatch: the cached HTML still references the previous build's hashed chunk URLs, which the deploy purged, so the dynamic import rejects.",
+        "index.html is served with no-cache (revalidated on every load) or routed Network First in the service worker, while content-hashed assets stay immutable and Cache First.",
+        "A vite:preloadError or equivalent lazy-import error handler reloads once with a retry cap, explicitly not an unbounded reload loop.",
+        "Capturing this rejection in monitoring — unhandledrejection versus window.onerror, and cross-origin 'Script error.' on chunk fetches — is routed to client-error-observability-contracts.",
+        "The verification is a deploy-then-reload check on a client that was loaded before the deploy."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Users report that a saved profile change does not appear on the settings page until they hard-reload. The report says the service worker precache is stale and proposes bumping CACHE_VERSION and calling skipWaiting on every load. The service worker precaches build assets only, its runtime routes match /assets/ and nothing else, and the settings page reads through SWR.",
+      "expected_output": "Rejects the precache diagnosis because no service worker route touches that API response, routes the stale read to frontend-data-fetching-cache-contracts, states what evidence would move it back, and flags unconditional skipWaiting as an unrelated risk.",
+      "expectations": [
+        "The response rejects the stale-precache claim on the evidence that the service worker's routes cover only /assets/, so the profile API response is never served from Cache Storage.",
+        "The stale settings value is routed to frontend-data-fetching-cache-contracts as a revalidation or key/invalidation question on the SWR read after the mutation.",
+        "It states the evidence that would move the finding back here: the API response showing as served from the service worker, or a Cache Storage entry for that URL.",
+        "Adding skipWaiting unconditionally is flagged as a separate decision that lets a new worker control pages loaded by the old version, mixing mismatched HTML and assets, and not a fix for this symptom."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "To make the account page work offline, a PR adds a StaleWhileRevalidate runtime route for /api/account so the last response is available without network. The app runs on shared kiosk devices where multiple users sign in and out.",
+      "expected_output": "Blocks the change because Cache Storage is per-origin rather than per-user and the Cache API ignores HTTP cache headers, keeps the account route Network Only, and routes the policy ruling on storing authenticated responses to frontend-security-baseline.",
+      "expectations": [
+        "The response explains that Cache Storage is scoped to the origin, not to a session or user, and that entries persist until explicitly deleted because the Cache API does not honor HTTP cache headers.",
+        "The concrete risk is stated: after logout and a new sign-in on a shared device, the cached /api/account response can be served to a different user, or stale post-logout data can be shown.",
+        "The personalized endpoint is routed Network Only, with Cache First reserved for hash-versioned static assets and Network First for shell HTML.",
+        "The ruling on whether authenticated responses may be stored client-side at all is routed to frontend-security-baseline.",
+        "If offline account data is still required, the response requires an explicit per-user store with a purge on logout rather than a shared runtime cache route."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A vite-plugin-pwa config sets workbox.globPatterns: ['**/*.{js,css,html}']. QA reports that offline the app renders with fallback system fonts and missing icons, while online everything looks correct. A 6 MB offline map tile bundle is also absent from the cache.",
+      "expected_output": "Identifies globPatterns as replacing the default match set rather than extending it, enumerates every needed extension, attributes the 6 MB omission to the file-size cap, and adds a built-manifest assertion as the regression.",
+      "expectations": [
+        "The response states that setting globPatterns overrides the defaults instead of adding to them, so woff2 fonts, svg and png icons, and JSON fall out of the precache.",
+        "The fix enumerates every extension the app needs offline in globPatterns rather than assuming the defaults are merged in.",
+        "The missing 6 MB asset is attributed to maximumFileSizeToCacheInBytes silently skipping oversized files, and that limit is decided deliberately rather than raised blindly.",
+        "The regression asserts against the generated precache manifest that HTML, JS, CSS, icons, and fonts are all present.",
+        "The response notes that precache entries must be same-origin URLs expected to return 200, since a failed entry rejects the install and the new worker never activates."
+      ]
+    }
+  ]
+}

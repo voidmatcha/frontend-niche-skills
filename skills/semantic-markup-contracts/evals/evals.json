@@ -1,0 +1,50 @@
+{
+  "skill_name": "semantic-markup-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Checkout form's submit control is `<div className=\"btn-primary\" tabIndex={0} onClick={placeOrder} aria-disabled={pending}>Place order</div>` inside a `<form>`. Keyboard users report Enter does nothing on the control, and double orders happen while pending because aria-disabled does not stop the click handler. Review and give the smallest safe fix.",
+      "expected_output": "Identifies the missing native button contract (no implicit submit, no Enter/Space activation, no real disabled state), proposes `<button type=\"submit\" disabled={pending}>` as the smallest structural change, and routes the rendered role/state/keyboard regression test to a11y-contract-testing.",
+      "expectations": [
+        "The response names the specific native contracts a div cannot provide: implicit submit behavior inside a form, Enter and Space activation, and a real disabled state that blocks click dispatch.",
+        "It states that aria-disabled only reports state to assistive technology and does not prevent the onClick handler from firing, unlike the native disabled attribute.",
+        "The fix is the native element swap to `<button type=\"submit\">` rather than adding role=\"button\" plus keydown handlers on the div.",
+        "The rendered role, name, state, and keyboard-path regression test is routed to a11y-contract-testing rather than written as part of this skill's finding."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A teammate files this under semantic-markup-contracts: \"axe reports no violations but our `getByRole('button', { name: 'Filter' })` query fails and Tab order in the toolbar is wrong. Please add role and accessible-name assertions plus a full keyboard-navigation suite for the toolbar.\" The toolbar is built from real `<button>` elements wrapped in a `<div role=\"toolbar\">`.",
+      "expected_output": "Rejects the routing: with native buttons already in place there is no element-choice defect, and writing rendered role/name/state and keyboard-path tests is a11y-contract-testing's scope. States what evidence would move it back into this skill and hands the test work over.",
+      "expectations": [
+        "The response declines to own the request as filed, because the markup already uses the native element whose implicit role matches the action.",
+        "It states that adding redundant ARIA to elements with the correct implicit role is not the fix and can create duplicate or worse semantics.",
+        "It names the evidence that would change the verdict: rendered DOM showing a clickable div/span, a link with href=\"#\" used as a command, or interactive elements nested inside each other.",
+        "Authoring the getByRole, accessible-name, and Tab-order assertions is routed to a11y-contract-testing."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Every card in a search-results grid renders its title as `<h1 className=\"text-sm\">` because the designer wanted the type token reused. A reviewer says this is fine for screen readers since the HTML outline algorithm re-ranks nested headings by section depth, and separately says the page will be penalized in search because there are 20 h1 elements.",
+      "expected_output": "Corrects the outline-algorithm premise, confirms the flat h1 repetition is a real structure defect for assistive technology and heading-based tests, downgrades the SEO framing to a soft signal, and gives a small rank fix that keeps the visual size.",
+      "expectations": [
+        "The response states the HTML outline algorithm was never implemented by browsers or assistive technology and was removed from the HTML spec, so nesting does not re-rank headings.",
+        "It concludes that structure comes from the literal h1 to h6 rank in logical document order, so 20 sibling h1 elements flatten the page's section structure.",
+        "The fix keeps the visual type token and changes only the rank, for example an h2 or h3 per card under the results-section heading, rather than restyling or removing the headings.",
+        "The SEO claim is stated as a soft structure signal rather than a ranking penalty, since the title text is still indexed."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Following your earlier review we replaced the div-with-onClick submit control with `<button type=\"submit\">` inside the existing `<form>`. Now the form performs a real native submit, the browser blocks it on a `required` email field and shows its own bubble, and our custom inline error component never renders. Roll the button back to a div so our JS validation keeps working.",
+      "expected_output": "Refuses the rollback, explains that the blocking condition is the now-active native validity lifecycle rather than the element choice, keeps the native button, and routes the novalidate / setCustomValidity / reportValidity design to constraint-validation-contracts.",
+      "expectations": [
+        "The response keeps the native button and rejects reverting to a div, since the div would reintroduce the missing keyboard, disabled, and submit contracts.",
+        "It explains that the new symptom is the native constraint-validation lifecycle becoming reachable for the first time, not a defect introduced by the semantic fix.",
+        "It identifies the concrete decision point as whether the form opts out with novalidate and drives messaging in JS, or keeps native validation and styles it, without designing that lifecycle here.",
+        "The validity-lifecycle work, including reportValidity, setCustomValidity, and the :invalid styling contract, is routed to constraint-validation-contracts.",
+        "Any follow-up test asserting the rendered error is announced and associated is routed to a11y-contract-testing."
+      ]
+    }
+  ]
+}

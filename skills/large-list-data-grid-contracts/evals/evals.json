@@ -1,0 +1,42 @@
+{
+  "skill_name": "large-list-data-grid-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our message list uses TanStack Virtual with useVirtualizer({ count: messages.length, getScrollElement, estimateSize: () => 44, overscan: 5 }). Rows render markdown and wrap to anywhere from one to six lines. Users report that scrolling the thread jumps backward and the scrollbar keeps resizing, and that after older messages load at the top they lose their place. The row elements are rendered with an absolute transform but nothing calls measureElement. Screen reader users also hear \"3 of 20\" on a 5000-message thread.",
+      "expected_output": "Attributes the jump to a flat estimateSize for variable-height rows with no measureElement wired, so the total scroll range is computed from a wrong estimate and every measured row corrects offsets underneath the user; prescribes a realistic estimate plus measureElement on the row element, and anchoring the prepend to a stable item (firstItemIndex or a scrollToIndex restore) noting overflow-anchor cannot anchor unmounted rows; flags the missing aria-setsize/aria-posinset reflecting the full 5000, and routes turning those counts into an asserted test contract to a11y-contract-testing.",
+      "expectations": [
+        "The response ties the scroll jump and resizing scrollbar to estimateSize: () => 44 being flat for rows that wrap to variable heights, with no measureElement so measured sizes never replace the estimate.",
+        "The fix is narrow: a realistic estimate plus wiring measureElement on the rendered row so measured rows report true size.",
+        "Lost position after loading older messages is attributed to uncompensated prepending shifting following offsets, fixed by anchoring to a stable item (firstItemIndex or a scrollToIndex restore), with the note that CSS overflow-anchor can only anchor rows that are actually mounted.",
+        "The \"3 of 20\" announcement is attributed to the mounted window rather than the dataset, requiring aria-setsize and aria-posinset that reflect the full count (or -1 when unknown).",
+        "Running and asserting the AT or axe contract for those row/set-size values is routed to a11y-contract-testing, while this response only identifies that they are missing or wrong.",
+        "Verification is a browser or e2e scroll test with virtualization enabled at a realistic item count and a fixed container height, not the small jsdom fixture."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A profiler run on my laptop shows our MUI X Data Grid mounting about 60 row nodes while only 20 are visible, and our Lighthouse score on that admin page is 68. That is clearly an INP problem from overscan. File a P1 to set rowBufferPx to 0 and columnBufferPx to 0 so we only mount what is visible.",
+      "expected_output": "Rejects the finding: extra mounted rows inside the buffer are the intended overscan design, no blank rows or measured interaction regression has been shown, and a Lighthouse score is a lab number that does not measure INP. States that dropping the buffer to 0 predictably causes blank rows on fast scroll, especially with dynamic heights. Names the evidence that would change the verdict and routes the interaction-latency measurement question to core-web-vitals-performance-contracts.",
+      "expectations": [
+        "The response rejects the claim, stating that mounting rows outside the viewport is what the overscan/row-buffer is for and is not by itself a defect.",
+        "It states that a local profiler snapshot plus a Lighthouse score is not evidence of a user-visible interaction regression, because a lab score does not measure INP from real interactions.",
+        "It warns that setting the buffer to 0 causes blank white gaps on fast scroll, since rows unmount before the next ones mount and measure, and that dynamically measured rows need slightly more buffer, not less.",
+        "It names the evidence that would make this a real finding: a reproducible blank row under real scroll, or a measured interaction-latency regression attributed to the row render work.",
+        "Deciding whether interaction latency is actually failing, and attributing it with field data or long-task evidence, is routed to core-web-vitals-performance-contracts."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our virtualized results grid lives inside a drawer. Keyboard users tab into a row, scroll with the arrow keys, and once the focused row scrolls out of the window focus falls back to document.body and arrow keys start scrolling the page instead. We tried storing the focused row id and calling rowRef.current?.focus() in an effect when that row remounts, but focus still ends up on body, and sometimes it jumps to the drawer's close button instead.",
+      "expected_output": "Confirms the diagnosis that the focused row's node is removed when the virtualizer unmounts it, so focus falls to body, and that a roving-tabindex plus restore-on-remount is the right shape here; but explains the refocus fails because the drawer's own focus management (focus trap, initial-focus and return-focus behavior, scroll lock) is running and reclaiming focus, and that lifecycle is owned by overlay-focus-scroll-contracts, so the row-level restore cannot be verified until the overlay contract is settled.",
+      "expectations": [
+        "The response confirms that focus is lost because the focused row's DOM node is unmounted by the virtualizer, not because of a bug in the row component itself.",
+        "It identifies the drawer's focus management (trap, initial/return focus, scroll lock) as the blocking condition that reclaims focus and defeats the remount refocus, explaining why the obvious rowRef.focus() fix does not land.",
+        "The overlay focus lifecycle is routed to overlay-focus-scroll-contracts as the owner, while this skill keeps the row-unmount half: a single tab stop into the grid with roving tabindex and a deliberate restore.",
+        "It asks for the ordering evidence (which handler moves focus last) before prescribing further changes, rather than adding more focus() calls.",
+        "Verification is a keyboard e2e test with virtualization enabled that scrolls the focused row out of the window and asserts where focus lands."
+      ]
+    }
+  ]
+}

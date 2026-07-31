@@ -1,0 +1,51 @@
+{
+  "skill_name": "frontend-data-fetching-cache-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "RTK Query: getTodos has providesTags: (result) => result.map(({ id }) => ({ type: 'Todo', id })), and addTodo has invalidatesTags: [{ type: 'Todo', id: 'LIST' }]. Creating a todo returns 201 but the list does not show the new row until a full page reload. Give the smallest fix and say what you would not change.",
+      "expected_output": "Diagnoses a tag mismatch — the query provides only per-item ids, so no cached tag matches the mutation's LIST id and nothing refetches — adds the LIST tag to providesTags including the empty/error result case, and routes showing the row before the server confirms to optimistic-update-rollback-contracts.",
+      "expectations": [
+        "The response identifies that getTodos provides only per-item Todo ids, so the mutation's { type: 'Todo', id: 'LIST' } tag matches no provided tag and triggers no refetch.",
+        "The fix adds { type: 'Todo', id: 'LIST' } to getTodos' providesTags rather than broadening the mutation to invalidate the whole Todo type.",
+        "The providesTags function is made safe for an undefined or errored result so the LIST tag is still provided.",
+        "Displaying the row before the server responds, and removing it if the create fails, is routed to optimistic-update-rollback-contracts.",
+        "The verification creates a todo and asserts the list query refetches and contains the new row without a reload."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Renaming a project shows the new name instantly, then it flips back to the old name for about a second before settling on the new one. The report says the query key ['projects', orgId] is unstable and asks for a key redesign. The rename mutation writes the new name into the cache in onMutate, and a list refetch was already in flight when the user clicked.",
+      "expected_output": "Rejects the key-instability diagnosis because a fragmented key produces misses rather than a temporary revert, attributes the flicker to the in-flight refetch resolving over the optimistic write, and routes the fix to optimistic-update-rollback-contracts.",
+      "expectations": [
+        "The response rejects the unstable-key claim, noting that ['projects', orgId] is built from serializable primitives and that key fragmentation causes permanent cache misses or refetch churn, not a value that reverts then corrects itself.",
+        "It attributes the revert to a refetch that started before onMutate and resolved after the optimistic write, overwriting it with pre-mutation server data.",
+        "The owning fix — awaiting cancelQueries for that key inside onMutate before writing, then reconciling on settle — is routed to optimistic-update-rollback-contracts.",
+        "The response names the discriminating evidence: whether the reverted value equals the response of a request that was already in flight, versus the query never producing a cache hit at all."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A dashboard uses TanStack Query and users see yesterday's numbers on the first load after opening the app. The team already set staleTime: 0 and refetchOnWindowFocus: true and it did not help. The app registers a service worker whose Workbox config has a CacheFirst runtime route matching /api/.",
+      "expected_output": "Explains that the query layer is refetching correctly but the service worker answers those requests from Cache Storage, so no cache-timing setting can help, and routes the fix to pwa-offline-cache-contracts.",
+      "expectations": [
+        "The response states that a refetch still issues a fetch that the service worker intercepts, and a CacheFirst route returns cached bytes without reaching the server.",
+        "It notes that the Cache API ignores HTTP cache headers, so stored responses persist until explicitly deleted and no staleTime, gcTime, or focus-refetch setting can override them.",
+        "Changing the /api/ route to Network First or Network Only, and not runtime-caching per-user API responses in a per-origin cache, is routed to pwa-offline-cache-contracts.",
+        "The verification first confirms whether the API response is served from the service worker (a 'from ServiceWorker' network entry or a Cache Storage entry for that URL) before any further query-cache tuning."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A project page runs useQuery(['project', id]), then useQuery(['members', project?.ownerTeamId], { enabled: !!project }), and each rendered member row mounts its own useQuery for that member's avatar metadata. Time to rendered content is about 1.4s on a fast connection.",
+      "expected_output": "Names a dependent-request waterfall with an N+1 per-row tail, flattens the chain by prefetching in the router or parent and batching the per-row requests, and routes server-seeded initial cache data to ssr-hydration-mismatch.",
+      "expectations": [
+        "The response separates two problems: the members query blocked on the project result, and per-row avatar requests that only start after each child mounts.",
+        "The dependent chain is flattened by prefetching in the router or parent, or by restructuring the API so the team id does not require a first round trip.",
+        "The per-row requests are replaced by one batched request or a useQueries call at the list level instead of one query per row.",
+        "Seeding the cache from server-rendered data (dehydrate/hydrate or initialData) and its first-render divergence is routed to ssr-hydration-mismatch.",
+        "The verification is a network trace or test showing the previously serialized requests now overlap on the path the user waits for."
+      ]
+    }
+  ]
+}

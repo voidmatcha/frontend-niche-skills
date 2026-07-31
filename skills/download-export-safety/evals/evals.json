@@ -1,0 +1,65 @@
+{
+  "skill_name": "download-export-safety",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our CSV exporter sanitizes each field by checking `if (value[0] === '=') value = \"'\" + value` and then joins fields with commas, wrapping any field containing a comma or newline in double quotes. A note field can contain user text. Is the sanitizer sufficient?",
+      "expected_output": "Identifies that first-character-only sanitization runs before cell boundaries are known, so an embedded newline or separator can open a new cell whose first character is a formula character, and moves sanitization to the final per-field serialization step.",
+      "expectations": [
+        "The response explains that checking only the first character of the whole value misses content after an embedded newline or separator that starts a new spreadsheet cell.",
+        "It recommends sanitizing after cell boundaries are known, immediately before serializing each final field, rather than on the raw value up front.",
+        "It covers the other leading characters that spreadsheet software can interpret as a formula — `+`, `-`, `@`, plus tab and carriage return — not just `=`.",
+        "It traces the specific exported field (the user-controlled note) through to the spreadsheet cell instead of calling the pattern exploitable from the sanitizer code alone.",
+        "It proposes a unit test with inputs such as `=1+1`, `+cmd`, `-10`, `@SUM(1,1)`, a value containing a newline followed by `=1+1`, and a separator-containing value."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Audit flagged two issues in our export module: a JSON export that serializes user-entered text, and a `URL.createObjectURL(blob)` call whose `URL.revokeObjectURL(url)` runs three lines later after `a.click()`. Also we use the file-saver package elsewhere. Write these up as findings.",
+      "expected_output": "Rejects both as findings — JSON export is not CSV formula injection on its own, and a createObjectURL with a nearby post-click revoke is a positive control — and says the file-saver helper must be read before claiming any leak there.",
+      "expectations": [
+        "The JSON export is rejected as a formula-injection finding, since spreadsheet cell interpretation is not in play unless the payload reaches a spreadsheet target.",
+        "The `createObjectURL` call with a revoke after `a.click()` is described as a correct example, and the response notes that revoking before the browser can start the download is the actual defect shape to look for.",
+        "The response declines to claim an Object URL leak in the file-saver path without inspecting the helper, since provider utilities may revoke internally.",
+        "It states the PR-worthiness bar these findings fail: no user-controlled risk reaching an unsafe sink, and no missing policy or regression check.",
+        "It offers what would turn either item into a real finding — for example the JSON becoming a spreadsheet-imported CSV, or a revoke that never runs on an error path."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Copy-to-clipboard bug: our handler awaits a `/share-token` fetch, then calls `navigator.clipboard.writeText(token)` inside a `.then()`, and unconditionally sets a 'Copied!' toast. On one browser nothing lands on the clipboard but the toast still shows. Assign the fix.",
+      "expected_output": "Splits the report: the unconditional success toast and missing rejection handling/fallback belong here, while the question of whether the awaited fetch left the call outside valid user activation routes to user-activation-contracts.",
+      "expectations": [
+        "The unconditional 'Copied!' toast is owned by this skill and fixed by awaiting the write and rendering success only on resolution, with a visible failure or fallback state on rejection.",
+        "The response requires catching the rejected promise and testing that rejected path, rather than assuming the write succeeds.",
+        "The timing question — whether the awaited fetch pushed the clipboard call outside transient user activation on the affected browser — is routed to user-activation-contracts as the owner of gesture gating.",
+        "It does not assert that any await necessarily consumes activation, and asks for evidence from the affected browser before naming activation as the cause.",
+        "The outbound payload itself (a share token reaching the clipboard) is examined here as an export-payload question."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Someone reported path traversal because our download filename is built from a user-entered report title and a title like `../../etc/passwd` is accepted. The download is a client-side Blob delivered via `a[download]`. There is also a server endpoint that streams the same report with `Content-Disposition: attachment; filename=\"<title>.csv\"`.",
+      "expected_output": "Corrects the path-traversal framing for the client anchor download, since browsers sanitize path separators and control characters in the download filename, and keeps the real findings on private labels/PII in the name and the unsanitized server Content-Disposition filename.",
+      "expectations": [
+        "The response corrects the client-side claim: for `a[download]`, browsers sanitize path separators and control characters in the resulting filename, so this is not client path traversal.",
+        "It keeps the server `Content-Disposition` filename as the genuine finding, requiring sanitization of path separators and control characters plus correct RFC 5987 encoding for non-ASCII titles.",
+        "It separately raises PII and private-label exposure in the filename as a distinct risk from invalid characters, and suggests neutral date or id suffixes.",
+        "It distinguishes user inconvenience from a privacy or security claim instead of collapsing them into one severity.",
+        "It proposes a narrow verification: a filename normalization test covering `/`, `\\`, control characters, emoji, long titles, and a private prefix."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Our 'Export table' button serializes the raw row objects returned by the API, even though the table only shows six of the twenty fields. The raw rows include `internalNotes`, `ownerEmail`, `cardLast4`, and a `createdAt` ISO timestamp that users say is off by a day in the CSV.",
+      "expected_output": "Defines an explicit export schema separate from visible table state as the fix, keeps the payload-leakage finding primary, and routes the timestamp semantics to datetime-correctness and the card data to payment-page-client-security.",
+      "expectations": [
+        "The response identifies that visual column filtering does not filter the export, and requires an explicit export schema declared separately from the table's visible state.",
+        "`internalNotes` and `ownerEmail` are treated as concrete payload leakage with a named exported field path, not a generic warning.",
+        "The off-by-a-day `createdAt` in the CSV is routed to datetime-correctness for timezone and date-only semantics, while this skill keeps ownership of which fields ship.",
+        "`cardLast4` in an export is routed to payment-page-client-security rather than resolved here.",
+        "It proposes a regression check that asserts the exported column set matches the declared schema, so a new API field cannot silently join the export."
+      ]
+    }
+  ]
+}

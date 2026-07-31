@@ -1,0 +1,41 @@
+{
+  "skill_name": "view-transitions-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our gallery grid morphs a card into a detail pane using document.startViewTransition. The card CSS is `.gallery-card__media { view-transition-name: card-media; }` and it is applied to every card in the list. On a page with one card the morph works; on the real grid the detail pane just appears with no animation, though the correct card always opens. Nothing is logged. We also never handled reduced motion anywhere in this feature.",
+      "expected_output": "Diagnoses duplicate view-transition-name across the rendered cards: two or more elements carrying the same name in one frame make the transition skip and ViewTransition.ready reject, while updateCallback still runs, which is why the DOM change lands with no animation and no visible error. Prescribes suffixing the name with the card's unique id or key (or view-transition-name: match-element where supported) and clearing dynamically set names after the snapshot. Adds an explicit prefers-reduced-motion block on the ::view-transition pseudos, notes reduced does not mean none, and routes locking that reduced-motion behavior as a durable regression test to a11y-contract-testing.",
+      "expectations": [
+        "The response identifies the shared static view-transition-name on every card as the cause: duplicate names in the same frame abort the transition while the DOM update still applies.",
+        "It explains the silence: the transition is skipped rather than thrown, so ready rejects and nothing appears in the console unless that rejection is logged, and asks for a transition.ready.catch(...) log or the DevTools ::view-transition pseudo tree as confirmation.",
+        "The fix is narrow: give each card a unique name by suffixing the id or key, or use match-element where supported, and remove dynamically assigned names once the snapshot is taken so no ghost morph or later duplicate appears.",
+        "It states that prefers-reduced-motion is not honored automatically because the UA default cross-fade and group transform still run, and prescribes an explicit reduced-motion rule on ::view-transition-group/old/new or gating startViewTransition, noting an instant cut is often harsher than a very short cross-fade.",
+        "Turning the reduced-motion behavior into a durable test contract is routed to a11y-contract-testing."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Ticket: \"Route transitions are broken. I grepped the styles and found `view-transition-name: hero-image` hardcoded in one CSS rule, which is the documented duplicate-name bug, and about 8% of sessions never see the animation. Ship the id-suffix fix.\" For context, only the single hero on the active route ever carries that class, and the 8% is the share of sessions on browsers without View Transitions support.",
+      "expected_output": "Rejects the finding: a single static name that is never duplicated at runtime is fine, and sessions on browsers without View Transitions support degrading to no animation is graceful degradation, not a defect. Names the evidence that would change the verdict, and routes the case where the name or the markup differs between the server-rendered HTML and the client's first render to ssr-hydration-mismatch.",
+      "expectations": [
+        "The response rejects the claim, stating that one static view-transition-name is only a bug if two rendered elements carry it in the same frame, which the grep alone does not show.",
+        "It rejects the 8% figure as evidence, since a browser without View Transitions support simply applies the DOM change without animating, which is the intended graceful degradation and not a bug to fix with unique names.",
+        "It names the evidence that would change the verdict: two elements simultaneously carrying the name during the transition (for example an outgoing and incoming hero both mounted), or a logged ViewTransition.ready rejection on an affected session.",
+        "If the name or the surrounding markup diverges between server render and the client's first render, that is routed to ssr-hydration-mismatch.",
+        "It does not prescribe an id-suffix rewrite on unverified grounds and keeps any change narrow to whatever the evidence shows."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Opening our settings dialog runs startViewTransition. The dialog is a native <dialog> opened with showModal(), and the site header is position: fixed. During the transition the header vanishes and the dialog's own backdrop flashes over everything, then it snaps into place. We followed the guidance and gave the header its own view-transition-name plus a high z-index on its ::view-transition-group(), but the dialog content still paints wrong and now the header sits above the dialog for the duration.",
+      "expected_output": "Explains that a document-scoped transition paints the ::view-transition layer above everything including the top layer, so a top-layer <dialog> and its backdrop plus fixed chrome are being flattened into the root snapshot; the header name and z-index fix only reorders the two snapshots and cannot resolve the dialog's stacking, because the top-layer/backdrop/stacking contract for the modal is owned by overlay-focus-scroll-contracts. Says the transition change should be re-verified only after the overlay stacking is settled, and offers an element-scoped transition as the narrower alternative.",
+      "expectations": [
+        "The response explains that in a document-scoped transition the ::view-transition layer paints above the rest of the page including top-layer content, so the showModal() dialog and its backdrop and the fixed header are baked into the flat root snapshot.",
+        "It states why the applied fix did not work: naming the header and raising its ::view-transition-group z-index only orders the header against the root snapshot and does not give the top-layer dialog a correct place in that stack, which is also why the header now sits above the dialog.",
+        "The modal's top-layer, backdrop, and stacking contract is routed to overlay-focus-scroll-contracts as the blocking condition that must be settled first.",
+        "It offers an element-scoped view transition as the narrower alternative to a document-scoped one for this interaction, rather than layering more z-index patches.",
+        "Verification is a browser check of the ::view-transition pseudo tree in the DevTools Animations panel with the dialog open, repeated after the overlay stacking is fixed."
+      ]
+    }
+  ]
+}

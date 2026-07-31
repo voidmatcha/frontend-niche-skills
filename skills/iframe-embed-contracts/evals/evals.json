@@ -1,0 +1,61 @@
+{
+  "skill_name": "iframe-embed-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our React parent renders `<iframe src={guestUrl} />` in JSX and attaches `window.addEventListener('message', onMsg)` inside a `useEffect`. The guest posts `{type:'READY'}` from its module top level, and the parent replies with `frame.contentWindow.postMessage(config, '*')`. Roughly one load in ten shows a permanent spinner and never initializes; the parent's `onload` handler always fires, so we assumed the frame loaded fine. Fix it.",
+      "expected_output": "Names two defects in the host/guest protocol: the listener can attach after the guest has already emitted READY, so the first message is lost with no retry, and the parent replies with a wildcard `targetOrigin`. Fixes with a replayable idempotent handshake, listener registration before `src` assignment, exact `targetOrigin`, and full receive-side validation, then routes page-level CLS attribution to core-web-vitals-performance-contracts.",
+      "expectations": [
+        "The response explains the race: `src` is set during render while the `message` listener attaches in an effect afterward, so a fast guest can emit READY before anyone is listening.",
+        "It rejects `onload` as evidence that initialization succeeded, noting the `load` event fires even when the frame's resource failed and says nothing about the handshake.",
+        "The handshake fix makes READY replayable and idempotent — the guest re-emits until acknowledged, or the parent probes — so listener order, reload, and guest navigation all converge on one init state.",
+        "It requires the listener to be registered before the frame's `src` is assigned, which means setting `src` imperatively rather than inline in JSX.",
+        "The reply is changed from `'*'` to the guest's exact origin so the config payload cannot be delivered to a different document loaded in that frame.",
+        "Receive-side validation is added on both sides: `event.origin` against the expected origin, `event.source === iframe.contentWindow`, and message type, version, and payload schema before acting.",
+        "A bounded timeout with a visible diagnostic or error state replaces the permanent spinner.",
+        "Page-level CLS or LCP attribution for the reserved frame box is routed to core-web-vitals-performance-contracts, while the sizing protocol itself stays here."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Blocking a release: our embed bootstraps a sandboxed `srcdoc` guest and the parent's first call is `frame.contentWindow.postMessage(bootstrap, '*')`. `targetOrigin: '*'` is a critical data leak in every guide I've read. The bootstrap payload is `{type:'bootstrap', v:1, nonce}` plus a transferred MessagePort, and every later message goes over the port with schema validation. Confirm the block.",
+      "expected_output": "Declines to block on the wildcard alone: a sandboxed `srcdoc` guest reports origin `null`, so an exact `targetOrigin` is not expressible, and a one-shot bootstrap carrying only a nonce and a transferred port with all subsequent traffic on the port is the documented acceptable shape. States precisely what evidence would flip the verdict.",
+      "expectations": [
+        "The response explains that a sandboxed `srcdoc` or opaque-origin guest has origin `null`, so no exact `targetOrigin` string can address it and the wildcard is a consequence of that architecture rather than carelessness.",
+        "It accepts the described pattern as adequate because the channel is bound to the specific `source` plus an unguessable per-instance nonce and a transferred `MessagePort`, with schema validation on the port traffic.",
+        "It refuses to file the wildcard as a critical leak on the API name alone and says so directly.",
+        "It names what would change the verdict: the bootstrap carrying session tokens, PII, or any capability beyond the nonce and port; the wildcard used for ongoing traffic rather than the single bootstrap; the nonce being predictable or reused across instances; or another document being loadable into that same frame.",
+        "It checks the receive side too — that the guest verifies `event.source` and the nonce before adopting the port, since the wildcard send is only half the contract.",
+        "It confirms the guest is granted minimal capabilities rather than the parent accepting messages from any `null`-origin sender.",
+        "Any question about what the bootstrap payload is permitted to contain in terms of tokens or cookie policy is routed to frontend-security-baseline."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our widget is embedded on partner sites and embedded sign-in broke in Chrome and Safari — the guest can't read its own session cookie. Our fix was to call `document.requestStorageAccess()` in the guest's top-level module so access is granted before anything renders. The promise rejects immediately every time. What's wrong with the call?",
+      "expected_output": "Explains the fix cannot work where it is placed: the Storage Access API is permission- and user-activation-dependent, so a call at module scope with no transient activation rejects by design. Routes the activation requirement to user-activation-contracts and keeps the embed-side session exchange and recovery path here.",
+      "expectations": [
+        "The response identifies the blocking condition as the missing transient user activation and permission grant, not a bug in the storage or cookie configuration.",
+        "It explains that calling `requestStorageAccess()` at module scope during load means no user gesture is in flight, so the rejection is the specified behavior rather than an error to retry through.",
+        "The call is moved behind an explicit in-guest user gesture, and the gesture/activation lifetime question — what consumes activation and which awaits are safe before the call — is routed to user-activation-contracts.",
+        "It notes that even from a gesture the grant can be denied, so the design must handle denial rather than assume success.",
+        "This skill retains the embed-side contract: a visible top-level sign-in or recovery path when storage access is denied, and a preference for an explicit parent-to-guest exchange of short-lived, audience-bound session data over long-lived tokens in the URL.",
+        "It states that partitioned storage means the embedded guest may simply not see the cookies it sees top-level, so the design must not assume unpartitioned access is recoverable.",
+        "The verification covers the denial path in a real two-origin browser test, not only the granted path."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our embedded widget renders blank inside our React Native app. The engineer assigned it has been adjusting the guest's `frame-ancestors` and adding sandbox tokens for two days with no change. The host page is loaded by the app's WebView and the widget talks to the host through `window.ReactNativeWebView.postMessage`. Tell them which knob to turn next.",
+      "expected_output": "Stops the iframe-policy work: the failing channel is a JavaScript-to-native bridge, not a browser parent/guest frame relationship, so `frame-ancestors`, `frame-src`, and sandbox tokens are the wrong controls. Routes the native WebView host contract to webview-bridge-pages and states the narrow slice this skill would still own.",
+      "expectations": [
+        "The response identifies that `window.ReactNativeWebView.postMessage` targets native code, not `window.parent`, so this is a WebView bridge problem rather than an iframe host/guest problem.",
+        "It states that `frame-ancestors` and `X-Frame-Options` govern which parent documents may embed a page and do not describe a native WebView host, so further edits there cannot fix the blank render.",
+        "The native host contract — injected-script timing, the WebView's origin model, message handler registration, and inbound message validation on the native side — is routed to webview-bridge-pages.",
+        "It asks for the evidence that would separate the two cases: whether the widget is actually inside an `<iframe>` within the WebView page or is the WebView page itself, and what the exact origins are in each layer.",
+        "It names the narrow slice this skill would still own if a real iframe exists inside the WebView page: the READY/init handshake, `origin`/`source` validation between page and frame, sizing bounds, and teardown.",
+        "It does not recommend loosening sandbox tokens or adding `allow-same-origin` as a speculative unblock."
+      ]
+    }
+  ]
+}

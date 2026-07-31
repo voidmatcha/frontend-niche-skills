@@ -1,0 +1,41 @@
+{
+  "skill_name": "js-form-validation-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A react-hook-form signup form posts to /api/accounts. On a duplicate address the API returns 409 with `{ field: 'email', message: 'Email already registered' }`. The submit handler catches it and calls `toast.error(err.message)`. Users say the toast disappears before they find the field, and the form looks like nothing went wrong. Fix it.",
+      "expected_output": "Files this as two separate contracts: the missing mapping (setError on the owning field with focus) and the missing clearing lifecycle (a server error is outside resolver ownership, so it needs clearErrors on the next edit). Gives `setError('email', { type: 'server', message }, { shouldFocus: true })` plus a `clearErrors('email')` path, keeps a form-level fallback for non-field failures, proposes the submit-to-edit sequence test, and routes the message wording and its localization to i18n-copy-and-layout.",
+      "expectations": [
+        "The response reports the dropped mapping and the missing clearing as two distinct findings rather than one combined fix.",
+        "It maps the 409 back to the owning field with `setError` and focuses that field instead of relying on a toast.",
+        "It explains that a server or root error is outside resolver ownership, so re-validation alone will not clear it and `clearErrors(name)` (or an explicit server-error lifecycle) is required on the next edit.",
+        "It proposes a test covering submit, server error lands and focuses the field, edit clears the error.",
+        "The wording and localization of the server-supplied message is routed to i18n-copy-and-layout, not treated as this skill's fix."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A report says: 'This form uses `useForm({ mode: 'onChange' })`, which is the eager-validation antipattern, so users see errors before they have typed anything. Change the mode.' The complaint that actually prompted the review was from a screen reader user: when the email error appears after a failed submit, nothing is announced. There is no `validateOnMount`, no `trigger()` on mount, and a mounted-component test asserts no error text is present on first render.",
+      "expected_output": "Rejects the `mode: 'onChange'` finding: it validates on the first edit, which can be noisy or costly, but it is not a first-render error, and the mount test proves no error is shown. States what evidence would change the verdict (validateOnMount, a mount-time trigger(), or a test showing error text on first render). Then routes the actual reported failure, that the error is not announced, to a11y-contract-testing.",
+      "expectations": [
+        "The response refuses to treat `mode: 'onChange'` on its own as a mount-time error display, distinguishing eager first-edit validation from errors painted before interaction.",
+        "It cites the passing first-render test and the absence of `validateOnMount` or a mount-time `trigger()` as the reason the claim fails.",
+        "It names the evidence that would flip the verdict, such as `validateOnMount`, a `trigger()` call in a mount effect, or a test asserting error text on first render.",
+        "The unannounced-error symptom is routed to a11y-contract-testing as the owner of the error role, name, and announcement contract.",
+        "It does not silently swap the mode as a placating fix for a claim it just rejected."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A react-hook-form checkout keeps a stale 'Enter a valid email' error after the user corrects the field. You add `clearErrors('email')` on change and confirm in React DevTools that `formState.errors.email` is now gone. Submit is still blocked and no message renders anywhere. The JSX is `<form onSubmit={handleSubmit(onSubmit)}>` with no `noValidate`, and the field is written by hand as `<input type=\"email\" required {...register('email')} />`, so the native attributes are in the markup regardless of what the resolver does.",
+      "expected_output": "Confirms the clearErrors fix is correct for the library lifecycle, then explains that submit is blocked before `handleSubmit` ever runs: the form has no `noValidate`, so the browser's own validation on the hand-written `type=\"email\" required` attributes gates submission and shows its own UI. Routes that native engine behavior to constraint-validation-contracts and points at adding `noValidate` (or reconciling the two engines) as the decision that unblocks it.",
+      "expectations": [
+        "The response affirms the `clearErrors` change as the right fix for the library-side stale error.",
+        "It identifies the missing `noValidate` on the `<form>` plus the hand-written `required`/`type=\"email\"` attributes as the reason submission is blocked before the library handler runs.",
+        "It attributes the blocking condition to the native constraint validation engine and routes it to constraint-validation-contracts.",
+        "It states the decision to make: suppress the native engine with `noValidate` so the library owns validity, or deliberately keep both and reconcile which one wins.",
+        "It does not attribute the still-blocked submit to `reValidateMode`, `isValid` gating, or a resolver bug."
+      ]
+    }
+  ]
+}

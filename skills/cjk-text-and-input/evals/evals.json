@@ -1,0 +1,41 @@
+{
+  "skill_name": "cjk-text-and-input",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A controlled React username field runs `onChange={(e) => setValue(e.target.value.replace(/[^a-zA-Z0-9\\uAC00-\\uD7A3]/g, ''))}`. Korean users report that typing 한글 produces ㅎㅏㄴ그ㅡㄹ in the box, with syllables splitting apart as they type. English and Japanese kana typed with a hardware keyboard look fine. The field also shows and hides a 'Username is taken' message from a server check.",
+      "expected_output": "Identifies mid-composition mutation of a controlled value as the cause: the IME composes across keystrokes, and rewriting `value` on every change while `isComposing` is true destroys the composition buffer, producing jamo separation. Fix is to leave the value untouched while composing and apply the filter on `compositionend` (or blur), gating on `e.nativeEvent.isComposing`. Routes when the taken-username error appears and clears to js-form-validation-contracts.",
+      "expectations": [
+        "The response attributes the jamo separation to the onChange transform running while the IME is still composing, not to the regex range or to React's controlled-input model in general.",
+        "It moves the sanitization to `compositionend` or blur and gates the change handler on `event.nativeEvent.isComposing`.",
+        "It notes the composition event sequence (compositionstart, compositionupdate, compositionend) and that branching on `isComposing` is more reliable than assuming an event order across engines.",
+        "It proposes a regression that drives a real Korean composition sequence rather than asserting on a pasted final string.",
+        "The lifecycle of the server-sourced 'Username is taken' error is routed to js-form-validation-contracts."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "An audit flags `if (e.keyCode === 229) return;` in a search box keydown handler and says 'keyCode is deprecated and 229 is a magic number, this is the IME bug, remove it.' Reading the handler, the very next lines are `if (e.isComposing) return;` and `if (e.key === 'Enter') runSearch();`, and there are passing tests that press Enter mid-composition and assert no search fires. The behavior users actually complain about is that fast typing in the box makes results flicker between older and newer queries, and the box issues a fetch on every keystroke with no cancellation.",
+      "expected_output": "Rejects the finding: a `keyCode === 229` check sitting alongside an `isComposing` guard is a legacy-engine compatibility guard and a positive control, not a defect, and the passing mid-composition Enter tests confirm the contract holds. States what would make it a real finding, then routes the flickering stale results and uncancelled per-keystroke fetches to async-effect-race-contracts.",
+      "expectations": [
+        "The response refuses to treat `keyCode === 229` as a bug when it is used as a compatibility guard next to an `isComposing` check.",
+        "It cites the passing Enter-during-composition tests as evidence the composition contract is already held.",
+        "It names what would change the verdict, such as a real composition sequence where Enter submits partial text, or a target browser or WebView in the support matrix that lacks `isComposing`.",
+        "The out-of-order and uncancelled per-keystroke request behavior is routed to async-effect-race-contracts.",
+        "It does not recommend deleting the guard as cleanup."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Korean CTA labels break mid-word inside buttons, so '구독 신청하기' wraps as '구독 신청하 / 기' and native speakers read it as a typo. You add `word-break: keep-all` plus `overflow-wrap: break-word` to `.btn`, and the mid-word breaks stop. Now the ko build has three buttons whose text runs past the pill background and gets clipped: the buttons are `width: 132px` from the design system to match the English labels ('Subscribe', 'Buy now'), and the Korean strings are meaningfully longer.",
+      "expected_output": "Confirms keep-all plus overflow-wrap is the correct Korean line-breaking fix and that `line-break: strict|loose` would not have solved it, since that tunes Japanese and Chinese punctuation-adjacent breaking rather than Korean word integrity. Then identifies the fixed 132px width against longer translated strings as a different contract, and routes the label-expansion and container-sizing decision to i18n-copy-and-layout.",
+      "expectations": [
+        "The response affirms `word-break: keep-all` as the right way to keep space-separated Korean words intact, with `overflow-wrap: break-word` as the escape hatch for long unbreakable tokens.",
+        "It states that `line-break: strict` or `loose` tunes Japanese and Chinese punctuation-adjacent breaking and does not control Korean word integrity.",
+        "It identifies the fixed 132px design-system width versus longer translated copy as the blocking condition, not a residual line-breaking problem.",
+        "The translated-copy expansion and container sizing decision is routed to i18n-copy-and-layout.",
+        "It does not recommend reverting to `break-all` or removing `keep-all` to make the labels fit."
+      ]
+    }
+  ]
+}

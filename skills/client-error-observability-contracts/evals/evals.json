@@ -1,0 +1,61 @@
+{
+  "skill_name": "client-error-observability-contracts",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Users report the save button silently doing nothing. The handler is `onClick={async () => { await api.save(draft); toast('saved'); }}` and `api.save` throws on a 500. Nothing appears in our error dashboard. We have a route-level `<ErrorBoundary>` and `window.onerror = reportToSdk` in `main.tsx`. The team's plan is to wrap more of the tree in error boundaries. Diagnose and give the smallest fix.",
+      "expected_output": "Explains that neither wired surface can see this error: React error boundaries do not catch event handlers or async callbacks, and a rejected promise fires `unhandledrejection` rather than the `error` event that `window.onerror` serves. Fixes by wiring the missing global listener plus a local `try/catch`, and rejects the 'more boundaries' plan.",
+      "expectations": [
+        "The response states that React error boundaries catch render, lifecycle, and constructor errors only, so an `onClick` handler error never reaches them no matter how many boundaries are added.",
+        "It states that a rejected promise with no `.catch` fires `unhandledrejection` and not the `error` event, so `window.onerror` alone drops the entire rejection class.",
+        "The smallest fix adds `window.addEventListener('unhandledrejection', ...)` reporting to the same SDK, and a `try/catch` in the handler that stores the failure in state so the user sees something instead of silence.",
+        "It explicitly rejects wrapping more of the tree in boundaries as the fix, since that addresses a surface that was never the problem.",
+        "It notes that capture-phase resource errors (`addEventListener('error', fn, true)`) are a third disjoint surface worth confirming, rather than assuming two handlers cover everything.",
+        "It names the verification: reproduce the rejected save and confirm one issue arrives, rather than declaring the wiring fixed from the diff.",
+        "Whether a source map or secret exposure is acceptable to ship is routed to frontend-security-baseline rather than ruled on here."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our dashboard is full of `\"Script error.\"` with no stack. A grep shows none of the `<script src>` tags in `index.html` carry `crossorigin`, and they all point at `/assets/index-8f2a.js` and `/assets/vendor-3b71.js` on our own domain. Filing a P1 to add `crossorigin=\"anonymous\"` to every script tag. Approve?",
+      "expected_output": "Rejects the diagnosis: `crossorigin` is irrelevant on same-origin scripts, so adding it to `/assets/*` cannot be the cause of the blackout and will not remove it. Names the evidence that would locate the real cross-origin source and routes an alternate explanation to the sibling that owns it.",
+      "expectations": [
+        "The response states that the `\"Script error.\"` sanitization applies to cross-origin scripts, and that `/assets/index-8f2a.js` served from the same origin is not subject to it, so the proposed change addresses nothing.",
+        "It refuses to approve the P1 as diagnosed and says the cause has not been located yet.",
+        "It names the evidence that would identify the real source: which tag actually loaded the throwing code, including any third-party CDN bundle, analytics tag, or the error SDK's own loader script injected at runtime rather than present in `index.html`.",
+        "For a genuinely cross-origin script it states both required pieces — `crossorigin=\"anonymous\"` on the tag and a matching `Access-Control-Allow-Origin` from the asset host — and that the attribute alone does nothing.",
+        "It mentions that a restrictive `Cross-Origin-Resource-Policy` on the asset host can also block the fetch and keep stacks opaque.",
+        "It offers the alternate explanation worth checking for unattributable production noise: minified React hydration codes such as #418/#425 with no server-versus-client diff, routed to ssr-hydration-mismatch.",
+        "It asks for one real dashboard event with its message, line, column, and stack fields rather than reasoning from the grep output."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Production stacks are all `at t (index-8f2a.js:1:48213)` and unreadable. The proposed fix in the PR is to flip the bundler to `devtool: 'source-map'` and deploy the `.map` files next to the bundles so the SDK can fetch them. It works in staging. Should this merge?",
+      "expected_output": "Blocks the merge on a policy the sibling owns: a publicly deployed `.map`, or a live `sourceMappingURL` pointing at one, hands the original source to anyone, and that exposure ruling belongs to frontend-security-baseline. Gives the working alternative that keeps stacks readable without shipping source.",
+      "expectations": [
+        "The response identifies that deploying `.map` files beside the bundle makes the original source publicly downloadable, and that a live `//# sourceMappingURL=` comment advertises where to get it.",
+        "It states that the ruling on whether that source and any embedded internal detail may be public belongs to frontend-security-baseline, and routes it there rather than deciding the security policy itself.",
+        "The alternative it gives is hidden source maps generated at build time, uploaded to the monitoring backend, and deleted from the deploy artifact after upload.",
+        "It notes that modern SDKs match uploaded maps to the deployed bundle via Debug IDs, so the maps do not need to be reachable from the browser for symbolication to work.",
+        "It explains why staging success is not evidence: the fetch works precisely because the map is public, which is the objection.",
+        "It confirms the positive control that would make this a non-finding — maps already uploaded and removed from the deploy — so a correctly configured build is not later re-flagged as a leak."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "One checkout bug has fragmented into about 4,000 issues because the message is `Payment failed for order ${orderId} at ${timestamp}`. Add a `fingerprint` so they collapse into one. While you're in there, note that we attach `{ checkoutForm }` as `extra` on every capture so support can see what the user typed — `checkoutForm` holds the card number, expiry, CVC, and email.",
+      "expected_output": "Fixes the grouping as asked, but flags that the scrub must land first or alongside it: cardholder data and email are leaving the browser on every capture, and collapsing 4,000 issues into one does not reduce that. Routes the PAN/CVV boundary rule to payment-page-client-security without making any compliance claim.",
+      "expectations": [
+        "The grouping fix sets an explicit `fingerprint` keyed on a stable value such as the error type or code plus `{{ default }}`, and moves `orderId` and the timestamp out of the message into structured context.",
+        "It flags the `{ checkoutForm }` payload as the more urgent finding: card number, expiry, CVC, and email are serialized into every error event and leave the browser.",
+        "The scrub is placed client-side in a `beforeSend`/scrubber hook, with the statement that server-side scrubbing is a backstop rather than the boundary.",
+        "It recommends never placing PAN or CVV where the reporter can serialize them at all, rather than relying on redaction of a field that should not be in reach.",
+        "It notes that breadcrumbs, request URLs and query strings, and user context can carry the same data independently of `extra`, and that `sendDefaultPii` should stay off unless justified.",
+        "The rule that cardholder data must not be logged, and the payment-page evidence work around it, is routed to payment-page-client-security.",
+        "It makes no statement about PCI scope, SAQ eligibility, or compliance status.",
+        "The verification confirms both outcomes: the fragmented issues collapse to one, and a captured event payload contains no card or email values."
+      ]
+    }
+  ]
+}
