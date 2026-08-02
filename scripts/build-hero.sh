@@ -3,7 +3,7 @@
 #
 # The README banner is generated rather than hand-drawn so it stays in step
 # with the landing page: scripts/hero-source.html copies its palette and type scale
-# from docs/intro.html. Re-run this after changing either one.
+# from docs/index.html. Re-run this after changing either one.
 #
 # Requires Google Chrome. The condensed display face comes from macOS system
 # fonts, so rendering on another platform will substitute and shift the type.
