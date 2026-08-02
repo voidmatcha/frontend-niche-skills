@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frontend Niche Skills hero</title>
+    <style>
+      /* Source of truth for docs/assets/hero.png. Regenerate with
+         scripts/build-hero.sh after changing anything here. The palette and
+         type scale are copied from docs/intro.html so the README banner and
+         the landing page read as one system. */
+      :root {
+        --ink: #160719;
+        --paper: #fff0c9;
+        --blue: #4352dc;
+        --acid: #dff779;
+        --mint: #82e4c5;
+        --coral: #ffad8f;
+        --rose: #ff9fc8;
+        --paper-deep: #ffe17a;
+        --cyan: #8cecff;
+        --violet: #c7adff;
+        --sans: "Avenir Next", "Avenir", "Gill Sans", "Trebuchet MS", sans-serif;
+        --display: "DIN Condensed", "Avenir Next Condensed", "Arial Narrow", Impact, sans-serif;
+        --mono: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 1400px;
+        height: 600px;
+        overflow: hidden;
+        font-family: var(--sans);
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        width: 1400px;
+        height: 600px;
+        padding: 44px 64px 40px;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        grid-template-rows: 1fr auto auto;
+        column-gap: 28px;
+        row-gap: 18px;
+        align-items: start;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(223, 247, 121, 0.26) 0 1px, transparent 1px) 0 0 / 56px 56px,
+          linear-gradient(108deg, transparent 0 72%, var(--rose) 72% 100%),
+          var(--blue);
+        color: var(--paper);
+      }
+
+      .hero::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(rgba(255, 240, 201, 0.045) 1px, transparent 1px) 0 0 / 100% 22px,
+          linear-gradient(90deg, rgba(255, 240, 201, 0.045) 1px, transparent 1px) 0 0 / 22px 100%;
+        content: "";
+        pointer-events: none;
+        mask-image: linear-gradient(to bottom, #000, transparent 86%);
+      }
+
+      .claim {
+        position: relative;
+        z-index: 1;
+        grid-column: 1;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .brandmark {
+        margin-bottom: 26px;
+      }
+
+      .brandmark__title {
+        font-family: var(--display);
+        font-size: 27px;
+        font-weight: 950;
+        letter-spacing: 0.025em;
+        line-height: 0.92;
+        text-transform: uppercase;
+      }
+
+
+      h1 {
+        max-width: 15ch;
+        margin: 0;
+        color: var(--paper);
+        font-family: var(--display);
+        font-size: 124px;
+        font-weight: 950;
+        letter-spacing: 0.005em;
+        line-height: 0.86;
+        text-shadow: 0 10px 38px rgba(22, 7, 25, 0.22);
+        text-transform: uppercase;
+      }
+
+      h1 em {
+        display: block;
+        color: var(--acid);
+        font-style: normal;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        position: relative;
+        z-index: 1;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        max-width: none;
+        margin: 0;
+        color: rgba(255, 240, 201, 0.94);
+        font-size: 34px;
+        font-weight: 650;
+        line-height: 1.3;
+      }
+
+      .domains {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        flex-wrap: wrap;
+        gap: 9px;
+      }
+
+      .domains span {
+        flex: 1 1 auto;
+        padding: 9px 12px;
+        text-align: center;
+        white-space: nowrap;
+        border: 2px solid var(--ink);
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      /* Ten chip fills, ordered by hue so the row reads as one sweep. They are
+         literal values rather than palette tokens on purpose: each is checked
+         to sit at least 24 dE from every colour already on the banner (the blue
+         field, the rose wedge, the acid headline, the paper text, the gecko
+         tile) and at least 28 dE from the other nine, at 7:1 against the ink
+         label. Reusing the palette tokens would have repeated a background. */
+      .domains span:nth-child(1) {
+        background: #f47b7b;
+      }
+      .domains span:nth-child(2) {
+        background: #f7ba97;
+      }
+      .domains span:nth-child(3) {
+        background: #fbdc74;
+      }
+      .domains span:nth-child(4) {
+        background: #74fb74;
+      }
+      .domains span:nth-child(5) {
+        background: #74fbca;
+      }
+      .domains span:nth-child(6) {
+        background: #74e0fb;
+      }
+      .domains span:nth-child(7) {
+        background: #74b3fb;
+      }
+      .domains span:nth-child(8) {
+        background: #af97f7;
+      }
+      .domains span:nth-child(9) {
+        background: #d074fb;
+      }
+      .domains span:nth-child(10) {
+        background: #fc92ea;
+      }
+
+      .mascot {
+        position: relative;
+        z-index: 1;
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        align-self: start;
+      }
+
+      .mascot img {
+        display: block;
+        width: 100%;
+        border: 3px solid var(--ink);
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <div class="claim">
+        <div class="brandmark">
+          <span class="brandmark__title">Frontend Niche Skills</span>
+        </div>
+        <h1>A symptom is not a <em>diagnosis.</em></h1>
+      </div>
+      <p class="lede">
+        41 focused playbooks turn ambiguous UI reports<br />
+        into testable next checks.
+      </p>
+      <div class="domains">
+          <span>WebView</span>
+          <span>IME</span>
+          <span>Markup</span>
+          <span>Hydration</span>
+          <span>Forms</span>
+          <span>Dates</span>
+          <span>Auth</span>
+          <span>Payments</span>
+          <span>A11y</span>
+        <span>Design drift</span>
+      </div>
+      <figure class="mascot">
+        <img src="../docs/assets/gecko-mascot.png" alt="" />
+      </figure>
+    </div>
+  </body>
+</html>

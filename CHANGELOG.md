@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. This project follows the general shape of [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.0] - 2026-08-02
 
 ### Added
 
@@ -78,6 +78,23 @@ All notable changes to this project are documented here. This project follows th
 - GitHub Actions: `checks.yml` runs the pack checks on push/PR with Bats dependencies installed, and `link-check.yml` runs the full link sweep weekly, filing a `link-rot` issue when a citation dies.
 - "Source link maintenance" procedure in `docs/skill-evidence-coverage.md` for triaging a dead citation: successor URL, commit-SHA/Web Archive pin, claim re-verification, or claim removal.
 
+- Initial public release of `frontend-niche-skills`.
+- 14 focused frontend skills:
+  - `webview-bridge-pages`
+  - `a11y-contract-testing`
+  - `cjk-text-and-input`
+  - `deeplink-hydration`
+  - `i18n-copy-and-layout`
+  - `frontend-security-baseline`
+  - `frontend-auth-flow-contracts`
+  - `payment-page-client-security`
+  - `datetime-correctness`
+  - `ssr-hydration-mismatch`
+  - `constraint-validation-contracts`
+  - `js-form-validation-contracts`
+  - `design-to-code-fidelity`
+  - `component-extraction-judgment`
+
 ### Changed
 
 - Live routing artifacts now bind predictions and run manifests to a dataset ID,
@@ -130,24 +147,3 @@ All notable changes to this project are documented here. This project follows th
 - Repaired two rotted citations found by the first full link sweep: the moved react-spectrum `runAfterTransition.ts` (now commit-pinned) and the retired Vue Router typedoc page.
 - Replaced pinned version matrices with time-safe phrasing where they rot (React `<ViewTransition>` channel, Temporal support), labelled Sentry-specific options as such, and generalized incident-shaped wording in `bff-proxy-security-contracts`.
 - Trimmed the three longest frontmatter descriptions under the spec cap and compressed generic sections in six skills while leaving their gates intact.
-
-## [0.1.0] - 2026-06-25
-
-### Added
-
-- Initial public release of `frontend-niche-skills`.
-- 14 focused frontend skills:
-  - `webview-bridge-pages`
-  - `a11y-contract-testing`
-  - `cjk-text-and-input`
-  - `deeplink-hydration`
-  - `i18n-copy-and-layout`
-  - `frontend-security-baseline`
-  - `frontend-auth-flow-contracts`
-  - `payment-page-client-security`
-  - `datetime-correctness`
-  - `ssr-hydration-mismatch`
-  - `constraint-validation-contracts`
-  - `js-form-validation-contracts`
-  - `design-to-code-fidelity`
-  - `component-extraction-judgment`
