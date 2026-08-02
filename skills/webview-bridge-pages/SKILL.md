@@ -223,5 +223,6 @@ smallest web-side change, and any native-app test still required.
 | [page-implementation](./references/page-implementation.md) | Query parsing on SPA hydration, timers, viewport/safe-area/keyboard/font scale |
 | [react-native](./references/react-native.md) · [wkwebview](./references/wkwebview.md) · [android-webview](./references/android-webview.md) · [flutter](./references/flutter.md) | Host APIs, version caveats, quirks |
 | [regression-testing](./references/regression-testing.md) | WebView evidence tiers, Android/iOS actual-engine workflow, reporting template |
+| [why-webview-bridge-pages](./references/why-webview-bridge-pages.md) | Why this skill exists: WebView-specific prior art, bridge libraries, host behavior references, and ecosystem notes. |
 
 Sources are listed in each reference file.

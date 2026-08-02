@@ -1,0 +1,62 @@
+name: Skill missed or misrouted a bug
+description: A skill gave the wrong diagnosis, fired on the wrong report, or failed to fire
+labels: ["routing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This pack routes by evidence, so the report needs the same evidence it
+        asks agents for. Partial reports are still welcome, but the fields below
+        are what make a case reproducible.
+
+  - type: input
+    id: skill
+    attributes:
+      label: Skill involved
+      description: Which skill fired, or which one should have.
+      placeholder: webview-bridge-pages
+    validations:
+      required: true
+
+  - type: textarea
+    id: report
+    attributes:
+      label: The report as the agent received it
+      description: Paste the prompt or issue text verbatim. Wording is what routing keys on.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What the agent concluded, and what was actually wrong
+    validations:
+      required: true
+
+  - type: input
+    id: host
+    attributes:
+      label: Host and engine
+      description: Desktop browser and version, or the app WebView, OS version, and wrapper.
+      placeholder: iOS 18.4 WKWebView via react-native-webview 13.x
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: evidence
+    attributes:
+      label: Evidence separated
+      description: Which of these did you actually observe, as opposed to infer?
+      options:
+        - label: Layout, the box exists and has size
+        - label: Hit-test, the element receives input
+        - label: Paint, the element is visible
+        - label: DOM structure or accessibility tree
+        - label: Network or console
+        - label: Reproduced in the host where it fails, not only a desktop browser
+
+  - type: textarea
+    id: agent
+    attributes:
+      label: Agent and install method
+      placeholder: Claude Code, installed via the plugin marketplace

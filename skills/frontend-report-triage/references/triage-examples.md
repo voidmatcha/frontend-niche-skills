@@ -43,3 +43,28 @@ Report: "Checkout embeds a Stripe iframe but also loads analytics and chat widge
 - Likely classes: `payment-page-client-security` high; `frontend-security-baseline` possible for broader script/CSP review.
 - Evidence: runtime script inventory, PAN/CVV field ownership, CSP/SRI/header state.
 - First verification: inspect runtime DOM/network while entering test card data; do not infer PCI scope from source files alone.
+
+## Why this skill exists
+
+41 focused skills can feel like too much when a raw user report mentions several domains at once:
+
+- "The modal is visible, but keyboard focus is behind it."
+- "Korean users press Enter and search submits too early."
+- "The checkout page uses Stripe, but it also loads analytics."
+- "The CSV export opens in Excel and runs weird formulas."
+
+Without a triage layer, agents may choose the first keyword they see or load too many skills. This skill keeps the pack usable by ranking likely failure classes first.
+
+## Routing quick reference
+
+| Report | Good route | Avoid |
+| --- | --- | --- |
+| "Clickable but invisible in WebView" | Separate layout, hit-test, paint, and host lifecycle evidence. | CSS retry or desktop Chrome-only fix. |
+| "aria-hidden warning in modal" | Inspect active element, hidden subtree, focus restore, and scroll lock. | Generic a11y checklist without runtime state. |
+| "CSV export user data" | Inspect final spreadsheet cells and formula policy. | Calling every CSV string a vulnerability. |
+| "Payment page loads third-party scripts" | Inventory runtime scripts and PAN/CVV boundary. | Declaring payment compliance from source alone. |
+| "Hydration warning after login redirect" | Separate URL state, auth state, and first-render determinism. | Treating it as only router or only SSR before evidence. |
+
+## Evidence status
+
+This document contains synthetic routing examples, not external OSS defect evidence. Use it to pick follow-up skills and evidence gaps. Use [`skill-evidence-coverage.md`](../../../docs/skill-evidence-coverage.md) to see each skill's evidence status. Use [`oss-validation-cases.md`](../../../docs/oss-validation-cases.md) and per-skill references when you need source-backed examples.

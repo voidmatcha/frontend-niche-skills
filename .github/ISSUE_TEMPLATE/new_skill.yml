@@ -1,0 +1,56 @@
+name: Propose a new skill
+description: Suggest a failure class the pack does not cover
+labels: ["new-skill"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        New skills are admitted against the six-question gate in
+        [docs/skill-quality-standard.md](../../docs/skill-quality-standard.md).
+        The questions below are those, so answering here is the proposal.
+
+  - type: textarea
+    id: failure
+    attributes:
+      label: What breaks, and how does it recur?
+      description: Primary documentation plus a reproduced case, an upstream issue pattern, or repeated user evidence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: surface
+    attributes:
+      label: Why is this not tied to one product or one component?
+      description: The contract should hold on a real shipped surface across frameworks or hosts.
+    validations:
+      required: true
+
+  - type: textarea
+    id: agent_difficulty
+    attributes:
+      label: What plausible default fix would a general coding agent reach for, and why is it wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: distinct
+    attributes:
+      label: Which existing skill is closest, and what separates them?
+      description: Name the sibling. If the triage route, evidence type, and success criterion already belong to it, this is an extension rather than a new skill.
+    validations:
+      required: true
+
+  - type: textarea
+    id: testable
+    attributes:
+      label: What reproduction or regression distinguishes the bug from a harmless pattern?
+    validations:
+      required: true
+
+  - type: textarea
+    id: rejection
+    attributes:
+      label: What does a weak finding look like, and how would the skill reject it?
+      description: Positive controls, known false positives, and the point where evidence is too thin to file or patch.
+    validations:
+      required: true

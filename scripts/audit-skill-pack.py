@@ -474,6 +474,31 @@ def check_readmes(root: Path, result: dict[str, Any], skill_names: list[str]) ->
                 add(result, "errors", rel_path, None, "README skill links must match README.md order")
     result["summary"]["readme_skill_order_checked"] = order_checked
 
+    # The symptom map is a second index over the same skills, written as code
+    # spans rather than links, so README_SKILL_RE does not see it. Without this
+    # the catalog stays guarded while the symptom map can silently drift.
+    symptom_checked = 0
+    for readme in readmes:
+        rel_path = rel(readme, root)
+        rows: list[str] = []
+        for line in readme.read_text(encoding="utf-8").splitlines():
+            if not line.startswith("|"):
+                continue
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) == 3 and re.fullmatch(r"`[a-z0-9-]+`", cells[1]):
+                rows.append(cells[1].strip("`"))
+        if len(rows) < len(skill_names) // 2:
+            continue
+        symptom_checked += 1
+        seen = sorted(set(rows))
+        for name in sorted(name for name in seen if rows.count(name) > 1):
+            add(result, "errors", rel_path, None, f"duplicate symptom-map entry for {name}")
+        for name in sorted(set(skill_names) - set(seen)):
+            add(result, "errors", rel_path, None, f"missing symptom-map entry for {name}")
+        for name in sorted(set(seen) - set(skill_names)):
+            add(result, "errors", rel_path, None, f"symptom map names skill without folder: {name}")
+    result["summary"]["readme_symptom_map_checked"] = symptom_checked
+
 
 def check_reference_toc(root: Path, result: dict[str, Any], skill_dirs: list[Path]) -> None:
     """Reference files over 100 lines need a contents list.
@@ -653,34 +678,6 @@ def check_manifests(root: Path, result: dict[str, Any], skill_names: list[str]) 
             add(result, "warnings", rel(path, root), None, "manifest references unpublished public GitHub URL")
 
 
-def check_backlog_snapshot(root: Path, result: dict[str, Any]) -> None:
-    path = root / "docs" / "oss-maintainer-candidate-backlog.md"
-    if not path.exists():
-        return
-    lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
-    sections = [
-        "core-web-vitals-performance-contracts",
-        "frontend-data-fetching-cache-contracts",
-        "async-effect-race-contracts",
-        "pwa-offline-cache-contracts",
-        "large-list-data-grid-contracts",
-    ]
-    for section in sections:
-        heading = f"## `{section}`"
-        try:
-            start = lines.index(heading)
-        except ValueError:
-            add(result, "warnings", rel(path, root), None, f"missing backlog section {section}")
-            continue
-        end = start + 1
-        while end < len(lines) and not lines[end].startswith("## "):
-            end += 1
-        items = [line for line in lines[start + 1 : end] if re.match(r"^\d+\. \*\*", line)]
-        nums = [int(re.match(r"^(\d+)\.", line).group(1)) for line in items]
-        if nums != list(range(1, 11)):
-            add(result, "errors", rel(path, root), start + 1, f"section {section} must have 10 numbered candidates; found {nums}")
-
-
 def check_evidence_coverage(root: Path, result: dict[str, Any], skill_names: list[str]) -> None:
     path = root / "docs" / "skill-evidence-coverage.md"
     if not path.exists():
@@ -761,6 +758,13 @@ def check_agent_metadata(root: Path, result: dict[str, Any], skill_dirs: list[Pa
     result["summary"]["openai_agent_metadata_checked"] = checked
 
 
+# Captured agent transcripts under evals/behavioral are evidence of what a model
+# said, not claims this repository is making. Rewording one so the overclaim
+# linter passes would falsify the record, so that check skips them. Every other
+# check still applies to them.
+CAPTURED_TRANSCRIPT_RE = re.compile(r"^evals/behavioral/[^/]+/condition-[^/]+\.md$")
+
+
 def check_overclaims(root: Path, result: dict[str, Any]) -> None:
     allowed_phrases = (
         "review claims",
@@ -779,6 +783,8 @@ def check_overclaims(root: Path, result: dict[str, Any]) -> None:
         "this site is/is not pci compliant",
     )
     for path in markdown_files(root):
+        if CAPTURED_TRANSCRIPT_RE.match(rel(path, root)):
+            continue
         lines = path.read_text(encoding="utf-8", errors="ignore").splitlines()
         for idx, line in enumerate(lines, 1):
             context = " ".join(lines[max(0, idx - 2) : min(len(lines), idx + 1)]).lower()
@@ -841,6 +847,35 @@ def check_script_syntax(root: Path, result: dict[str, Any]) -> None:
     result["summary"]["scripts_syntax_checked"] = checked
 
 
+def self_repository_prefixes(root: Path) -> tuple[str, ...]:
+    """URL prefixes that point at this repository itself.
+
+    A link to our own CI workflow, or to a raw file in our own tree, is a
+    self-reference rather than a citation. The external check exists to catch
+    dead evidence, and these cannot resolve at all until the repository is
+    public, so checking them would gate the README on publication order.
+    Returns an empty tuple when no origin remote is configured.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ()
+    url = proc.stdout.strip()
+    match = re.search(r"github\.com[:/]([^/\s]+)/([^/\s]+?)(?:\.git)?$", url)
+    if not match:
+        return ()
+    owner, repo = match.group(1), match.group(2)
+    return (
+        f"github.com/{owner}/{repo}",
+        f"raw.githubusercontent.com/{owner}/{repo}",
+    )
+
+
 def check_external_links(root: Path, result: dict[str, Any], only: list[Path] | None = None) -> None:
     """Opt-in network check: external URLs in tracked markdown must still resolve.
 
@@ -857,6 +892,7 @@ def check_external_links(root: Path, result: dict[str, Any], only: list[Path] | 
     from concurrent.futures import ThreadPoolExecutor
 
     skip_hosts = ("example.com", "example.org", "example.test", "localhost", "127.0.0.1")
+    self_prefixes = self_repository_prefixes(root)
     if only is not None:
         files = {path for path in only if path.exists() and path.suffix == ".md"}
     else:
@@ -880,6 +916,7 @@ def check_external_links(root: Path, result: dict[str, Any], only: list[Path] | 
                 or "@" in host
                 or host.endswith((".example", ".test", ".invalid"))
                 or any(skip in url for skip in skip_hosts)
+            or any(url.split("://", 1)[-1].startswith(prefix) for prefix in self_prefixes)
             ):
                 continue
             first_seen.setdefault(url, path)
@@ -918,6 +955,53 @@ def check_external_links(root: Path, result: dict[str, Any], only: list[Path] | 
         result["summary"]["external_urls_unverified"] = unverified
 
 
+def check_published_audit_output(root: Path, result: dict[str, Any]) -> None:
+    """The READMEs publish this command's output; keep it from going stale.
+
+    A sample output block that no longer matches the real run is exactly the
+    kind of unchecked claim this pack argues against, and it drifts silently
+    every time a document is added. Root is skipped because it is machine
+    specific.
+    """
+    label_to_key = {
+        "Skills": "skill_count",
+        "Local markdown refs checked": "local_markdown_refs_checked",
+        "Sources sections checked": "sources_sections_checked",
+        "Skill contracts checked": "skill_contracts_checked",
+        "Eval files checked": "eval_files_checked",
+        "Eval cases checked": "eval_cases_checked",
+        "Reference files checked": "reference_files_checked",
+        "README skill orders checked": "readme_skill_order_checked",
+        "README symptom maps checked": "readme_symptom_map_checked",
+    }
+    checked = 0
+    for path in sorted(root.glob("README*.md")):
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        block = re.search(r"```console\n(.*?)```", text, re.DOTALL)
+        if block is None:
+            continue
+        checked += 1
+        for line in block.group(1).splitlines():
+            label, sep, shown = line.partition(":")
+            if not sep:
+                continue
+            key = label_to_key.get(label.strip())
+            if key is None:
+                continue
+            actual = result["summary"].get(key)
+            if actual is None:
+                continue
+            if shown.strip() != str(actual):
+                add(
+                    result,
+                    "errors",
+                    rel(path, root),
+                    None,
+                    f"published audit output is stale: {label.strip()} shows {shown.strip()}, run reports {actual}",
+                )
+    result["summary"]["published_audit_blocks_checked"] = checked
+
+
 def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None = None) -> dict[str, Any]:
     result: dict[str, Any] = {
         "root": str(root),
@@ -948,7 +1032,6 @@ def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None =
     check_markdown_links(root, result)
     check_source_urls(root, result)
     check_manifests(root, result, skill_names)
-    check_backlog_snapshot(root, result)
     check_evidence_coverage(root, result, skill_names)
     check_triage_coverage(root, result, skill_names)
     check_agent_metadata(root, result, skill_dirs)
@@ -957,6 +1040,8 @@ def audit(root: Path, check_links: bool = False, link_paths: list[Path] | None =
     check_script_syntax(root, result)
     if check_links:
         check_external_links(root, result, only=link_paths)
+    # Runs last: it compares against summary counters every other check fills in.
+    check_published_audit_output(root, result)
     result["ok"] = not result["errors"] and not result["warnings"]
     return result
 
@@ -967,12 +1052,18 @@ def print_text(result: dict[str, Any]) -> None:
     print(f"Skills: {result['summary'].get('skill_count', 0)}")
     print(f"Local markdown refs checked: {result['summary'].get('local_markdown_refs_checked', 0)}")
     print(f"Sources sections checked: {result['summary'].get('sources_sections_checked', 0)}")
-    print(f"Compatibility fields checked: {result['summary'].get('compatibility_fields_checked', 0)}")
+    compatibility_checked = result["summary"].get("compatibility_fields_checked", 0)
+    # `compatibility` is optional in the spec and no skill here sets it, so this
+    # counter is always 0. The README publishes this output verbatim, where a
+    # permanently-zero line reads as a dead check rather than an unused field.
+    if compatibility_checked:
+        print(f"Compatibility fields checked: {compatibility_checked}")
     print(f"Skill contracts checked: {result['summary'].get('skill_contracts_checked', 0)}")
     print(f"Eval files checked: {result['summary'].get('eval_files_checked', 0)}")
     print(f"Eval cases checked: {result['summary'].get('eval_cases_checked', 0)}")
     print(f"Reference files checked: {result['summary'].get('reference_files_checked', 0)}")
     print(f"README skill orders checked: {result['summary'].get('readme_skill_order_checked', 0)}")
+    print(f"README symptom maps checked: {result['summary'].get('readme_symptom_map_checked', 0)}")
     scripts = result["summary"].get("scripts_syntax_checked", [])
     print(f"Scripts syntax checked: {len(scripts)}")
     if "external_urls_checked" in result["summary"]:

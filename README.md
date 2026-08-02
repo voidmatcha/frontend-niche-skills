@@ -2,9 +2,10 @@
 <img src="docs/assets/hero.png" alt="frontend-niche-skills — frontend edge-case agent skills for WebView, IME, semantic markup, hydration, forms, dates, auth, payment pages, a11y, and design drift." width="100%" />
 </div>
 
-# Frontend Niche Skills
+<h1 align="center">Frontend Niche Skills</h1>
 
 <p align="center">
+<a href="https://github.com/voidmatcha/frontend-niche-skills/actions/workflows/checks.yml"><img alt="Checks" src="https://github.com/voidmatcha/frontend-niche-skills/actions/workflows/checks.yml/badge.svg" /></a>
 <a href="#skills"><img alt="Agent Skills" src="https://img.shields.io/badge/Agent_Skills-41-1FC07C?style=flat-square&amp;labelColor=black" /></a>
 <a href="https://claude.com/product/claude-code"><img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-compatible-D97757?style=flat-square&amp;labelColor=black&amp;logo=anthropic&amp;logoColor=white" /></a>
 <a href="https://github.com/openai/codex"><img alt="Codex" src="https://img.shields.io/badge/Codex-compatible-412991?style=flat-square&amp;labelColor=black&amp;logo=openai&amp;logoColor=white" /></a>
@@ -16,6 +17,15 @@
 <strong>🇺🇸 English</strong> | <a href="README.ko.md">🇰🇷 한국어</a> | <a href="README.ja.md">🇯🇵 日本語</a> | <a href="README.zh-cn.md">🇨🇳 简体中文</a>
 </p>
 
+<p align="center">
+<a href="#skills">41 skills</a> ·
+<a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">blinded routing comparison, 16 of 138 cases</a> ·
+<a href="./evals/behavioral/">two self-run behavioral tests, both tied</a> ·
+<a href="./docs/oss-validation-cases.md">commit-pinned OSS casebook</a> ·
+<a href="#development-checks">173 eval-case specs</a> ·
+<a href="./.github/workflows/link-check.yml">CI-checked citations</a>
+</p>
+
 **Agent Skills for frontend edge cases that broad checklists often miss — WebView pages, semantic markup, overlay lifecycle, IME/CJK input, hydration, forms, auth, payment pages, exports, dates, visual fidelity, and report triage.**
 
 `frontend-niche-skills` gives Claude Code, Codex, and other `AGENTS.md`-compatible coding agents focused playbooks for bugs where the right fix depends on separating evidence types: layout vs paint, DOM vs accessibility tree, browser vs native WebView host, server render vs client hydration, payment-page data boundary vs runtime script surface, and export file vs spreadsheet/Blob/clipboard behavior.
@@ -24,51 +34,32 @@ These skills are not replacements for project conventions, security review, QSA/
 
 ## Contents
 
-- [Install](#install)
-- [Quick example](#quick-example)
-- [Workflow](#workflow)
-- [Skills](#skills)
-- [Symptom map](#symptom-map)
-- [Evidence](#evidence)
-- [Development checks](#development-checks)
-- [FAQ](#faq)
-- [License](#license)
+[Why routing first](#why-routing-first) · [Quick example](#quick-example) · [Try one skill without installing](#try-one-skill-without-installing) · [Quick fit](#quick-fit) · [Symptom map](#symptom-map) · [Skills](#skills) · [Install](#install) · [Workflow](#workflow) · [Evidence](#evidence) · [Development checks](#development-checks) · [Contributing](#contributing) · [FAQ](#faq) · [License](#license)
 
-## Install
+## Why routing first
 
-Install the [`skills` CLI](https://www.skills.sh/). Skills follow the [`SKILL.md` format](https://agentskills.io/specification).
+One report, answered two ways:
 
-These skills target Claude Code, Codex, and other agents that honour the specification's 1024-character `description` cap, and they spend that budget on trigger phrases so the right skill fires. The Claude.ai upload path caps `description` at 200 characters instead, so uploading these unchanged will fail there ([Claude docs](https://claude.com/docs/skills/how-to)).
+```diff
+  "The CTA is still clickable after app resume, but its label disappeared."
 
-The `voidmatcha/frontend-niche-skills` commands below assume the public repository or plugin marketplace entry is available. For a local or pre-release checkout, use the local checkout commands in this section instead.
-
-```bash
-# Claude Code + Codex via skills CLI
-npx skills add voidmatcha/frontend-niche-skills --skill '*' -g -a claude-code -a codex
-
-# Other agents supported by the installed skills CLI
-npx skills add voidmatcha/frontend-niche-skills --skill '*' -g --agent '*'
+- Add a re-render on AppState change and a 300ms delay before painting.
++ The box still receives taps, so hit-test passes and paint does not.
++ That rules out bridge routing and re-render timing, and points at
++ compositing: isolation boundary, child z-index, layer promotion.
 ```
 
-### Claude Code plugin
+You have seen this loop. A report says the button does nothing. The agent adds an `await`. Still broken. It adds a retry. Still broken. It adds a 300ms delay, that reload happens to work, and the patch ships. Nobody ever established whether the button was unclickable, clickable but unpainted, or clicked and silently failing. Those three share nothing except the sentence that described them, and only one of them was ever a timing bug.
 
-```bash
-/plugin marketplace add voidmatcha/frontend-niche-skills
-/plugin install frontend-niche-skills@voidmatcha
-```
+That is the expensive failure. Not a bad patch, a plausible patch aimed at a misread symptom, which passes review because no one checked which boundary actually broke.
 
-### Codex plugin local checkout
+Agent-repair research points the same way: locating the fault consumes a large share of an agent's budget, and a location handed to the repair step without diagnostic context leaves it guessing ([arXiv:2606.24820](https://arxiv.org/abs/2606.24820), [arXiv:2502.00350](https://arxiv.org/abs/2502.00350)). Those are Python repositories rather than browsers, so take the mechanism from them, not the numbers.
 
-This repo includes `.codex-plugin/plugin.json` and Claude plugin manifests. From a local checkout:
-
-```bash
-codex plugin marketplace add "$(pwd)"
-codex plugin add frontend-niche-skills@frontend-niche-skills
-```
-
-Start a new Codex or Claude Code session after installing or updating so bundled skills refresh.
+So a skill here is not a checklist. It is one boundary, plus the evidence that separates it from the boundary next door: what it means when hit-test passes and paint does not, how a bridge that never sent `READY` differs from one whose message was dropped, which of those a screenshot can settle and which it cannot. That is the part an agent cannot infer from the bug report, and it is the part that decides whether the next patch is aimed at anything real.
 
 ## Quick example
+
+The full exchange behind that contrast. It is written to show the shape of the output, not captured from a session; the recorded runs are under [`evals/behavioral/`](./evals/behavioral/).
 
 ```text
 You: Review this React Native WebView onboarding page. The CTA area is still
@@ -93,13 +84,90 @@ Verification
 
 Pattern value: make the agent test the right hypothesis before applying another generic patch.
 
-## Workflow
+## Try one skill without installing
 
-1. **Pick the symptom skill.** Use the narrowest skill whose failure mode matches the bug.
-2. **Read repo context.** Pair the skill with project routing, design tokens, i18n, tests, and browser/device support.
-3. **Separate evidence types.** Layout, paint, hit-test, DOM structure, accessibility tree, network, hydration, locale behavior, runtime scripts, and exported files can disagree.
-4. **Fix the cause, not the symptom.** Prefer removing fragile timing or duplicated logic over adding retries.
-5. **Verify in the right host.** WebView bugs need app-WebView evidence; payment-page findings need runtime script/PAN-boundary evidence; visual fidelity needs reference/render capture; form/a11y findings need regression tests where possible.
+Paste this into any agent that can fetch a URL. It costs nothing and takes about a minute.
+
+```text
+Read https://raw.githubusercontent.com/voidmatcha/frontend-niche-skills/main/skills/cjk-text-and-input/SKILL.md
+and then diagnose this report: our Korean search box runs the search twice when
+the user presses Enter, only for some users, and a 300ms debounce reduced it but
+did not stop it.
+```
+
+That is the same report used in the behavioral run linked above, so you can compare what your agent says against [both recorded conditions](./evals/behavioral/2026-08-01-ime-enter-double-submit/).
+
+## Quick fit
+
+Use `frontend-niche-skills` when:
+
+- A report names a symptom, such as a blank area, a stale screen, or a silent failure, without naming which boundary broke.
+- An agent keeps proposing plausible generic patches, a retry, a delay, an extra re-render, that do not hold.
+- The failure only reproduces in one host: an app WebView, a third-party iframe, a single browser engine, one locale.
+- You want the agent to state what evidence would confirm or reject a cause before it edits code.
+
+Do not use it as:
+
+- a replacement for running the app in the host where the bug actually appears,
+- a generic frontend lint preset or code-style rule set,
+- a compliance decision, since payment-page findings are evidence and a QSA, acquirer, or payment owner decides scope,
+- a substitute for project-local conventions: routing, design tokens, auth model, test runner, browser and device matrix.
+
+## Symptom map
+
+Use this after scanning the grouped skill list. Start from the failure signal, pick the most specific runtime evidence first, then hand off to sibling skills as needed.
+
+| Failure signal | Start with | First question to ask |
+| --- | --- | --- |
+| Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app browser; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
+| A browser iframe/widget is blank, accepts spoofed messages, loses READY/init, flickers while resizing, lacks a required capability, or loses embedded sign-in. | `iframe-embed-contracts` | What are the exact parent/guest origins, delivered frame policies, authenticated message handshake, sizing protocol, and storage mode? |
+| Browser Back/Forward restores stale or private UI, or a timer/socket/observer is dead or duplicated after return. | `browser-page-lifecycle-bfcache-contracts` | Was this a persisted restore, what state/resource needs idempotent reconciliation, and what does the real history traversal show? |
+| SPA Back/Forward or same-document hash navigation returns to the wrong scroll position, scrolls twice after content renders, or fails to reveal the fragment target. | `history-scroll-restoration-contracts` | Which same-document history entry owns the position, who performs restoration, and when is the target layout stable? |
+| Camera or microphone works once but fails after permission changes, device switching, track interruption, or closing and reopening the capture UI. | `media-capture-device-contracts` | What are the permission, selected-device, track-state, teardown, and reacquisition transitions? |
+| HTML structure itself looks suspect: div buttons, wrong links, labels/headings/lists, invalid interactive nesting. | `semantic-markup-contracts` | Can native HTML express this before ARIA, CSS, or JavaScript? |
+| Modal, drawer, sheet, popover, menu, or command palette looks fine but focus, background interaction, Escape/backdrop, or scroll lock fails. | `overlay-focus-scroll-contracts` | What happens on open, nested open, close, unmount, and route change? |
+| A single-pointer drag, swipe, resize, or drawing interaction gets stuck, loses input at the element boundary, or fights native scrolling. | `pointer-gesture-contracts` | Does the sequence preserve one active `pointerId`, the intended event-delivery/capture path, terminal cleanup, and `touch-action`? Route pinch, rotate, or other multi-contact geometry elsewhere. |
+
+<details>
+<summary>The other 33 signals</summary>
+
+| Failure signal | Start with | First question to ask |
+| --- | --- | --- |
+| Dialog, menu, combobox, tab, or custom widget needs accessibility regression coverage. | `a11y-contract-testing` | Can a test assert role, name, state, and focus contract? |
+| A contenteditable or rich-text editor loses or reverses the selection, applies one intent twice, breaks undo, inserts paste/drop at the wrong caret, or restores a stale range after remount. | `contenteditable-selection-contracts` | Which live editing host owns the selection, and does the browser or application own this one `beforeinput`/`input` transaction and its history? |
+| Korean, Japanese, or Chinese text/input behaves wrong: IME Enter, composition, grapheme length, wrapping, truncation. | `cjk-text-and-input` | Is the code mixing composition text, committed text, and displayed text? |
+| Translated copy breaks layout, pluralization, bidi/RTL, number/date formatting, or translation-key contracts. | `i18n-copy-and-layout` | Is the bug copy, layout, locale behavior, or input composition? |
+| Deep link, auth redirect, SPA/SSR route, or query params initialize the wrong screen. | `deeplink-hydration` | What is the URL state before router readiness, hydration, and auth bounce? |
+| WebSocket or SSE client breaks across a connection drop: reconnect storm, duplicated/missing events, out-of-order deltas, a frozen UI on an OPEN-but-dead socket, buffer growth, or a token that expired after the handshake. | `realtime-transport-contracts` | Is this reconnect/backoff, resume/cursor, delta folding, liveness/heartbeat, backpressure, or socket re-auth? |
+| Browser-facing auth UI has returnTo, OAuth/passkey, autocomplete, OTP expiry/retry, safe-error, or fresh-verification issues. | `frontend-auth-flow-contracts` | What browser contract should the auth flow preserve? |
+| Popup, clipboard, share, picker, fullscreen, or payment API works from a direct click but fails after async work or another gated call. | `user-activation-contracts` | Which API is activation-gated, and where does transient activation expire or get consumed? |
+| Raw HTML, sanitizer, CSP, opener, storage, URL parsing, or third-party script risk appears outside a payment page. | `frontend-security-baseline` | Is there a concrete browser security source-to-sink path? |
+| A frontend-owned server route proxies client-selected paths, uploads, headers, or business actions to an upstream API. | `bff-proxy-security-contracts` | What route-method-auth capability is exposed, and can another ingress bypass it? |
+| Checkout/payment page needs client-side evidence: hosted fields, direct PAN/CVV handling, runtime scripts, CSP/SRI/header controls. | `payment-page-client-security` | What evidence shows the payment data boundary and runtime script surface? |
+| CSV/Excel export, file download, Blob URL, clipboard write, generated filename, or export schema is involved. | `download-export-safety` | What leaves the browser, and how are spreadsheet cells, Object URLs, clipboard failures, and filenames handled? |
+| Date shifted, timezone/DST issue, date-only input, `datetime-local` round trip, relative time, or server/client clock disagreement. | `datetime-correctness` | Is the value an instant, local date-time, date-only value, or formatted display string? |
+| Money/quantity total is off by a fraction or a penny, rounding looks wrong, or a localized amount parses incorrectly. | `money-and-precision-contracts` | Is the value computed in binary floats, and which rounding mode and minor-unit representation does the math use? |
+| Native Constraint Validation API is involved: `setCustomValidity`, `reportValidity`, `:user-invalid`, invalid-to-valid lifecycle. | `constraint-validation-contracts` | Does native validity clear and report at the right time? |
+| React Hook Form, Formik, Final Form, vee-validate, Valibot, or custom JS validation has stale errors, disabled submits, or async/server races. | `js-form-validation-contracts` | Which library state owns error, validity, submit, and server-field mapping? |
+| Hydration warning or server/client mismatch involves locale, time, randomness, browser-only APIs, storage, auth state, or responsive branches. | `ssr-hydration-mismatch` | What must be deterministic on the first client render? |
+| Implementation should match Figma, screenshot, design reference, or visual spec. | `design-to-code-fidelity` | Can you export the reference, capture the render, and diff before subjective review? |
+| Repeated UI might become a component, wrapper, hook, token, or should stay separate. | `component-extraction-judgment` | Is the duplication stable enough to extract without hiding product differences? |
+| Optimistic UI update applied before the server confirms behaves wrong: flicker, double-apply, a failed mutation that never rolls back, or stale data after the response races a refetch. | `optimistic-update-rollback-contracts` | What is the apply -> confirm/rollback -> reconcile contract, and how are temp/server IDs and concurrent mutations ordered? |
+| Files brought into the page misbehave: a drop-zone highlight flickers, a dropped file navigates the page away, a dropped folder yields nothing, a wrong-type file passes, paste-image breaks, or preview URLs leak. | `file-ingest-contracts` | Which ingest link fails: drag-event cancel, `DataTransfer` items vs files, type trust, paste, or object-URL lifecycle? |
+| Frontend errors are missing from the dashboard, unreadable (minified / `Script error.`), or the app white-screens despite error boundaries. | `client-error-observability-contracts` | Is capture wired for async/rejections, are cross-origin/source-map settings correct, and what is scrubbed before send? |
+| A View Transitions animation misbehaves: it randomly does not fire (silent abort), freezes on a stale/old frame, ignores reduced-motion, or leaves ghost morphs. | `view-transitions-contracts` | Duplicate `view-transition-name`, an unpainted snapshot (Suspense/decode), a missing reduced-motion block, or wrong Transition wrapping? |
+| A dialog/popover enter or exit animation cuts off, or cleanup/focus/unmount is stuck because a transition never "finished". | `css-transition-animation-contracts` | Is `display`/`overlay` missing from the transition (with `allow-discrete`), or is code gated on `transitionend` that never fires? |
+| The wrong image file ships, an image over-downloads, the hero is lazy-loaded, or images cause layout shift. | `responsive-image-contracts` | Does `srcset` have a `sizes` matching the real layout, correct width descriptors, LCP `eager`/`fetchpriority`, and `width`/`height`? |
+| A page's LCP/CLS/INP fails and you need to attribute it, not just report the score. | `core-web-vitals-performance-contracts` | Which element is LCP (discoverable/prioritized?), what sources each layout shift, and which long tasks inflate INP? |
+| Client-cached data is stale after a mutation, or requests waterfall / over-fetch (React Query/SWR/RTK Query/Apollo). | `frontend-data-fetching-cache-contracts` | Which query key should invalidate, and are reads parallelized with the right stale/gc timing? |
+| Browser-local records disappear, an IndexedDB upgrade hangs behind another tab, a later request aborts after the UI says Saved, or persistence is described as a permanent backup. | `browser-storage-durability-contracts` | Which stage failed: open/upgrade ownership, transaction activity, commit/abort, quota/persistence, unexpected close, or recovery? |
+| An async effect shows the wrong data, fires twice, leaks, or reads a stale value. | `async-effect-race-contracts` | Is there take-latest/`AbortController` + cleanup, and is the effect idempotent under StrictMode? |
+| Users get a stale build after deploy, `ChunkLoadError`, or a service worker serves wrong/stale bytes offline. | `pwa-offline-cache-contracts` | Is there an SW update flow, complete precache, cache versioning, and a do-not-cache rule for authed HTML/API? |
+| A virtualized list/grid jumps or loses scroll, or Ctrl+F / screen-reader totals / focus break under virtualization. | `large-list-data-grid-contracts` | Is `estimateSize`/overscan right, and are `aria-setsize`/`aria-posinset` (or `aria-rowcount`) set for unmounted rows? |
+| `ResizeObserver` reports undelivered notifications, flickers, grows forever, measures the wrong box, or observes stale elements after remount. | `resize-observer-layout-contracts` | Which callback write feeds back into the observed size, and does setup/cleanup own the current target? |
+| Report is vague, crosses multiple domains, or you are not sure which specialized skill should own it. | `frontend-report-triage` | What are the top 1-3 likely failure classes, and what evidence would distinguish them? |
+
+</details>
 
 ## Skills
 
@@ -189,70 +257,65 @@ Source model: README lists routing and evidence documents; detailed citations li
 | [`large-list-data-grid-contracts`](./skills/large-list-data-grid-contracts/SKILL.md) | A virtualized list/grid that jumps or loses scroll position, or find-in-page / screen-reader totals / focus breaking because off-screen rows are unmounted; pinned-column/header drift. |
 | [`resize-observer-layout-contracts`](./skills/resize-observer-layout-contracts/SKILL.md) | `ResizeObserver` size feedback loops, undelivered-notification errors, wrong-box measurements, flicker, and stale observed targets after remount. |
 
-## Symptom map
+## Install
 
-Use this after scanning the grouped skill list. Start from the failure signal, pick the most specific runtime evidence first, then hand off to sibling skills as needed.
+Install the [`skills` CLI](https://www.skills.sh/). Skills follow the [`SKILL.md` format](https://agentskills.io/specification).
 
-| Failure signal | Start with | First question to ask |
-| --- | --- | --- |
-| Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app browser; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
-| A browser iframe/widget is blank, accepts spoofed messages, loses READY/init, flickers while resizing, lacks a required capability, or loses embedded sign-in. | `iframe-embed-contracts` | What are the exact parent/guest origins, delivered frame policies, authenticated message handshake, sizing protocol, and storage mode? |
-| Browser Back/Forward restores stale or private UI, or a timer/socket/observer is dead or duplicated after return. | `browser-page-lifecycle-bfcache-contracts` | Was this a persisted restore, what state/resource needs idempotent reconciliation, and what does the real history traversal show? |
-| SPA Back/Forward or same-document hash navigation returns to the wrong scroll position, scrolls twice after content renders, or fails to reveal the fragment target. | `history-scroll-restoration-contracts` | Which same-document history entry owns the position, who performs restoration, and when is the target layout stable? |
-| Camera or microphone works once but fails after permission changes, device switching, track interruption, or closing and reopening the capture UI. | `media-capture-device-contracts` | What are the permission, selected-device, track-state, teardown, and reacquisition transitions? |
-| HTML structure itself looks suspect: div buttons, wrong links, labels/headings/lists, invalid interactive nesting. | `semantic-markup-contracts` | Can native HTML express this before ARIA, CSS, or JavaScript? |
-| Modal, drawer, sheet, popover, menu, or command palette looks fine but focus, background interaction, Escape/backdrop, or scroll lock fails. | `overlay-focus-scroll-contracts` | What happens on open, nested open, close, unmount, and route change? |
-| A single-pointer drag, swipe, resize, or drawing interaction gets stuck, loses input at the element boundary, or fights native scrolling. | `pointer-gesture-contracts` | Does the sequence preserve one active `pointerId`, the intended event-delivery/capture path, terminal cleanup, and `touch-action`? Route pinch, rotate, or other multi-contact geometry elsewhere. |
-| Dialog, menu, combobox, tab, or custom widget needs accessibility regression coverage. | `a11y-contract-testing` | Can a test assert role, name, state, and focus contract? |
-| A contenteditable or rich-text editor loses or reverses the selection, applies one intent twice, breaks undo, inserts paste/drop at the wrong caret, or restores a stale range after remount. | `contenteditable-selection-contracts` | Which live editing host owns the selection, and does the browser or application own this one `beforeinput`/`input` transaction and its history? |
-| Korean, Japanese, or Chinese text/input behaves wrong: IME Enter, composition, grapheme length, wrapping, truncation. | `cjk-text-and-input` | Is the code mixing composition text, committed text, and displayed text? |
-| Translated copy breaks layout, pluralization, bidi/RTL, number/date formatting, or translation-key contracts. | `i18n-copy-and-layout` | Is the bug copy, layout, locale behavior, or input composition? |
-| Deep link, auth redirect, SPA/SSR route, or query params initialize the wrong screen. | `deeplink-hydration` | What is the URL state before router readiness, hydration, and auth bounce? |
-| WebSocket or SSE client breaks across a connection drop: reconnect storm, duplicated/missing events, out-of-order deltas, a frozen UI on an OPEN-but-dead socket, buffer growth, or a token that expired after the handshake. | `realtime-transport-contracts` | Is this reconnect/backoff, resume/cursor, delta folding, liveness/heartbeat, backpressure, or socket re-auth? |
-| Browser-facing auth UI has returnTo, OAuth/passkey, autocomplete, OTP expiry/retry, safe-error, or fresh-verification issues. | `frontend-auth-flow-contracts` | What browser contract should the auth flow preserve? |
-| Popup, clipboard, share, picker, fullscreen, or payment API works from a direct click but fails after async work or another gated call. | `user-activation-contracts` | Which API is activation-gated, and where does transient activation expire or get consumed? |
-| Raw HTML, sanitizer, CSP, opener, storage, URL parsing, or third-party script risk appears outside a payment page. | `frontend-security-baseline` | Is there a concrete browser security source-to-sink path? |
-| A frontend-owned server route proxies client-selected paths, uploads, headers, or business actions to an upstream API. | `bff-proxy-security-contracts` | What route-method-auth capability is exposed, and can another ingress bypass it? |
-| Checkout/payment page needs client-side evidence: hosted fields, direct PAN/CVV handling, runtime scripts, CSP/SRI/header controls. | `payment-page-client-security` | What evidence shows the payment data boundary and runtime script surface? |
-| CSV/Excel export, file download, Blob URL, clipboard write, generated filename, or export schema is involved. | `download-export-safety` | What leaves the browser, and how are spreadsheet cells, Object URLs, clipboard failures, and filenames handled? |
-| Date shifted, timezone/DST issue, date-only input, `datetime-local` round trip, relative time, or server/client clock disagreement. | `datetime-correctness` | Is the value an instant, local date-time, date-only value, or formatted display string? |
-| Money/quantity total is off by a fraction or a penny, rounding looks wrong, or a localized amount parses incorrectly. | `money-and-precision-contracts` | Is the value computed in binary floats, and which rounding mode and minor-unit representation does the math use? |
-| Native Constraint Validation API is involved: `setCustomValidity`, `reportValidity`, `:user-invalid`, invalid-to-valid lifecycle. | `constraint-validation-contracts` | Does native validity clear and report at the right time? |
-| React Hook Form, Formik, Final Form, vee-validate, Valibot, or custom JS validation has stale errors, disabled submits, or async/server races. | `js-form-validation-contracts` | Which library state owns error, validity, submit, and server-field mapping? |
-| Hydration warning or server/client mismatch involves locale, time, randomness, browser-only APIs, storage, auth state, or responsive branches. | `ssr-hydration-mismatch` | What must be deterministic on the first client render? |
-| Implementation should match Figma, screenshot, design reference, or visual spec. | `design-to-code-fidelity` | Can you export the reference, capture the render, and diff before subjective review? |
-| Repeated UI might become a component, wrapper, hook, token, or should stay separate. | `component-extraction-judgment` | Is the duplication stable enough to extract without hiding product differences? |
-| Optimistic UI update applied before the server confirms behaves wrong: flicker, double-apply, a failed mutation that never rolls back, or stale data after the response races a refetch. | `optimistic-update-rollback-contracts` | What is the apply -> confirm/rollback -> reconcile contract, and how are temp/server IDs and concurrent mutations ordered? |
-| Files brought into the page misbehave: a drop-zone highlight flickers, a dropped file navigates the page away, a dropped folder yields nothing, a wrong-type file passes, paste-image breaks, or preview URLs leak. | `file-ingest-contracts` | Which ingest link fails: drag-event cancel, `DataTransfer` items vs files, type trust, paste, or object-URL lifecycle? |
-| Frontend errors are missing from the dashboard, unreadable (minified / `Script error.`), or the app white-screens despite error boundaries. | `client-error-observability-contracts` | Is capture wired for async/rejections, are cross-origin/source-map settings correct, and what is scrubbed before send? |
-| A View Transitions animation misbehaves: it randomly does not fire (silent abort), freezes on a stale/old frame, ignores reduced-motion, or leaves ghost morphs. | `view-transitions-contracts` | Duplicate `view-transition-name`, an unpainted snapshot (Suspense/decode), a missing reduced-motion block, or wrong Transition wrapping? |
-| A dialog/popover enter or exit animation cuts off, or cleanup/focus/unmount is stuck because a transition never "finished". | `css-transition-animation-contracts` | Is `display`/`overlay` missing from the transition (with `allow-discrete`), or is code gated on `transitionend` that never fires? |
-| The wrong image file ships, an image over-downloads, the hero is lazy-loaded, or images cause layout shift. | `responsive-image-contracts` | Does `srcset` have a `sizes` matching the real layout, correct width descriptors, LCP `eager`/`fetchpriority`, and `width`/`height`? |
-| A page's LCP/CLS/INP fails and you need to attribute it, not just report the score. | `core-web-vitals-performance-contracts` | Which element is LCP (discoverable/prioritized?), what sources each layout shift, and which long tasks inflate INP? |
-| Client-cached data is stale after a mutation, or requests waterfall / over-fetch (React Query/SWR/RTK Query/Apollo). | `frontend-data-fetching-cache-contracts` | Which query key should invalidate, and are reads parallelized with the right stale/gc timing? |
-| Browser-local records disappear, an IndexedDB upgrade hangs behind another tab, a later request aborts after the UI says Saved, or persistence is described as a permanent backup. | `browser-storage-durability-contracts` | Which stage failed: open/upgrade ownership, transaction activity, commit/abort, quota/persistence, unexpected close, or recovery? |
-| An async effect shows the wrong data, fires twice, leaks, or reads a stale value. | `async-effect-race-contracts` | Is there take-latest/`AbortController` + cleanup, and is the effect idempotent under StrictMode? |
-| Users get a stale build after deploy, `ChunkLoadError`, or a service worker serves wrong/stale bytes offline. | `pwa-offline-cache-contracts` | Is there an SW update flow, complete precache, cache versioning, and a do-not-cache rule for authed HTML/API? |
-| A virtualized list/grid jumps or loses scroll, or Ctrl+F / screen-reader totals / focus break under virtualization. | `large-list-data-grid-contracts` | Is `estimateSize`/overscan right, and are `aria-setsize`/`aria-posinset` (or `aria-rowcount`) set for unmounted rows? |
-| `ResizeObserver` reports undelivered notifications, flickers, grows forever, measures the wrong box, or observes stale elements after remount. | `resize-observer-layout-contracts` | Which callback write feeds back into the observed size, and does setup/cleanup own the current target? |
-| Report is vague, crosses multiple domains, or you are not sure which specialized skill should own it. | `frontend-report-triage` | What are the top 1-3 likely failure classes, and what evidence would distinguish them? |
+These skills target Claude Code, Codex, and other agents that honour the specification's 1024-character `description` cap, and they spend that budget on trigger phrases so the right skill fires. The Claude.ai upload path caps `description` at 200 characters instead, so uploading these unchanged will fail there ([Claude docs](https://claude.com/docs/skills/how-to)).
+
+The `voidmatcha/frontend-niche-skills` commands below assume the public repository or plugin marketplace entry is available. For a local or pre-release checkout, use the local checkout commands in this section instead.
+
+```bash
+# Claude Code + Codex via skills CLI
+npx skills add voidmatcha/frontend-niche-skills --skill '*' -g -a claude-code -a codex
+
+# Other agents supported by the installed skills CLI
+npx skills add voidmatcha/frontend-niche-skills --skill '*' -g --agent '*'
+```
+
+### Claude Code plugin
+
+```bash
+/plugin marketplace add voidmatcha/frontend-niche-skills
+/plugin install frontend-niche-skills@voidmatcha
+```
+
+### Codex plugin local checkout
+
+This repo includes `.codex-plugin/plugin.json` and Claude plugin manifests. From a local checkout:
+
+```bash
+codex plugin marketplace add "$(pwd)"
+codex plugin add frontend-niche-skills@frontend-niche-skills
+```
+
+Start a new Codex or Claude Code session after installing or updating so bundled skills refresh.
+
+## Workflow
+
+1. **Pick the symptom skill.** Use the narrowest skill whose failure mode matches the bug.
+2. **Read repo context.** Pair the skill with project routing, design tokens, i18n, tests, and browser/device support.
+3. **Separate evidence types.** Layout, paint, hit-test, DOM structure, accessibility tree, network, hydration, locale behavior, runtime scripts, and exported files can disagree.
+4. **Fix the cause, not the symptom.** Prefer removing fragile timing or duplicated logic over adding retries.
+5. **Verify in the right host.** WebView bugs need app-WebView evidence; payment-page findings need runtime script/PAN-boundary evidence; visual fidelity needs reference/render capture; form/a11y findings need regression tests where possible.
 
 ## Evidence
 
-The repo avoids treating a grep hit as a bug. The docs separate confirmed examples, candidate leads, positive controls, and known false positives.
+The repo avoids treating a grep hit as a bug. Every claim carries a rung on the evidence ladder in [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md): **E1 measured**, **E2 source-verified**, **E3 primary-source cited**, **E4 routing example**. A rung records what was actually done, not how confident anyone feels. As of 2026-08-01 nothing in the OSS casebook has been filed upstream, reproduced locally, or accepted by a maintainer.
 
 Where evidence lives:
 
 - [`docs/oss-validation-cases.md`](./docs/oss-validation-cases.md) — public OSS cases used to sanity-check skill boundaries and PR shapes.
-- [`docs/oss-maintainer-candidate-backlog.md`](./docs/oss-maintainer-candidate-backlog.md) — public OSS research candidates with file/line evidence. Re-check the current default branch and reproduce locally before filing.
-- [`docs/why-webview-bridge-pages.md`](./docs/why-webview-bridge-pages.md) — WebView-specific prior art, bridge libraries, host behavior references, and ecosystem notes.
+- [`skills/webview-bridge-pages/references/why-webview-bridge-pages.md`](./skills/webview-bridge-pages/references/why-webview-bridge-pages.md) — WebView-specific prior art, bridge libraries, host behavior references, and ecosystem notes.
 - [`docs/public-skill-landscape.md`](./docs/public-skill-landscape.md) — opened public skill packs that directly overlap, nearly match, or complement this pack, with keep/split/defer decisions.
-- [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) — per-skill map showing whether support comes from validated cases, candidate leads, primary-source references, or routing examples.
+- [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) — the evidence ladder itself, plus a per-skill map of which rung each skill's support sits on.
 - [`docs/skill-quality-standard.md`](./docs/skill-quality-standard.md) — portable format, routing, workflow, evidence, output, evaluation, and new-skill admission criteria used by this pack.
-- [`docs/frontend-report-triage.md`](./docs/frontend-report-triage.md) — integrated report triage contract and examples.
 - `skills/*/SKILL.md` and `skills/*/references/*.md` — per-skill official docs, prior art, examples, false-positive notes, and implementation-specific evidence.
 
-Candidate OSS findings are **not** confirmed upstream bugs until the current branch is re-checked, reproduced locally, and accepted by a maintainer or supported by a failing test.
+- [`evals/behavioral/`](./evals/behavioral/) — the two times this pack measured its own central claim, an agent diagnosing a bug with and without the relevant skill. Each rubric was committed before its runs. Both cases tied, so on those two reports the skill changed nothing a pre-registered criterion could see. The second write-up records one unscored difference that went to the skill, and says why noticing it afterwards is not evidence.
+- [`.github/workflows/checks.yml`](./.github/workflows/checks.yml) — browser fixtures for four of the 41 skills re-run on every push: three suites across Chromium, Firefox, and WebKit, and one on Chromium only. They verify that the browser behaviors those skills describe are real; they do not measure whether the pack changes what an agent does. Because the same suite gates pushes, a failing run blocks the push rather than leaving a recorded negative.
+
+E2 rows are **not** confirmed upstream bugs. An E2 row becomes evidence only after the current branch is re-checked, the behavior is reproduced locally, and a maintainer accepts the fix or a failing test backs it.
 
 ## Development checks
 
@@ -266,25 +329,55 @@ lefthook install
 lefthook run pre-push
 ```
 
+A passing run looks like this:
+
+```console
+$ python3 scripts/audit-skill-pack.py
+Skill pack audit: PASS
+Root: /path/to/frontend-niche-skills
+Skills: 41
+Local markdown refs checked: 335
+Sources sections checked: 50
+Skill contracts checked: 40
+Eval files checked: 41
+Eval cases checked: 173
+Reference files checked: 36
+README skill orders checked: 4
+README symptom maps checked: 4
+Scripts syntax checked: 16
+```
+
 `lefthook.yml` only delegates to the repo script, so contributors can run the same checks without lefthook. The script audits skill metadata and quality sections, direct reference reachability, eval-file shape, README links/counts, plugin manifests, local markdown links, overclaim wording, and bundled script syntax. It also runs `git diff --check`, and verifies the source links in the markdown you are pushing (skipped when offline; `SKIP_LINK_CHECK=1` forces a skip). To check every external URL instead, run `python3 scripts/audit-skill-pack.py --check-links`; `.github/workflows/link-check.yml` runs that weekly and files a `link-rot` issue when a citation dies. The link-replacement procedure lives in [docs/skill-evidence-coverage.md](./docs/skill-evidence-coverage.md), and `.github/workflows/checks.yml` runs the pack checks on every push and pull request.
+
+## Contributing
+
+New skills are admitted against the six-question gate in [docs/skill-quality-standard.md](./docs/skill-quality-standard.md), which asks whether the failure recurs, whether it holds outside one product or component, whether a general coding agent gets it wrong, whether a sibling skill already owns the route, whether it is testable, and whether the skill can reject weak findings. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow and the checks that run before a push.
 
 ## FAQ
 
-### Is this a generic frontend checklist?
+### How is this different from a frontend review checklist or an ESLint config?
 
-No. These skills focus on frontend edges generic UI review often misses: WebView host behavior, native HTML structure, IME/CJK input, accessibility contracts, hydration, forms, datetime, auth, payment-page client evidence, exports, overlays, and design fidelity.
+A checklist lists what to look at. Each of these names one failure class and the evidence that tells it apart from its neighbours, on frontend edges generic UI review often misses: WebView host behavior, native HTML structure, IME/CJK input, accessibility contracts, hydration, forms, datetime, auth, payment-page client evidence, exports, overlays, and design fidelity.
 
-### Does `payment-page-client-security` decide PCI scope?
+### Can an agent decide PCI DSS scope for a payment page?
 
 No. It collects frontend evidence: payment-page script inventory, PAN/CVV boundaries, CSP/SRI/header controls, and PCI DSS 6.4.3/11.6.1 discussion points. A QSA, acquirer, payment owner, or security owner decides scope and compliance.
 
-### Should these replace project-local rules?
+### Do these skills replace my project's own conventions and lint rules?
 
 No. Keep project-local conventions: routing, components, design tokens, auth model, test runner, browser/device matrix, and release gates. Use these skills as issue-specific playbooks.
 
-### Why not one huge skill?
+### Why 41 separate skills instead of one big frontend skill?
 
 Smaller skills keep context focused. `frontend-report-triage` exists for messy reports, but it should route to the smallest useful set rather than loading all skills.
+
+### Why does a page work in desktop Chrome but break inside an app WebView?
+
+Because the host differs, not the markup. Safe-area and viewport insets, bridge readiness, renderer death on resume, and compositing behavior are host contracts, not page bugs. `webview-bridge-pages` covers them, and the evidence has to come from the app WebView rather than a desktop browser.
+
+### Which coding agents can use these skills?
+
+Any agent that reads the [`SKILL.md` format](https://agentskills.io/specification). Claude Code and Codex are covered by dedicated plugin marketplaces, and the [`skills` CLI](https://www.skills.sh/) installs the pack into the other agents it supports. See [Install](#install).
 
 ## License
 

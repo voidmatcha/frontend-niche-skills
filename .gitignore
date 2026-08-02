@@ -1,6 +1,7 @@
 .serena/
 .omx/
 .claude/
+.codex/
 .impeccable/
 .tokensave/
 .DS_Store

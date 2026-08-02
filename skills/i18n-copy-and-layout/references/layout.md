@@ -1,5 +1,12 @@
 # Layout: expansion & direction
 
+## Contents
+
+- [Text expands](#text-expands)
+- [RTL & language markup](#rtl--language-markup)
+- [RTL retrofit in a codebase that already ships an RTL locale](#rtl-retrofit-in-a-codebase-that-already-ships-an-rtl-locale)
+- [Sources](#sources)
+
 The space copy lives in. Translated text changes length, height, and reading
 direction — layouts measured once in English break on all three axes.
 
@@ -48,6 +55,48 @@ W3C publishes IBM's average expansion rates (English → European languages):
   code — and ensure fonts cover every script you ship (font selection is more than
   first-in-the-stack).
 
+## RTL retrofit in a codebase that already ships an RTL locale
+
+Setting `dir` and using logical properties is the greenfield answer. A codebase
+that already shipped Arabic or Hebrew usually did it a different way, with
+per-language CSS overrides that mirror each component by hand, and the questions
+there are different.
+
+- **Check whether the locale ships but `dir` never does.** The signal is an RTL
+  locale bundle in the build alongside no `dir` anywhere in the rendered markup.
+  Mirroring done purely in CSS can look right while the bidi algorithm still runs
+  with an LTR base, so mixed-direction runs, trailing punctuation, and text field
+  editing resolve wrong even on a screen that visually mirrors.
+- **CSS `direction` is not a substitute for the `dir` attribute.** Direction is
+  normally defined in the document rather than through the `direction` property,
+  and the two do not behave identically: `dir` inherits from table columns into
+  cells, `direction` does not, because CSS inheritance follows the document tree.
+  Styles can also fail to load or be overridden; markup travels with the content.
+- **Language-scoped override blocks fail by omission.** A `[lang="ar"] .card { ... }`
+  block, or the preprocessor mixin equivalent, mirrors only the components someone
+  remembered to write a block for. A new component inherits its physical
+  properties and renders unmirrored with no error, no failing build, and no
+  console warning. Nothing surfaces it except rendering that locale.
+- **Count before proposing a migration.** Physical `margin-left`/`margin-right`,
+  `padding-left`/`padding-right`, bare `left:`/`right:` offsets, and
+  `text-align: left`/`right` against existing logical-property usage. The ratio is
+  the difference between a bounded edit and a rewrite, and it decides whether a
+  full conversion is even the right recommendation.
+- **Order the retrofit by what pays first.** Set `dir` on the document root first:
+  it fixes bidi resolution for text, form fields, and selection regardless of what
+  the stylesheet does. Then convert only the components that genuinely mirror:
+  containers, icon-adjacent spacing, positioned overlays. Symmetric spacing does
+  not need touching, and logical properties are the destination rather than a
+  prerequisite.
+- **Watch for `direction` used as a layout trick.** Setting `direction: rtl` to
+  push an ellipsis to the start of a string, or to truncate from the other end,
+  borrows a text-direction mechanism for a visual effect. It changes bidi
+  resolution inside that element, reordering punctuation and embedded LTR runs,
+  and it collides with a real RTL retrofit later.
+
+The regression that catches this class is rendering in the RTL locale itself.
+A snapshot taken in English exercises none of the mirroring paths.
+
 ## Sources
 
 - W3C i18n — [Text size in translation](https://www.w3.org/International/articles/article-text-size.en.html)
@@ -57,3 +106,9 @@ W3C publishes IBM's average expansion rates (English → European languages):
   [Declaring language in HTML](https://www.w3.org/International/questions/qa-html-language-declarations)
   (`lang` ≠ `dir`; direction not derivable from language; `dir` as markup; font selection)
 - MDN — [CSS logical properties for margins, borders, padding](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values)
+- W3C i18n — [Structural markup and right-to-left text in HTML](https://www.w3.org/International/questions/qa-html-dir)
+  (where `dir` belongs, and why inline markup is not enough)
+- MDN — [`dir` global attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/dir);
+  [CSS `direction`](https://developer.mozilla.org/en-US/docs/Web/CSS/direction)
+  (direction is normally defined in the document rather than via the property;
+  `dir` inherits from table columns into cells while `direction` does not)

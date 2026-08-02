@@ -72,7 +72,7 @@ SH
   mkdir -p "$TEST_REPO/tests"
   printf '#!/usr/bin/env bats\n@test "x" { true; }\n' >"$TEST_REPO/tests/example.bats"
 
-  run env BATS_BIN="$TOOL_BIN/missing-bats" LC_ALL=C LC_CTYPE=C LANG=C \
+  run env -u CI BATS_BIN="$TOOL_BIN/missing-bats" LC_ALL=C LC_CTYPE=C LANG=C \
     /bin/bash "$TEST_REPO/scripts/pre-push-checks.sh"
 
   [ "$status" -eq 2 ]
@@ -107,7 +107,7 @@ SH
   chmod +x "$TOOL_BIN/curl" "$TEST_REPO/scripts/list-changed-markdown.sh"
   printf '[link](https://example.invalid/a)\n' >"$TEST_REPO/한글.md"
 
-  run env PATH="$TOOL_BIN:$PATH" EXPECT_LINK_PATH="한글.md" LC_ALL=C LC_CTYPE=C LANG=C \
+  run env -u CI PATH="$TOOL_BIN:$PATH" EXPECT_LINK_PATH="한글.md" LC_ALL=C LC_CTYPE=C LANG=C \
     /bin/bash "$TEST_REPO/scripts/pre-push-checks.sh"
 
   [ "$status" -eq 0 ]

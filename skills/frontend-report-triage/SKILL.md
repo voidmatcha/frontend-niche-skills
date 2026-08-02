@@ -70,6 +70,7 @@ Return a compact triage result:
 3. **Evidence gaps** — the smallest missing artifact that would change the route.
 4. **Follow-up skills** — exact skill names in recommended order.
 5. **First verification** — one concrete test, inspection, or reproduction step.
+6. **Boundary note** — what not to claim yet.
 
 ## Guardrails
 

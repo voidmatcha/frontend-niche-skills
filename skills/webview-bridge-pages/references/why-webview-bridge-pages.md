@@ -8,6 +8,28 @@
 
 ---
 
+## Contents
+
+- [TL;DR](#tldr)
+- [Background: why this exists](#background-why-this-exists)
+- [How well-corroborated are these pitfalls?](#how-well-corroborated-are-these-pitfalls)
+- [Is a consolidated reference like this already available in open source?](#is-a-consolidated-reference-like-this-already-available-in-open-source)
+- [Problem → evidence table](#problem--evidence-table)
+- [Why doesn't `100vh` fill the screen correctly in a WebView?](#why-doesnt-100vh-fill-the-screen-correctly-in-a-webview)
+- [Why is the WebView viewport height wrong right after the page loads on Android?](#why-is-the-webview-viewport-height-wrong-right-after-the-page-loads-on-android)
+- [How do `svh`/`dvh` behave when the on-screen keyboard opens?](#how-do-svhdvh-behave-when-the-on-screen-keyboard-opens)
+- [Why is `env(safe-area-inset-*)` zero or late inside a WebView?](#why-is-envsafe-area-inset--zero-or-late-inside-a-webview)
+- [Why does my first message to native get dropped on app cold start?](#why-does-my-first-message-to-native-get-dropped-on-app-cold-start)
+- [How do I recover from a blank screen after the WebView renderer dies?](#how-do-i-recover-from-a-blank-screen-after-the-webview-renderer-dies)
+- [Why does iOS zoom in when I focus a text input?](#why-does-ios-zoom-in-when-i-focus-a-text-input)
+- [How does Android font scaling affect a WebView page?](#how-does-android-font-scaling-affect-a-webview-page)
+- [Why does no `<meta viewport>` make the page render at ~980px?](#why-does-no-meta-viewport-make-the-page-render-at-980px)
+- [Why do my timers drift or stop when the WebView is backgrounded?](#why-do-my-timers-drift-or-stop-when-the-webview-is-backgrounded)
+- [A note on `position: fixed` inside a frozen/oversized viewport](#a-note-on-position-fixed-inside-a-frozenoversized-viewport)
+- [Scope: durable mechanism vs. target-runtime evidence](#scope-durable-mechanism-vs-target-runtime-evidence)
+- [FAQ](#faq)
+- [Related ecosystem references](#related-ecosystem-references)
+
 ## TL;DR
 
 Building bridge pages inside native WebViews hits a fixed cluster of non-obvious, version-gated failures: `100vh` overshoots the visible area (use `svh`/`dvh`), the Android viewport height is wrong on initial load until a touch or keyboard toggle forces a recalculation, `env(safe-area-inset-*)` reports `0px` or arrives late, the native↔JS message bridge is not ready when your first message fires (so the message is dropped), and a renderer crash leaves a blank screen unless the host explicitly recreates the WebView. Every pitfall below is backed by a primary source — a spec, a browser bug tracker, official platform docs, or open-source framework code — and most are corroborated by multiple independent projects.
@@ -24,7 +46,7 @@ A bridge page must survive a host environment that controls the viewport sizing,
 
 Each row points to at least one opened source — a web standard, browser-engine issue, official platform document, or open-source implementation. Some rows have independent corroboration; others are explicitly issue- or project-specific and require target-runtime reproduction. The cited ecosystems include React Native WebView, Capacitor (`@capacitor-community/safe-area`), `flutter_inappwebview`, Hotwire Turbo, and WebViewJavascriptBridge alongside CSS specifications, browser issue trackers, and Android documentation.
 
-For the complementary, source-line view — concrete defects this skill catches in real open-source code — see [open-source validation cases](./oss-validation-cases.md).
+For the complementary, source-line view — concrete defects this skill catches in real open-source code — see [open-source validation cases](../../../docs/oss-validation-cases.md).
 
 ---
 
