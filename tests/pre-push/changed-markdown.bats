@@ -1,6 +1,12 @@
 #!/usr/bin/env bats
 
 setup() {
+  # The CI step exports these for the real checkout. Each test builds its
+  # own repository in a temp dir where those revisions do not exist, so
+  # inheriting them makes the script take its CI branch and fail. Tests
+  # that need them set them explicitly.
+  unset CHECK_DIFF_BASE CHECK_DIFF_HEAD CHECK_DELIVERABLE_REF
+
   export REPO_ROOT
   REPO_ROOT="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
   export TEST_REPO="$BATS_TEST_TMPDIR/repo"
