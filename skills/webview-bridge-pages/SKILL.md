@@ -1,6 +1,6 @@
 ---
 name: webview-bridge-pages
-description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — postMessage-to-native bridge, native close/back and Android hardware-back, first READY/auth message can be missed on cold start (buffer + bounded flush), blank screen after renderer death, query-param render inputs and A/B variants, IAP button stuck disabled, auth/token handoff, safe-area insets and 100vh wrong (svh/dvh), paint/compositing vs hit-test separation, iOS sub-16px input-zoom. Hosts: React Native, WKWebView, Android WebView, Flutter. For first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
+description: "Use when building the web-page side of a native app WebView (in-app webview / bridge pages) — postMessage-to-native bridge, native close/back and Android hardware-back, first READY/auth message can be missed on cold start (buffer + bounded flush), blank screen after renderer death, query-param render inputs and A/B variants, IAP button stuck disabled, auth/token handoff, native-prefetched startup data handoff, hidden/preloaded WebView firing analytics unseen, READY-as-metric timing fields, safe-area insets and 100vh wrong (svh/dvh), paint/compositing vs hit-test separation, iOS sub-16px input-zoom. Hosts: React Native, WKWebView, Android WebView, Flutter. For first-render router.query/router.isReady readiness in a plain SPA see deeplink-hydration; for token storage / CSP / XSS / SameSite see frontend-security-baseline; for login/returnTo/passkey flows see frontend-auth-flow-contracts."
 ---
 
 # Webview bridge pages (web side)
@@ -28,38 +28,45 @@ messages through one transport adapter, let native own lifecycle
    → [contract-design](./references/contract-design.md)
 6. Loading/`READY` contract decided — required for costly-blank screens (payment,
    critical funnels), skippable for low-stakes ones (a brief blank is cheap); paired with an
-   error/timeout policy; re-sent on involuntary reload (renderer death)
+   error/timeout policy; re-sent on involuntary reload (renderer death); carries timing
+   fields (elapsed + epoch + reason) when readiness is also a metric; if the app
+   preloads hidden WebViews, split load vs activation or metrics/analytics fire unseen
    → [contract-design](./references/contract-design.md)
-7. Auth/session source decided (none / shared cookie / bridge-injected — never a
+7. Startup data handoff decided when first render waits on an API the app could call
+   earlier — transport by size (query param vs injected store), schema version +
+   TTL so either side can deploy first, missing store → normal fetch fallback
+   (Android injection ordering is unreliable, rn-webview #1609)
+   → [contract-design](./references/contract-design.md)
+8. Auth/session source decided (none / shared cookie / bridge-injected — never a
    query-param token); never start OAuth/social login inside the webview (embedded
    UAs get `403: disallowed_useragent` — bridge out to the system browser)
    → [contract-design](./references/contract-design.md)
-8. Navigation & capabilities policy decided (external links, deep links, downloads,
+9. Navigation & capabilities policy decided (external links, deep links, downloads,
    file inputs) — don't assume browser behavior; no `window.open`/`target="_blank"`
    (silently dropped without app-side support), and `input[type=file]` dead-taps on
    Android without app-side `onShowFileChooser`
    → [contract-design](./references/contract-design.md)
-9. Query parsing centralized with fallbacks for every unknown value; timestamp unit
-   agreed; timers recomputed from absolute time; back is usually a full load in
-   WebViews (bfcache off/uncertain) — bind funnel/form drafts to `history.state` or
-   a `sessionStorage` draft
-   → [page-implementation](./references/page-implementation.md)
-10. A/B axes orthogonal (one config key → one query param); unknown variant → control
+10. Query parsing centralized with fallbacks for every unknown value; timestamp unit
+    agreed; timers recomputed from absolute time; back is usually a full load in
+    WebViews (bfcache off/uncertain) — bind funnel/form drafts to `history.state` or
+    a `sessionStorage` draft
+    → [page-implementation](./references/page-implementation.md)
+11. A/B axes orthogonal (one config key → one query param); unknown variant → control
     → [contract-design](./references/contract-design.md)
-11. Viewport meta set; `svh`/`dvh` instead of `vh`; insets from app params, not
+12. Viewport meta set; `svh`/`dvh` instead of `vh`; insets from app params, not
     `env()` alone; `<meta name="color-scheme">` declared with `prefers-color-scheme`
     styles (Android WebView can auto-invert pages that don't declare a scheme)
     → [page-implementation](./references/page-implementation.md)
-12. Layout verified at 130% system font scale (200% on Android 14+); keyboard +
+13. Layout verified at 130% system font scale (200% on Android 14+); keyboard +
     input-focus zoom (≥16px font) behavior decided → [page-implementation](./references/page-implementation.md)
-13. Missing/incorrect visuals split DOM/layout/hit-test/paint/compositing before
+14. Missing/incorrect visuals split DOM/layout/hit-test/paint/compositing before
     height, padding, timeout, or repaint workarounds → [page-implementation](./references/page-implementation.md)
-14. Localized copy containing intentional `\n` line breaks preserves them with
+15. Localized copy containing intentional `\n` line breaks preserves them with
     `white-space: pre-line` — for line-breaking and long-token overflow rules
     (`overflow-wrap`, `word-break`, CJK) see cjk-text-and-input
-15. Old Android failures: identify the actual WebView/Chrome engine version, then
+16. Old Android failures: identify the actual WebView/Chrome engine version, then
     check syntax/API compatibility before treating it as an app or OS regression
-16. Legacy fallback work must include a matrix: affected old WebView engine,
+17. Legacy fallback work must include a matrix: affected old WebView engine,
     modern Android WebView/Chrome control, and app WebView when bridge/safe-area/deeplink
     integration matters. Record device/API/WebView version, URL environment, screenshots,
     and whether Playwright only forced the fallback branch or an actual engine ran it.

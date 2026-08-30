@@ -75,6 +75,18 @@
         "The Playwright-against-dev-server run is rejected as legacy-engine evidence, because a framework dev runtime and untranspiled `node_modules` ship modern syntax that the browserslist target does not downlevel, so a legacy WebView can fail even when the production build is clean.",
         "It requires actual-engine evidence — an emulator or WebView Shell on the affected WebView version, plus one modern Android control — and says results should be reported by WebView/Chrome version before Android OS or device."
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "Our onboarding bridge page waits ~800ms on a membership API before first render. The app team proposes passing the whole API response as a base64 query param so the page can render instantly. Separately, on Android only, some sessions render with empty membership data even though the app injected it via injectedJavaScriptBeforeContentLoaded.",
+      "expected_output": "Rejects the query-param transport for response-sized payloads (URL length truncation, log/history leakage) in favor of an injected store or host object; explains the Android-only empties as the known injectedJavaScriptBeforeContentLoaded ordering unreliability (#1609) and requires the page to treat the store as maybe-absent with a normal-fetch fallback, plus a schema version and per-entry freshness so app and web can deploy in either order.",
+      "expectations": [
+        "The response rejects putting an API-response-sized payload in a query param, citing practical URL length truncation and leakage into server logs/history.",
+        "It proposes a pre-script injected store or host-object handoff with a schema version, where an unknown version or missing store falls back to the page's normal fetch path.",
+        "It attributes the Android-only empty data to injectedJavaScriptBeforeContentLoaded ordering being unreliable on Android (react-native-webview #1609) rather than to an app-side data bug, and on React Native recommends injectedJavaScriptObject as the ordering-independent transport.",
+        "It requires per-entry freshness (storedAt/TTL) and consume-on-read semantics so SPA revisits do not silently render a stale snapshot.",
+        "It states that secrets must not ride the injected global since every script in the page can read it."
+      ]
     }
   ]
 }

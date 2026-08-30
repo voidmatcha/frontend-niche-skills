@@ -57,6 +57,13 @@ Before changing WebView page code, freeze the runtime facts that can make a corr
 - Network path: local server, DNS/VPN, `adb reverse`, and API environment are known separately.
 - Runtime identity: Android API/model/WebView or Chrome package version, or iOS simulator/device + WebKit/WKWebView path.
 - Orientation state: initial orientation and any rotation sequence are recorded.
+- Module freshness: if any `node_modules` package was swapped in place (copied dist,
+  linked local build) without a version bump, webpack-family bundlers may keep serving
+  the old module — `node_modules` is snapshotted by `package.json` version
+  (`snapshot.managedPaths`), so new exports come back `undefined` and the failure
+  masquerades as a host/platform bug (e.g. "bridge messages dropped, but only on
+  Android"). Clear the build cache (`.next`, `node_modules/.cache`) and restart the
+  dev server before trusting any cross-host difference.
 
 If any item is unknown, treat the next step as environment diagnosis, not UI fixing.
 
@@ -192,3 +199,4 @@ Use these as source anchors when updating this reference:
 - Appium context guide: native app and WebView contexts are separate; switching context changes what element lookup/interaction means (<https://appium.io/docs/en/latest/guides/context/>).
 - Maestro upstream docs: `takeScreenshot` saves a PNG and `assertScreenshot` compares against a known-good screenshot for visual regression (`mobile-dev-inc/maestro-docs`).
 - Local Xcode `xcrun simctl io help`: documents `screenshot` and `recordVideo` operations; it does not expose an absolute orientation setter, so any iOS rotation automation must state its mechanism and limitation.
+- webpack docs: `snapshot.managedPaths` — paths managed by a package manager are snapshotted by package name + version, not file contents, so in-place `node_modules` swaps go unnoticed until the cache is cleared (<https://webpack.js.org/configuration/other-options/#managedpaths>).

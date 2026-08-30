@@ -6,6 +6,8 @@
 - [Native chrome owns close/back](#native-chrome-owns-closeback)
 - [Actions with unobservable results (purchases etc.)](#actions-with-unobservable-results-purchases-etc)
 - [Loading signal (blank-screen prevention)](#loading-signal-blank-screen-prevention)
+- [Startup data handoff (native prefetch)](#startup-data-handoff-native-prefetch)
+- [Preloaded (hidden) WebView lifecycle](#preloaded-hidden-webview-lifecycle)
 - [Auth & session handoff](#auth--session-handoff)
 - [Navigation & capabilities](#navigation--capabilities)
 - [A/B variants via query params](#ab-variants-via-query-params)
@@ -99,6 +101,18 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
   own API failures (web-owned error state with retry — native can't see them),
   bridge-unavailable = noop by design, and who logs which telemetry (exposure and
   purchase events app-side; page errors web-side).
+- **READY doubles as the measurement hook — carry timing fields.** Load-finished
+  callbacks measure document load, not user-visible readiness (see above), so if the
+  team wants a "tap → first meaningful screen" metric, put it in the READY payload:
+  elapsed ms from navigation start (`performance.now()` at send), the epoch timestamp
+  of the send (same device clock as native `Date.now()`, so native can join it with
+  its own tap/`loadStart` timestamps and attribute cold-load time to
+  WebView-creation vs web segments), and a `reason`/state discriminator when the page
+  has fallback render paths (timeout fallbacks firing in production is an anomaly
+  signal, not a distribution). Route the two kinds of signal differently: latency
+  distributions can go to a sampled RUM pipeline, but rare anomaly signals (fallback
+  reasons, bridge send failures) must go to full-volume logging — RUM SDKs commonly
+  sample at 1–10% and will silently drop the rare events that matter most.
 - **The renderer can die mid-session, not just on cold load.** iOS WKWebView's
   out-of-process WebContent can be killed under memory pressure
   (`webViewWebContentProcessDidTerminate` — which itself sometimes doesn't fire,
@@ -108,6 +122,55 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
   again — keep the screen reconstructable from params/native and **re-post `READY` on
   every (re)load** so native can re-handshake (restore route/scroll). Never assume
   in-memory DOM/JS state survived.
+
+## Startup data handoff (native prefetch)
+
+When the page's first render waits on an API the app could have called earlier, the
+app can fetch in parallel with WebView creation and hand the response to the page —
+the pattern behind Meituan's "client proxy request" and Woowa Brothers' floating-webview
+data handoff. Contract points, in order of what goes wrong without them:
+
+- **Transport by size.** Query params work for small scalar inputs but have practical
+  URL length limits and leak into server logs/history — API-response-sized payloads get
+  truncated (Woowa hit exactly this and moved to app-storage handoff). For structured
+  payloads, inject a JS global before page scripts run, or use a host object the page
+  polls.
+- **Injection timing is host-specific.** RN's `injectedJavaScriptBeforeContentLoaded`
+  can run after the page's own scripts on Android, or not at all on first launch
+  (react-native-webview #1609) — so the web side must treat the injected store as
+  *maybe absent* and fall back to its normal fetch path. On RN, prefer
+  `injectedJavaScriptObject` (read via `injectedObjectJson()`): the data survives
+  independent of script-execution ordering.
+- **Version + freshness fields make it safe to evolve.** Give the store a schema
+  version (unknown version → treat as absent → normal fetch, so app and web can deploy
+  in either order) and per-entry `storedAt`/TTL so the page can distinguish fresh /
+  stale / missing instead of rendering an old cart as current.
+- **Consume-on-read for SPA revisits.** A handed-off response describes page state at
+  injection time; if the SPA can revisit the route in-session, delete the entry after
+  first use or a stale snapshot silently resurfaces.
+- **No secrets.** An injected global is readable by every script in the page — same
+  rule as query-param tokens above.
+
+## Preloaded (hidden) WebView lifecycle
+
+Apps increasingly create WebViews before the user navigates — hidden/offscreen
+preloading (Shopify's Mobile Bridge preloads and pools WebViews; Shopify Checkout
+Sheet Kit exposes `preload()` with a TTL and invalidation; Android WebView now ships
+Prefetch/Prerender as platform APIs). If the host does this, the page's lifecycle
+assumptions break silently:
+
+- **READY fires at preload time, not display time.** Analytics "exposure" events,
+  timers, and readiness metrics all run while the user has seen nothing. Put it in the
+  contract: either the app passes a `preloaded=1` style param and later signals
+  activation (an inbound message, or the page observing visibility), or the page
+  sends distinct `LOADED` and `ACTIVATED` messages. Latency metrics measured on a
+  hidden load must be re-baselined at activation or they report fantasy numbers.
+- **Staleness is the app's problem but the page's symptom.** A preloaded page shows
+  data as of preload time; the contract needs a TTL/invalidate rule (Checkout Sheet
+  Kit invalidates on cart change) and the page should re-validate on activation.
+- Don't assume `document.visibilityState`/`prerendering` alone detects hidden
+  preloads: an offscreen-but-attached WebView can report `visible` depending on host
+  implementation — an explicit contract signal beats inference.
 
 ## Auth & session handoff
 
@@ -186,6 +249,21 @@ when the page would navigate or use device capabilities:
   [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()`
   unreliable). Funnel back option (b): Capacitor App-plugin `backButton`, adopted by
   Tauri PR #14133.
+- Startup data handoff: Meituan tech blog
+  ["WebView性能、体验分析与优化"](https://tech.meituan.com/2017/06/09/webviewperf.html)
+  (client proxy request — native fetches in parallel with WebView init); Woowa Brothers
+  ["플로팅웹뷰 도입기"](https://techblog.woowahan.com/24165/) (query-param truncation →
+  app-storage handoff);
+  [react-native-webview #1609](https://github.com/react-native-webview/react-native-webview/issues/1609)
+  (`injectedJavaScriptBeforeContentLoaded` ordering unreliable on Android);
+  react-native-webview Reference (`injectedJavaScriptObject` / `injectedObjectJson()`).
+- Preloaded WebView lifecycle: Shopify Engineering
+  ["Mobile Bridge: Making WebViews Feel Native"](https://shopify.engineering/mobilebridge-native-webviews)
+  (background preload + pooling, P75 6s → 1.4s); Shopify
+  [Checkout Sheet Kit preloading](https://shopify.dev/docs/storefronts/mobile/checkout-kit/preloading)
+  (preload-as-hint semantics, TTL, `invalidate()`); Android Developers
+  [Speculative loading in WebView](https://developer.android.com/develop/ui/views/layout/webapps/speculative-loading)
+  (Preconnect / Prefetch / Prerender platform APIs).
 - OAuth-in-webview block: Google Developers Blog
   ["Upcoming security changes to Google's OAuth 2.0 authorization endpoint in embedded webviews"](https://developers.googleblog.com/en/upcoming-security-changes-to-googles-oauth-20-authorization-endpoint-in-embedded-webviews/)
   and Google's `disallowed_useragent` remediation FAQ; IETF

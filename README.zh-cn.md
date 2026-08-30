@@ -340,11 +340,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
+Local markdown refs checked: 336
 Sources sections checked: 50
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 174
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4

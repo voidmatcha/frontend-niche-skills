@@ -22,7 +22,7 @@
 <a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">blinded routing comparison, 16 of 138 cases</a> ·
 <a href="./evals/behavioral/">two self-run behavioral tests, both tied</a> ·
 <a href="./docs/oss-validation-cases.md">commit-pinned OSS casebook</a> ·
-<a href="#development-checks">173 eval-case specs</a> ·
+<a href="#development-checks">174 eval-case specs</a> ·
 <a href="./.github/workflows/link-check.yml">CI-checked citations</a>
 </p>
 
@@ -336,11 +336,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
+Local markdown refs checked: 336
 Sources sections checked: 50
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 174
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4
