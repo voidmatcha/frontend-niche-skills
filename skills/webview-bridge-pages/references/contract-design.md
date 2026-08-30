@@ -111,8 +111,8 @@ When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands nati
   has fallback render paths (timeout fallbacks firing in production is an anomaly
   signal, not a distribution). Route the two kinds of signal differently: latency
   distributions can go to a sampled RUM pipeline, but rare anomaly signals (fallback
-  reasons, bridge send failures) must go to full-volume logging — RUM SDKs commonly
-  sample at 1–10% and will silently drop the rare events that matter most.
+  reasons, bridge send failures) must go to full-volume logging — RUM SDKs often
+  sample sessions, and sampling silently drops the rare events that matter most.
 - **The renderer can die mid-session, not just on cold load.** iOS WKWebView's
   out-of-process WebContent can be killed under memory pressure
   (`webViewWebContentProcessDidTerminate` — which itself sometimes doesn't fire,
@@ -132,7 +132,8 @@ data handoff. Contract points, in order of what goes wrong without them:
 
 - **Transport by size.** Query params work for small scalar inputs but have practical
   URL length limits and leak into server logs/history — API-response-sized payloads get
-  truncated (Woowa hit exactly this and moved to app-storage handoff). For structured
+  truncated (Woowa Brothers hit exactly this in their floating-webview work and moved
+  to app-storage handoff). For structured
   payloads, inject a JS global before page scripts run, or use a host object the page
   polls.
 - **Injection timing is host-specific.** RN's `injectedJavaScriptBeforeContentLoaded`
@@ -155,8 +156,8 @@ data handoff. Contract points, in order of what goes wrong without them:
 
 Apps increasingly create WebViews before the user navigates — hidden/offscreen
 preloading (Shopify's Mobile Bridge preloads and pools WebViews; Shopify Checkout
-Sheet Kit exposes `preload()` with a TTL and invalidation; Android WebView now ships
-Prefetch/Prerender as platform APIs). If the host does this, the page's lifecycle
+Sheet Kit exposes `preload()` as an explicit hint with `invalidate()`; Android WebView
+now ships Prefetch/Prerender as platform APIs). If the host does this, the page's lifecycle
 assumptions break silently:
 
 - **READY fires at preload time, not display time.** Analytics "exposure" events,
@@ -166,8 +167,10 @@ assumptions break silently:
   sends distinct `LOADED` and `ACTIVATED` messages. Latency metrics measured on a
   hidden load must be re-baselined at activation or they report fantasy numbers.
 - **Staleness is the app's problem but the page's symptom.** A preloaded page shows
-  data as of preload time; the contract needs a TTL/invalidate rule (Checkout Sheet
-  Kit invalidates on cart change) and the page should re-validate on activation.
+  data as of preload time; the contract needs a staleness/invalidate rule (Checkout
+  Sheet Kit makes the *app* responsible for `invalidate()`/re-`preload()` when the
+  cart changes — it does not auto-invalidate on data change) and the page should
+  re-validate on activation.
 - Don't assume `document.visibilityState`/`prerendering` alone detects hidden
   preloads: an offscreen-but-attached WebView can report `visible` depending on host
   implementation — an explicit contract signal beats inference.
@@ -252,8 +255,8 @@ when the page would navigate or use device capabilities:
 - Startup data handoff: Meituan tech blog
   ["WebView性能、体验分析与优化"](https://tech.meituan.com/2017/06/09/webviewperf.html)
   (client proxy request — native fetches in parallel with WebView init); Woowa Brothers
-  ["플로팅웹뷰 도입기"](https://techblog.woowahan.com/24165/) (query-param truncation →
-  app-storage handoff);
+  ["웹과 네이티브, 조화로운 공존은 가능한가? 플로팅웹뷰 도입으로 찾은 희망"](https://techblog.woowahan.com/24165/)
+  (query-param truncation → app-storage handoff);
   [react-native-webview #1609](https://github.com/react-native-webview/react-native-webview/issues/1609)
   (`injectedJavaScriptBeforeContentLoaded` ordering unreliable on Android);
   react-native-webview Reference (`injectedJavaScriptObject` / `injectedObjectJson()`).
@@ -261,7 +264,7 @@ when the page would navigate or use device capabilities:
   ["Mobile Bridge: Making WebViews Feel Native"](https://shopify.engineering/mobilebridge-native-webviews)
   (background preload + pooling, P75 6s → 1.4s); Shopify
   [Checkout Sheet Kit preloading](https://shopify.dev/docs/storefronts/mobile/checkout-kit/preloading)
-  (preload-as-hint semantics, TTL, `invalidate()`); Android Developers
+  (preload-as-hint semantics, app-owned `invalidate()`); Android Developers
   [Speculative loading in WebView](https://developer.android.com/develop/ui/views/layout/webapps/speculative-loading)
   (Preconnect / Prefetch / Prerender platform APIs).
 - OAuth-in-webview block: Google Developers Blog
