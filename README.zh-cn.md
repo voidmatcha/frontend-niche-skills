@@ -19,10 +19,10 @@
 
 <p align="center">
 <a href="#skills">41 个技能</a> ·
-<a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">盲测路由对比，138 例中的 16 例</a> ·
+<a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">盲测路由运行，全部 138 例</a> ·
 <a href="./evals/behavioral/">两次自测行为实验，均为平局</a> ·
 <a href="./docs/oss-validation-cases.md">锚定 commit 的开源案例集</a> ·
-<a href="#development-checks">173 条评估用例规格</a> ·
+<a href="#development-checks">177 条评估用例规格</a> ·
 <a href="./.github/workflows/link-check.yml">CI 校验的引用</a>
 </p>
 
@@ -119,7 +119,7 @@ did not stop it.
 
 | 失败信号 | 起始技能 | 首先要问的问题 |
 | --- | --- | --- |
-| 页面运行在 React Native WebView、WKWebView、Android WebView、Flutter WebView 或应用内浏览器中；安全区域、键盘、恢复（resume）、桥接或绘制与桌面 Chrome 表现不同。 | `webview-bridge-pages` | 这是布局、命中测试、绘制/合成、桥接时序，还是宿主生命周期问题？ |
+| 页面运行在 React Native WebView、WKWebView、Android WebView、Flutter WebView 或应用内 WebView 中；安全区域、键盘、恢复（resume）、桥接或绘制与桌面 Chrome 表现不同。 | `webview-bridge-pages` | 这是布局、命中测试、绘制/合成、桥接时序，还是宿主生命周期问题？ |
 | 浏览器 iframe/widget 为空、接受伪造消息、丢失 READY/init、调整尺寸时闪烁、缺少所需能力，或丢失嵌入式登录状态。 | `iframe-embed-contracts` | 准确的父页/客体 origin、实际下发的 frame 策略、已认证消息握手、尺寸协议和存储模式分别是什么？ |
 | 浏览器返回/前进恢复出了陈旧或私密的界面，或者返回后计时器/套接字/observer 已失效或被重复创建。 | `browser-page-lifecycle-bfcache-contracts` | 这是不是一次 persisted 恢复？哪些状态/资源需要幂等地重新校准？真实的历史遍历又显示了什么？ |
 | SPA 返回/前进或同一文档内 hash 导航后落在错误滚动位置、内容渲染后滚动两次，或无法显示 fragment 目标。 | `history-scroll-restoration-contracts` | 哪个 same-document history entry 拥有位置、由谁执行恢复、目标布局何时稳定？ |
@@ -263,7 +263,7 @@ did not stop it.
 
 安装 [`skills` CLI](https://www.skills.sh/)。这些技能遵循 [`SKILL.md` 格式](https://agentskills.io/specification)。
 
-这些技能面向遵循规范中 `description` 1024 字符上限的 Claude Code、Codex 等代理，并把这些字符用于触发词，以便正确的技能被激活。Claude.ai 的上传路径将 `description` 限制为 200 字符，因此直接上传会失败（[Claude 文档](https://claude.com/docs/skills/how-to)）。
+这些技能面向遵循规范中 `description` 1024 字符上限的 Claude Code、Codex 等代理，并把这些字符用于触发词，以便正确的技能被激活。Claude.ai 自定义技能上传说明中 `description` 的上限为 200 字符（[Claude 帮助中心](https://support.claude.com/en/articles/12512198-how-to-create-custom-skills)），直接上传这些技能曾被拒绝。[Claude 技能文档](https://claude.com/docs/skills/how-to)写的是 1,024 字符，但只要上传路径仍执行 200 字符限制，就需要 [CONTRIBUTING](CONTRIBUTING.md#claudeai) 中的短描述变体（2026-09-25 核实）。
 
 下面的 `voidmatcha/frontend-niche-skills` 命令假设公开仓库或插件市场条目已经可用。若使用本地或预发布检出，请改用本节中的本地检出命令。
 
@@ -290,6 +290,8 @@ npx skills add voidmatcha/frontend-niche-skills --skill '*' -g --agent '*'
 codex plugin marketplace add "$(pwd)"
 codex plugin add frontend-niche-skills@frontend-niche-skills
 ```
+
+公开仓库可用时，也可以用 `codex plugin marketplace add voidmatcha/frontend-niche-skills` 代替本地路径；Codex CLI 接受 `owner/repo` 形式的 marketplace 来源。
 
 安装或更新后请开启新的 Codex 或 Claude Code 会话，以便刷新捆绑的技能。
 
@@ -340,11 +342,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
-Sources sections checked: 50
+Local markdown refs checked: 350
+Sources sections checked: 51
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 177
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4
@@ -377,7 +379,7 @@ Scripts syntax checked: 16
 
 ### 为什么页面在桌面 Chrome 上正常，在应用内 WebView 里却出问题？
 
-因为不同的是宿主，而不是标记。安全区域与 viewport inset、桥接就绪时机、恢复时渲染进程被回收、合成行为，这些都是宿主契约，不是页面缺陷。`webview-bridge-pages` 覆盖这些内容，而证据必须来自应用内 WebView，不能来自桌面浏览器。
+因为不同的是宿主，而不是标记。安全区域与 viewport inset、桥接就绪时机、恢复时渲染进程被回收、合成行为都由宿主决定，因此修复通常是让页面符合该宿主的契约：viewport meta、`svh`/`dvh` 单位、重新发送 READY，以及重新加载后仍可恢复的状态。`webview-bridge-pages` 覆盖这些内容，而证据必须来自应用内 WebView，不能来自桌面浏览器。
 
 ### 哪些编码智能体可以使用这些技能？
 

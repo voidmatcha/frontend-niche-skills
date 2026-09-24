@@ -5,78 +5,50 @@ description: "Use when shipping UI copy in more than one language — text overf
 
 # i18n copy & layout
 
-The expensive i18n bugs aren't missing translations — they're the **layout, grammar,
-and formatting assumptions baked in while the app was English-only**, which surface only
-when real translated copy lands. Core rule: treat copy as **variable-length,
-variable-order, variable-form data**, never as fixed text measured once in English.
-Two halves: **copy** (the words and values) and **layout** (the space they live in).
+The expensive i18n bugs aren't missing translations — they're the **layout, grammar, and formatting assumptions baked in while the app was English-only**, which surface only when real translated copy lands. Core rule: treat copy as **variable-length, variable-order, variable-form data**, never as fixed text measured once in English. Two halves: **copy** (the words and values) and **layout** (the space they live in).
 
-For East-Asian glyph rendering, line-breaking (`word-break: keep-all`), and IME
-composition, use **cjk-text-and-input** — the two are deliberately split.
+For East-Asian glyph rendering, line-breaking (`word-break: keep-all`), and IME composition, use **cjk-text-and-input** — the two are deliberately split.
 
 ## Checklist (lead with the trap; details in references/)
 
 **Layout** → [layout](./references/layout.md)
 
-1. No fixed-width or tight single-line containers for copy; design for reflow —
-   translations run ~130–300% of the English length, and the *shortest* strings expand
-   most.
-2. Compound-noun languages (German/Finnish/Dutch) produce one long unbreakable word;
-   leave room and don't rely on wrapping. Allow extra line height — Thai/Arabic/
-   Devanagari/CJK glyphs are taller than Latin.
-3. Set `lang` **and** `dir` on `<html>` — separate mechanisms; direction is not
-   derivable from language, and `dir` is markup, not CSS-only.
-4. Lay out with CSS logical properties (`margin-inline-start`, `inset-inline`), not
-   `left`/`right`, so RTL mirrors automatically; watch `dir="ltr"` islands
-   (email/URL/code).
+1. No fixed-width or tight single-line containers for copy; design for reflow — translations run ~130–300% of the English length, and the *shortest* strings expand most.
+2. Compound-noun languages (German/Finnish/Dutch) produce one long unbreakable word; leave room and don't rely on wrapping. If you add a wrapping fallback, use `overflow-wrap: break-word` (it breaks only a word that cannot fit on its own line), not `word-break: break-all`, which breaks between any two characters of non-CJK text and splits ordinary Latin words in every locale. Allow extra line height — Thai/Arabic/Devanagari/CJK glyphs are taller than Latin.
+3. Set `lang` **and** `dir` on `<html>` — separate mechanisms; direction is not derivable from language, and `dir` is markup, not CSS-only.
+4. Lay out with CSS logical properties (`margin-inline-start`, `inset-inline`), not `left`/`right`, so RTL mirrors automatically; watch `dir="ltr"` islands (email/URL/code).
 5. Verify with real translated copy or pseudo-localization — never English/Lorem.
 
 **Copy** → [copy](./references/copy.md)
 
-6. Never `count === 1 ? singular : plural`. Select via `Intl.PluralRules` / ICU `plural`
-   — CLDR has six categories (Arabic uses all; CJK only `other`).
-7. Never concatenate sentence fragments. One full-sentence template + named placeholders
-   so translators can reorder the variable.
-8. Interpolation alone doesn't fix gender/article agreement — use ICU `select` for
-   gendered/variant words.
-9. Format numbers/dates/currency with `Intl` (locale separators, digit grouping, ISO
-   4217 currency) — never hardcode `$`, `MM/DD/YYYY`, or `.`/`,`. `Intl` formats but
-   does not parse or store — for timezone/DST/instant storage correctness see
-   datetime-correctness.
+6. Never `count === 1 ? singular : plural`. Select via `Intl.PluralRules` / ICU `plural` — CLDR has six categories (Arabic uses all; CJK only `other`).
+7. Never concatenate sentence fragments. One full-sentence template + named placeholders so translators can reorder the variable.
+8. Interpolation alone doesn't fix gender/article agreement — use ICU `select` for gendered/variant words.
+9. Format numbers/dates/currency with `Intl` (locale separators, digit grouping, ISO 4217 currency) — never hardcode `$`, `MM/DD/YYYY`, or `.`/`,`. `Intl` formats but does not parse or store — for timezone/DST/instant storage correctness see datetime-correctness.
 
 ## PR-worthiness gate
 
-Generic "hardcoded English" reports are noisy. Count a case only when it affects a user-facing
-surface and has a small, reviewable migration path:
+Generic "hardcoded English" reports are noisy. Count a case only when it affects a user-facing surface and has a small, reviewable migration path:
 
-- **Copy contract**: hardcoded user copy bypasses the app's existing translation system, contains a
-  visible typo, or blocks translation of an error/empty/loading state.
-- **Grammar contract**: plural, gender, article, or sentence order is computed in code instead of a
-  full-message ICU/translation template.
-- **Layout contract**: translated text can overflow/truncate because the component assumes English
-  length, fixed width, fixed height, or physical left/right properties.
-- **Formatting contract**: date/number/currency output is hardcoded instead of using locale-aware
-  formatting.
+- **Copy contract**: hardcoded user copy bypasses the app's existing translation system, contains a visible typo, or blocks translation of an error/empty/loading state.
+- **Grammar contract**: plural, gender, article, or sentence order is computed in code instead of a full-message ICU/translation template.
+- **Layout contract**: translated text can overflow/truncate because the component assumes English length, fixed width, fixed height, or physical left/right properties.
+- **Formatting contract**: date/number/currency output is hardcoded instead of using locale-aware formatting.
 
 Reject weak findings:
 
 - Developer-only logs, test fixtures, seed data, or non-user-facing constants.
-- Product names, protocol literals, CSS class names, route names, or intentionally English brand
-  copy.
-- A string already routed through translation but missing one locale file; that is translation
-  inventory work, not a skill-level code defect.
+- Product names, protocol literals, CSS class names, route names, or intentionally English brand copy.
+- A string already routed through translation but missing one locale file; that is translation inventory work, not a skill-level code defect.
 - CJK line-breaking/IME behavior; hand that to `cjk-text-and-input`.
-- If the mismatch is between the rendered UI and a design reference (not translation), see
-  `design-to-code-fidelity`.
+- If the mismatch is between the rendered UI and a design reference (not translation), see `design-to-code-fidelity`.
+- A server-versus-client first-render format divergence (the server formats in its own locale or zone, the client in the user's) is a hydration mismatch; route it to `ssr-hydration-mismatch`. This skill still owns which display format is correct.
 
-Minimal useful PR: move the message into the existing i18n mechanism, add at least one non-English
-or plural-form test/story, and keep layout flexible with wrapping/min-inline-size/logical props.
+Minimal useful PR: move the message into the existing i18n mechanism, add at least one non-English or plural-form test/story, and keep layout flexible with wrapping/min-inline-size/logical props.
 
 ## Output shape
 
-Report the locale and user-facing surface, copy/grammar/layout/formatting
-contract, concrete rendered or message evidence, smallest i18n-system change,
-and a non-English, plural, RTL, or pseudo-localized regression as appropriate.
+Report the locale and user-facing surface, copy/grammar/layout/formatting contract, concrete rendered or message evidence, smallest i18n-system change, and a non-English, plural, RTL, or pseudo-localized regression as appropriate.
 
 ## References
 

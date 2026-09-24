@@ -21,7 +21,7 @@
       "expectations": [
         "The response states that token/session storage and cookie attributes are owned by frontend-security-baseline, not by this skill, and routes the finding there.",
         "It points out that the defect is the storage decision and the server session design, so editing the login form component is the wrong lever.",
-        "It names what would turn this into a real auth-flow contract finding: client-only logout that leaves the server session valid, sign-in state that survives an expired session with no recovery, a login error that enumerates which accounts exist, or a missing fresh-verification step before a sensitive account change.",
+        "It names what would turn this into a real auth-flow contract finding: a post-login `returnTo`/`next` redirect restored without validating the target, a login error that enumerates which accounts exist, an expired one-time code or reset link with no retry or resend path, or a missing fresh-verification step before a sensitive account change. It does not claim logout or session-expiry handling for this skill, since logout belongs to frontend-security-baseline.",
         "It does not invent a backend cryptography or session-token-format recommendation, since that is explicitly outside this skill.",
         "It offers the auth-flow work it can legitimately do on this login page — autocomplete fields, generic error copy, retry and expiry states — as a separate, smaller deliverable."
       ]
@@ -48,8 +48,7 @@
         "It states that Android Chrome's SMS code retrieval comes from the WebOTP API (`navigator.credentials.get({ otp: { transport: ['sms'] } })`), which is additive to the attribute rather than implied by it.",
         "It notes the WebOTP path also depends on the SMS body carrying the origin-bound suffix, so the message format is part of the contract and not purely a frontend change.",
         "It asks for the concrete platform evidence before shipping — which Android browser and version, whether the attribute is already present, and what the delivered SMS body looks like.",
-        "It keeps the surrounding flow contract in view: expiry, resend, and retry state for the code, and a fallback path when autofill does not fire at all.",
-        "Native form-validity wiring for the invalid-code message — the Constraint Validation API, `setCustomValidity()`, and `:user-invalid` timing — is routed to constraint-validation-contracts."
+        "It keeps the surrounding flow contract in view: expiry, resend, and retry state for the code, and a fallback path when autofill does not fire at all."
       ]
     }
   ]

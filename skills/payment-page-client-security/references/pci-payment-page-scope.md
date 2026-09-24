@@ -17,6 +17,8 @@ The payment page is not just "the card input iframe." Parent-page scripts can af
 
 Public PCI SSC guidance says SAQ A eligibility criteria changed for e-commerce merchants. SAQ A no longer directly includes 6.4.3 and 11.6.1, but merchants still must confirm the site is not susceptible to script attacks that could affect e-commerce systems. PCI SSC FAQ guidance says this may be supported by techniques like those in 6.4.3/11.6.1 or by confirmation from a PCI DSS-compliant TPSP/payment processor that the embedded payment page/form solution protects against script attacks when implemented as instructed.
 
+That script-susceptibility criterion applies only to merchant pages that embed a TPSP/payment processor's payment page or form (for example, an iframe). The same PCI SSC post says it "does not apply to e-commerce merchants with a webpage that redirects customers from the merchant's webpage to a TPSP/payment processor (for example, including but not limited to, with an HTTP 30x redirect, a meta redirect tag, or a JavaScript redirect)", nor to merchants that fully outsource payment functions. For a redirect flow, the frontend concern is that a script or injected content could tamper with the redirect target or payment link on the merchant page. Report that as a risk check, not as SAQ A eligibility evidence.
+
 Agent output should say:
 
 - "This is an evidence gap for SAQ/compliance review."
@@ -31,15 +33,15 @@ Do not say:
 
 ## Open-source prior art found
 
-- `mr-yum/pci-dss-page-tampering` — very low-star but closest public OSS match found. It implements inventory, detection, and validation workflows for PCI DSS 6.4.3 / 11.6.1: staging inventory discovers scripts/headers, production detection compares against approved inventory, and CI validates inventory files. The README notes the repository is largely agent-developed, so treat it as prior art, not proof of demand.
-- `shyshlakov/pci-dss-mcp` — very low-star MCP scanner focused on Go payment services. It is broader PCI DSS service-code analysis, with payment-page script checks among other checks. Useful as a comparison point, not a replacement for frontend runtime evidence review.
-- `OWASP/www-project-pci-dss-toolkit` — OWASP project repository with low GitHub signal. Useful mostly for terminology/checklist framing, not mature frontend tooling.
+- `mr-yum/pci-dss-page-tampering` — 1 GitHub star (checked 2026-09-25) but closest public OSS match found. It implements inventory, detection, and validation workflows for PCI DSS 6.4.3 / 11.6.1: staging inventory discovers scripts/headers, production detection compares against approved inventory, and CI validates inventory files. The README notes the repository is largely agent-developed, so treat it as prior art, not proof of demand.
+- `shyshlakov/pci-dss-mcp` — 3 GitHub stars (checked 2026-09-25); an MCP scanner focused on Go payment services. It is broader PCI DSS service-code analysis, with payment-page script checks among other checks. Useful as a comparison point, not a replacement for frontend runtime evidence review.
+- `OWASP/www-project-pci-dss-toolkit` — OWASP project page (2 GitHub stars, checked 2026-09-25) that describes a *planned* toolkit for requirements 6.4.3 / 11.6.1 and a road map, not shipped frontend tooling.
 
 This means the niche skill should not pretend to replace scanners. Its useful layer is judgment: classify the payment architecture, trace whether PAN/CVV crosses the merchant-JS boundary, decide whether third-party scripts actually run on the payment path, and translate missing artifacts into concrete evidence requests.
 
 ## Sanitization/XSS boundary
 
-If a payment page renders CMS, marketing, or rich HTML near checkout, use `frontend-security-baseline` for raw HTML and CSP details. Payment risk is higher because XSS can overlay or observe a payment form and defeat intended hosted-field isolation.
+If a payment page renders CMS, marketing, or rich HTML near checkout, use `frontend-security-baseline` for the raw-HTML/XSS sink fix, as on every page. The payment-page CSP/SRI/header controls stay in this skill as 6.4.3/11.6.1 evidence. Payment risk is higher because XSS can overlay or observe a payment form and defeat intended hosted-field isolation.
 
 ## Sources
 
@@ -48,3 +50,4 @@ If a payment page renders CMS, marketing, or rich HTML near checkout, use `front
 - PCI SSC Document Library — [PCI DSS v4.0.1 SAQ guidance](https://www.pcisecuritystandards.org/document_library/)
 - GitHub — [`mr-yum/pci-dss-page-tampering`](https://github.com/mr-yum/pci-dss-page-tampering)
 - GitHub — [`shyshlakov/pci-dss-mcp`](https://github.com/shyshlakov/pci-dss-mcp)
+- GitHub — [`OWASP/www-project-pci-dss-toolkit`](https://github.com/OWASP/www-project-pci-dss-toolkit)

@@ -25,7 +25,7 @@
         "It directs the eligibility and attestation decision to the acquirer, QSA, or internal payment/security owner.",
         "It still classifies the architecture as a full redirect and states what that means for the PAN boundary: card entry happens on the provider's domain, so merchant JavaScript should not see PAN or CVV.",
         "It offers the concrete evidence it can produce instead: runtime script and iframe inventory captured from the pre-redirect payment page, owner and justification for each payment-path script, CSP/`form-action`/header evidence, and confirmation that no PAN, CVV, or card data appears in storage, URLs, logs, analytics, or replay tooling.",
-        "It notes that even a redirect flow leaves the pre-redirect page in scope for script-attack concerns, so 'we redirect, therefore nothing to check' is not accepted.",
+        "It states that PCI SSC's SAQ A script-susceptibility criterion applies to pages embedding a TPSP payment page or form and does not apply to redirect flows, and still treats integrity of the redirect target or payment link on the pre-redirect page as a frontend risk check, explicitly not as SAQ A eligibility evidence.",
         "PCI references stay phrased as 6.4.3 / 11.6.1 evidence signals, explicitly not as a compliance verdict."
       ]
     },
@@ -54,7 +54,7 @@
         "It requires a runtime script inventory captured from the live checkout URL, since a scanner hit on one tag does not describe the dynamically injected third-party chain.",
         "Change and tamper detection for payment-page scripts and security-impacting headers is named as the 11.6.1-style evidence artifact that substitutes for SRI here.",
         "It recommends rolling any CSP change out in report-only mode before enforcement on a revenue path.",
-        "General CSP hardening and XSS work outside the payment context is routed to frontend-security-baseline."
+        "The checkout CSP/SRI decision stays in this skill as 6.4.3/11.6.1 evidence rather than being routed to frontend-security-baseline."
       ]
     }
   ]

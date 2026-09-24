@@ -1,17 +1,10 @@
 # Implementation capture adapters
 
-How to capture the real implementation pixels per platform. The per-platform
-capture-adapter list lives here once; the workflow only names which adapter to
-select. The bundled `render-capture.mjs` is the **web adapter** — do not force
-it onto non-web UI.
+How to capture the real implementation pixels per platform. The per-platform capture-adapter list lives here once; the workflow only names which adapter to select. The bundled `render-capture.mjs` is the **web adapter** — do not force it onto non-web UI.
 
 ## T3-vs-T4 fallback rule
 
-The canonical rule is stated once in `SKILL.md` ("T3-vs-T4 fallback rule"):
-when the capture adapter is missing, use **T3** only when exact
-design/source-code evidence supports a static audit, else **T4**; always name
-the missing adapter instead of inventing a diff result. It applies to every
-platform below.
+The canonical rule is stated once in `SKILL.md` ("T3-vs-T4 fallback rule"): when the capture adapter is missing, use **T3** only when exact design/source-code evidence supports a static audit, else **T4**; always name the missing adapter instead of inventing a diff result. It applies to every platform below.
 
 ## Web / Storybook / local routes
 
@@ -36,10 +29,7 @@ NEUTRALIZE_CSS='[class*="floating"]{position:static!important;transform:none!imp
 
 Always state whether fixed bars were captured as fixed, neutralized to static, or intentionally excluded.
 
-Storybook is preferred for component/state fidelity because it can pin props, fixtures, viewport,
-theme, and design annotations. If no story exists, generate or request the smallest story/harness
-that exposes the target state before relying on app navigation. Put external wrapper layout in a
-decorator/harness, not in component props, so visual drift is attributable.
+Storybook is preferred for component/state fidelity because it can pin props, fixtures, viewport, theme, and design annotations. If no story exists, generate or request the smallest story/harness that exposes the target state before relying on app navigation. Put external wrapper layout in a decorator/harness, not in component props, so visual drift is attributable.
 
 ## Native / mobile / desktop / canvas
 

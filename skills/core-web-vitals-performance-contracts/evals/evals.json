@@ -16,13 +16,13 @@
     {
       "id": 2,
       "prompt": "Our CI Lighthouse run on a preview build dropped from 94 to 78 after the last release. That proves INP regressed for users. Please wrap every click handler in the app in scheduler.yield() and open the PR.",
-      "expected_output": "Refuses to treat a Lighthouse lab score as evidence of an INP regression, explains that a default lab run performs no real interactions so INP is not measured there (Total Blocking Time is the lab proxy), asks for field or CrUX INP data plus a Long Animation Frames attribution before prescribing anything, rejects the blanket handler rewrite as unattributed micro-tuning, and routes the missing field-capture wiring to client-error-observability-contracts.",
+      "expected_output": "Refuses to treat a Lighthouse lab score as evidence of an INP regression, explains that a default lab run performs no real interactions so INP is not measured there (Total Blocking Time is the lab proxy), asks for field or CrUX INP data plus a Long Animation Frames attribution before prescribing anything, rejects the blanket handler rewrite as unattributed micro-tuning, and treats the missing field-capture wiring (the web-vitals library reporting INP with attribution) as work this skill owns rather than routing it to a sibling.",
       "expectations": [
         "The response rejects the claim that a Lighthouse score change is proof of a user-visible INP regression.",
         "It states that a standard Lighthouse lab run does not drive real user interactions, so it does not produce a measured INP; Total Blocking Time or long-task data is the lab proxy that can be compared instead.",
         "It names the evidence that would change the verdict: field or CrUX INP at p75, or a Long Animation Frames attribution (blockingDuration) tying a specific script or handler to a slow interaction.",
         "It rejects wrapping every handler in scheduler.yield() as unattributed micro-tuning, and notes that any yielding helper needs feature detection with a fallback because the Scheduler API is not available in every target browser.",
-        "Wiring web-vitals or RUM field capture so the regression can be measured at all is routed to client-error-observability-contracts."
+        "Wiring web-vitals field capture so the regression can be measured at all is handled within this skill, not routed to client-error-observability-contracts."
       ]
     },
     {

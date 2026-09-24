@@ -27,25 +27,24 @@
     {
       "id": 3,
       "prompt": "To make the account page work offline, a PR adds a StaleWhileRevalidate runtime route for /api/account so the last response is available without network. The app runs on shared kiosk devices where multiple users sign in and out.",
-      "expected_output": "Blocks the change because Cache Storage is per-origin rather than per-user and the Cache API ignores HTTP cache headers, keeps the account route Network Only, and routes the policy ruling on storing authenticated responses to frontend-security-baseline.",
+      "expected_output": "Blocks the change because Cache Storage is per-origin rather than per-user and the Cache API ignores HTTP cache headers, keeps the account route Network Only, and makes the do-not-cache ruling itself rather than deferring it to a sibling skill.",
       "expectations": [
         "The response explains that Cache Storage is scoped to the origin, not to a session or user, and that entries persist until explicitly deleted because the Cache API does not honor HTTP cache headers.",
         "The concrete risk is stated: after logout and a new sign-in on a shared device, the cached /api/account response can be served to a different user, or stale post-logout data can be shown.",
         "The personalized endpoint is routed Network Only, with Cache First reserved for hash-versioned static assets and Network First for shell HTML.",
-        "The ruling on whether authenticated responses may be stored client-side at all is routed to frontend-security-baseline.",
+        "The response rules that authenticated or per-user responses must not be written to Cache Storage and does not defer that ruling to frontend-security-baseline, which covers token storage and CSRF rather than service-worker caches.",
         "If offline account data is still required, the response requires an explicit per-user store with a purge on logout rather than a shared runtime cache route."
       ]
     },
     {
       "id": 4,
-      "prompt": "A vite-plugin-pwa config sets workbox.globPatterns: ['**/*.{js,css,html}']. QA reports that offline the app renders with fallback system fonts and missing icons, while online everything looks correct. A 6 MB offline map tile bundle is also absent from the cache.",
-      "expected_output": "Identifies globPatterns as replacing the default match set rather than extending it, enumerates every needed extension, attributes the 6 MB omission to the file-size cap, and adds a built-manifest assertion as the regression.",
+      "prompt": "A vite-plugin-pwa config sets workbox.globPatterns: ['**/*.{js,css,html}'] and showMaximumFileSizeToCacheInBytesWarning: true. QA reports that offline the app renders with fallback system fonts and missing icons, while online everything looks correct. The build log also warns that a 6 MB offline map tile bundle (tiles.js) won't be precached.",
+      "expected_output": "Identifies that the configured pattern matches only JS/CSS/HTML, the same set as the default, so fonts and icons were never precached; enumerates every needed extension; attributes the 6 MB omission to the file-size cap; and adds a built-manifest assertion as the regression.",
       "expectations": [
-        "The response states that setting globPatterns overrides the defaults instead of adding to them, so woff2 fonts, svg and png icons, and JSON fall out of the precache.",
-        "The fix enumerates every extension the app needs offline in globPatterns rather than assuming the defaults are merged in.",
-        "The missing 6 MB asset is attributed to maximumFileSizeToCacheInBytes silently skipping oversized files, and that limit is decided deliberately rather than raised blindly.",
-        "The regression asserts against the generated precache manifest that HTML, JS, CSS, icons, and fonts are all present.",
-        "The response notes that precache entries must be same-origin URLs expected to return 200, since a failed entry rejects the install and the new worker never activates."
+        "The response states that the pattern matches only js, css, and html, which is the same set the default already covers, so woff2 fonts and svg/png icons were never in the precache manifest; it does not claim that setting globPatterns removed them from a larger default set.",
+        "The fix enumerates every extension the app needs offline in globPatterns, re-listing js, css, and html because a custom pattern replaces the default rather than extending it.",
+        "The missing 6 MB asset is attributed to maximumFileSizeToCacheInBytes (2 MiB default) excluding the oversized file with a build warning, notes that without showMaximumFileSizeToCacheInBytesWarning recent vite-plugin-pwa would fail the build instead, and decides that limit deliberately rather than raising it blindly.",
+        "The regression asserts against the generated precache manifest that HTML, JS, CSS, icons, and fonts are all present."
       ]
     }
   ]

@@ -1,6 +1,6 @@
 ---
 name: payment-page-client-security
-description: "Use when reviewing checkout/payment pages for frontend-owned payment security: Stripe/Adyen/Braintree/Razorpay/PayPal hosted fields, iframes, redirects, wallets, direct card forms; PAN/CVV/CVC/cardholder data in DOM, React/Vue/Svelte state, logs, analytics, storage, URLs, replay tools; payment-page runtime script inventory, tag managers, third-party scripts, CSP/SRI/header controls, PCI DSS 6.4.3/11.6.1 evidence, SAQ A vs SAQ A-EP scope signals. This does not decide legal PCI scope, SAQ eligibility, or QSA acceptance. Route token-storage/CSP/XSS to frontend-security-baseline; route WebView-host payment pages to webview-bridge-pages."
+description: "Use when reviewing checkout/payment pages for frontend-owned payment security: Stripe/Adyen/Braintree/Razorpay/PayPal hosted fields, iframes, redirects, wallets, direct card forms; PAN/CVV/CVC/cardholder data in DOM, React/Vue/Svelte state, logs, analytics, storage, URLs, replay tools; payment-page runtime script inventory, tag managers, third-party scripts, CSP/SRI/header controls, PCI DSS 6.4.3/11.6.1 evidence, SAQ A vs SAQ A-EP scope signals. This does not decide legal PCI scope, SAQ eligibility, or QSA acceptance. Route auth-token storage, XSS, opener, and return-URL checks to frontend-security-baseline even on checkout; pair with webview-bridge-pages for native WebView bridge messages around checkout."
 ---
 
 # Payment page client security
@@ -11,8 +11,10 @@ Use this as a **payment-page evidence pass**, not as a generic security checklis
 
 - Cover browser/client code, checkout page composition, hosted payment iframes/fields, redirects, CSP/SRI/header evidence, logs, storage, analytics, tag managers, replay tools, and payment-page script monitoring.
 - Do not decide legal PCI scope, SAQ eligibility, QSA acceptance, or whether a site is "PCI compliant." Say "PCI evidence/risk discussion," not "compliance verdict."
-- For generic XSS, token storage, open redirects, or CSP hardening outside payment context, use `frontend-security-baseline` first.
+- Auth-token storage, XSS through HTML sinks, opener isolation, and redirect/return-URL validation go to `frontend-security-baseline` on every page, checkout included. This skill keeps cardholder-data exposure, payment-page script inventory, CSP/SRI/header controls as PCI DSS 6.4.3/11.6.1 evidence, and tamper monitoring.
 - For native WebView bridge messages around checkout, pair this with `webview-bridge-pages`.
+- For the host/guest embed contract of a hosted-fields iframe (`sandbox` tokens, `allow` delegation, `frame-src` versus `frame-ancestors`, READY/`postMessage`), use `iframe-embed-contracts`; this skill resumes the PAN-boundary check once the frame renders.
+- For error-reporter wiring (global capture surfaces, `beforeSend` placement, grouping), use `client-error-observability-contracts`; this skill decides which payment fields must never reach the payload.
 
 ## Workflow
 
@@ -50,6 +52,7 @@ rg -n -i 'card(number)?|\bpan\b|cvv|cvc|expiry' src/ pages/ app/ public/ 2>/dev/
 
 # Runtime-script risk indicators near checkout
 rg -n -i '<script|dangerouslySetInnerHTML|innerHTML|insertAdjacentHTML|eval\(|new Function\(|GTM-|dataLayer|gtag|analytics|chat|intercom|hotjar|fullstory|posthog|segment' src/ pages/ app/ public/ 2>/dev/null
+# HTML-sink hits (dangerouslySetInnerHTML/innerHTML/insertAdjacentHTML) route to frontend-security-baseline; keep script-injection/loader hits here
 
 # Header/policy ownership in common frontend stacks
 rg -n -i 'Content-Security-Policy|script-src|frame-src|connect-src|form-action|integrity=|crossorigin=|headers\(|next\.config|helmet|vercel\.json|netlify\.toml' . 2>/dev/null
@@ -70,13 +73,11 @@ Use this mapping carefully:
 
 - **6.4.3-style evidence**: scripts on payment pages are authorized, integrity-assured, inventoried, and have business/technical justification.
 - **11.6.1-style evidence**: a change/tamper-detection mechanism alerts on unauthorized changes to payment-page scripts and security-impacting HTTP headers.
-- **SAQ A signal**: even where 6.4.3/11.6.1 are not directly in SAQ A, merchants still need confidence that the site is not susceptible to script attacks affecting e-commerce systems. A TPSP/payment processor may provide part of this evidence.
+- **SAQ A signal**: even where 6.4.3/11.6.1 are not directly in SAQ A, merchants still need confidence that the site is not susceptible to script attacks affecting e-commerce systems. A TPSP/payment processor may provide part of this evidence. PCI SSC scopes this criterion to pages that embed the TPSP payment page or form (for example, an iframe); it does not apply to redirect or fully outsourced flows. For those flows, check whether the redirect target or payment link could be tampered with, and report it as a risk note rather than SAQ A evidence (PCI SSC FAQ wording in the reference).
 
 ## PR-worthiness gate
 
-File a payment-page finding only with concrete evidence: PAN/CVV/CVC crossing into merchant-controlled DOM, framework state, logs, storage, URLs, or telemetry, or a runtime script/CSP/SRI gap observed on the actual payment path — not speculation from imports or provider names.
-Reject weak findings: "we use Stripe, so PCI is solved," a `package.json` import that never executes at runtime, a broad-CSP note with no payment-path script, or SRI proposed for a provider script whose bytes are expected to change.
-Minimal useful PR: one PAN-boundary fix (hosted field/iframe/tokenization or telemetry scrub), one payment-path script removed or justified with owner and allowlist, or one narrowed CSP/header plus a runtime-inventory or change-detection artifact.
+File a payment-page finding only with concrete evidence: PAN/CVV/CVC crossing into merchant-controlled DOM, framework state, logs, storage, URLs, or telemetry, or a runtime script/CSP/SRI gap observed on the actual payment path — not speculation from imports or provider names. Reject weak findings: "we use Stripe, so PCI is solved," a `package.json` import that never executes at runtime, a broad-CSP note with no payment-path script, or SRI proposed for a provider script whose bytes are expected to change. Minimal useful PR: one PAN-boundary fix (hosted field/iframe/tokenization or telemetry scrub), one payment-path script removed or justified with owner and allowlist, or one narrowed CSP/header plus a runtime-inventory or change-detection artifact.
 
 ## Output shape
 

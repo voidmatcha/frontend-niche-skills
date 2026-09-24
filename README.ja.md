@@ -19,10 +19,10 @@
 
 <p align="center">
 <a href="#skills">41 スキル</a> ·
-<a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">ブラインドのルーティング比較、138 件中 16 件</a> ·
+<a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">ブラインドのルーティング実行、全 138 件</a> ·
 <a href="./evals/behavioral/">自前で実行した行動テスト 2 件、いずれも同点</a> ·
 <a href="./docs/oss-validation-cases.md">コミットを固定した OSS ケースブック</a> ·
-<a href="#development-checks">173 件の eval ケース仕様</a> ·
+<a href="#development-checks">177 件の eval ケース仕様</a> ·
 <a href="./.github/workflows/link-check.yml">CI で検証される出典リンク</a>
 </p>
 
@@ -119,7 +119,7 @@ did not stop it.
 
 | 失敗シグナル | 最初に使うスキル | 最初に問うべきこと |
 | --- | --- | --- |
-| ページが React Native WebView、WKWebView、Android WebView、Flutter WebView、アプリ内ブラウザで動作しており、セーフエリア、キーボード、復帰（resume）、ブリッジ、ペイントがデスクトップ Chrome と異なる。 | `webview-bridge-pages` | これはレイアウト、ヒットテスト、ペイント/コンポジット、ブリッジのタイミング、ホストのライフサイクルのどれか？ |
+| ページが React Native WebView、WKWebView、Android WebView、Flutter WebView、アプリ内 WebView で動作しており、セーフエリア、キーボード、復帰（resume）、ブリッジ、ペイントがデスクトップ Chrome と異なる。 | `webview-bridge-pages` | これはレイアウト、ヒットテスト、ペイント/コンポジット、ブリッジのタイミング、ホストのライフサイクルのどれか？ |
 | ブラウザの iframe/widget が空になる、偽装メッセージを受ける、READY/init を失う、サイズ変更でちらつく、必要な機能が使えない、または埋め込みログインが消える。 | `iframe-embed-contracts` | 正確な親/ゲスト origin、配信された frame ポリシー、認証済みメッセージのハンドシェイク、サイズプロトコル、ストレージモードは何か？ |
 | 戻る/進む操作の後でページが停止する、または古いソケット・タイマー・状態を再利用する。 | `browser-page-lifecycle-bfcache-contracts` | 新規ロードか bfcache 復元か、どのリソースを一時停止・再開すべきか？ |
 | SPA の戻る/進む、または同一文書内の hash ナビゲーションで誤ったスクロール位置に戻る、コンテンツ描画後に二重スクロールする、または fragment 対象を表示できない。 | `history-scroll-restoration-contracts` | どの same-document history entry が位置を所有し、誰が復元し、対象レイアウトはいつ安定するか？ |
@@ -263,7 +263,7 @@ did not stop it.
 
 [`skills` CLI](https://www.skills.sh/) をインストールしてください。スキルは [`SKILL.md` フォーマット](https://agentskills.io/specification)に従っています。
 
-これらのスキルは、仕様の `description` 1024 文字上限に従う Claude Code や Codex などを対象とし、適切なスキルが起動するようその文字数をトリガー表現に使っています。Claude.ai のアップロード経路では `description` が 200 文字に制限されるため、そのままアップロードすると失敗します([Claude ドキュメント](https://claude.com/docs/skills/how-to))。
+これらのスキルは、仕様の `description` 1024 文字上限に従う Claude Code や Codex などを対象とし、適切なスキルが起動するようその文字数をトリガー表現に使っています。Claude.ai のカスタムスキルのアップロードでは `description` の上限が 200 文字と案内されており([Claude ヘルプセンター](https://support.claude.com/en/articles/12512198-how-to-create-custom-skills))、これらのスキルをそのままアップロードすると拒否されました。[Claude スキルのドキュメント](https://claude.com/docs/skills/how-to)には 1,024 文字と書かれていますが、アップロード経路が 200 文字を適用している間は [CONTRIBUTING](CONTRIBUTING.md#claudeai) の短い説明のバリアントが必要です(2026-09-25 確認)。
 
 以下の `voidmatcha/frontend-niche-skills` コマンドは、公開リポジトリまたはプラグインマーケットプレイスのエントリーが利用可能であることを前提としています。ローカルまたはプレリリースのチェックアウトでは、代わりにこのセクションのローカルチェックアウト用コマンドを使ってください。
 
@@ -290,6 +290,8 @@ npx skills add voidmatcha/frontend-niche-skills --skill '*' -g --agent '*'
 codex plugin marketplace add "$(pwd)"
 codex plugin add frontend-niche-skills@frontend-niche-skills
 ```
+
+公開リポジトリを利用できる場合は、ローカルパスの代わりに `codex plugin marketplace add voidmatcha/frontend-niche-skills` も使えます。Codex CLI は `owner/repo` 形式のマーケットプレイスソースを受け付けます。
 
 インストールや更新のあとは、バンドルされたスキルを再読み込みさせるため、Codex または Claude Code の新しいセッションを開始してください。
 
@@ -340,11 +342,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
-Sources sections checked: 50
+Local markdown refs checked: 350
+Sources sections checked: 51
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 177
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4
@@ -377,7 +379,7 @@ Scripts syntax checked: 16
 
 ### デスクトップの Chrome では動くのに、アプリ内 WebView で壊れるのはなぜですか？
 
-マークアップではなくホストが違うからです。セーフエリアとビューポートのインセット、ブリッジの準備完了、復帰時にレンダラーが落ちること、コンポジットの挙動は、いずれもページ側のバグではなくホストのコントラクトです。`webview-bridge-pages` がこれらを扱います。エビデンスはデスクトップブラウザではなく、アプリ内 WebView から取る必要があります。
+マークアップではなくホストが違うからです。セーフエリアとビューポートのインセット、ブリッジの準備完了、復帰時にレンダラーが落ちること、コンポジットの挙動はホストが決めるため、修正は多くの場合、そのホストのコントラクトに合わせてページを書くことです。viewport meta、`svh`/`dvh` 単位、READY の再送、再読み込み後も復元できる状態がこれにあたります。`webview-bridge-pages` がこれらを扱います。エビデンスはデスクトップブラウザではなく、アプリ内 WebView から取る必要があります。
 
 ### どのコーディングエージェントでこれらのスキルを使えますか？
 

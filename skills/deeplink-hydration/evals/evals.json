@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Next.js Pages Router. `/invite` is a statically optimized page. Push notifications open `/invite?code=ABC123` and users land on the home feed instead of the invite screen. It never reproduces when we click through the app in dev. The page has:\n\n```js\nconst router = useRouter();\nuseEffect(() => {\n  if (!router.query.code) router.replace('/');\n}, []);\n```\n\nGive the smallest safe fix and how you would keep it fixed.",
+      "prompt": "Next.js Pages Router. `/invite` is a statically optimized page. Push notifications open `/invite?code=ABC123` and users land on the home feed instead of the invite screen. It never reproduces when we click through the app in dev. QA also reports that after the bounce to the home feed, the feed opens at a stale scroll offset instead of the top. The page has:\n\n```js\nconst router = useRouter();\nuseEffect(() => {\n  if (!router.query.code) router.replace('/');\n}, []);\n```\n\nGive the smallest safe fix and how you would keep it fixed.",
       "expected_output": "Explains that a statically optimized page renders first with an empty router.query, so the guard runs before the code param exists, fixes it by gating on router.isReady and adding the right dependencies, adds a cold direct-navigation e2e test, and routes the post-redirect scroll position complaint to history-scroll-restoration-contracts.",
       "expectations": [
         "The response states that under Automatic Static Optimization the page prerenders with an empty router.query and the params only arrive after hydration triggers an update.",
@@ -21,7 +21,7 @@
       "expected_output": "Rejects the proposed fix because App Router has no router.isReady flag, separates the hydration-mismatch error from param readiness, routes the mismatch to ssr-hydration-mismatch, and states what evidence would make the reset a deep-link finding.",
       "expectations": [
         "The response states that Next.js App Router has no router.isReady flag and that useSearchParams() is synchronous in client components, so the proposed guard cannot be written as asked.",
-        "It explains the App Router equivalent discipline: reading search params forces the subtree up to the nearest Suspense boundary into client rendering, so the param-reading component is wrapped in Suspense with a skeleton fallback.",
+        "It explains the App Router equivalent discipline conditioned on how the route renders: when the route is prerendered, reading search params makes the tree up to the closest Suspense boundary client-side rendered, so the param-reading component is wrapped in Suspense with a skeleton fallback; when the route is dynamically rendered, the params are already available during the server render.",
         "The 'server rendered HTML didn't match the client' error is identified as server/client DOM divergence and routed to ssr-hydration-mismatch, not treated as evidence of param loss.",
         "It states that the two symptoms may have separate causes and refuses to assume the mismatch explains the filter reset without evidence.",
         "It names the evidence that would make this a deep-link finding: the cold entry URL captured as loaded, showing range=30d present while the first param-dependent decision still read a missing value.",

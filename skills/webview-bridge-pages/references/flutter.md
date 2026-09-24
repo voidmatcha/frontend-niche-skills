@@ -4,28 +4,17 @@
 
 ## Sending (web → app)
 
-App registers a JavaScript channel (`addJavaScriptChannel('ChannelName', ...)`);
-the page then calls:
+App registers a JavaScript channel (`addJavaScriptChannel('ChannelName', ...)`); the page then calls:
 
 ```js
 window.ChannelName.postMessage(jsonString); // string only
 ```
 
-- The official example calls `ChannelName.postMessage(...)` (no `window.` prefix);
-  the `window.` form works on both platforms and is what the transport adapter uses.
-- On Android this is implemented with `addJavascriptInterface` under the hood
-  (a `@JavascriptInterface postMessage(String)` method) — so the same security
-  caveats apply: injected into frames, no origin control, treat as untrusted natively.
-- On iOS it registers a `WKUserContentController` script message handler, plus an
-  injected at-document-start alias `window.<name> = webkit.messageHandlers.<name>`
-  so the same `window.<name>.postMessage(...)` call shape works.
-- Channel name is part of the contract — agree on one generic name (e.g. `NativeBridge`)
-  so the universal transport adapter works unchanged.
-- **Timing:** `webview_flutter` registers the channel at document-start (Android
-  `addJavascriptInterface`, iOS a document-start `WKUserScript`), so `window.ChannelName`
-  is normally present before your scripts run — but if the host adds the channel late or
-  under a different name, an early `window.ChannelName.postMessage` hits `undefined`. The
-  adapter's buffer-until-`window.ChannelName`-exists guard covers that race.
+- The official example calls `ChannelName.postMessage(...)` (no `window.` prefix); the `window.` form works on both platforms and is what the transport adapter uses.
+- On Android this is implemented with `addJavascriptInterface` under the hood (a `@JavascriptInterface postMessage(String)` method) — so the same security caveats apply: injected into frames, no origin control, treat as untrusted natively.
+- On iOS it registers a `WKUserContentController` script message handler, plus an injected at-document-start alias `window.<name> = webkit.messageHandlers.<name>` so the same `window.<name>.postMessage(...)` call shape works.
+- Channel name is part of the contract — agree on one generic name (e.g. `NativeBridge`) so the universal transport adapter works unchanged.
+- **Timing:** `webview_flutter` registers the channel at document-start (Android `addJavascriptInterface`, iOS a document-start `WKUserScript`), so `window.ChannelName` is normally present before your scripts run — but if the host adds the channel late or under a different name, an early `window.ChannelName.postMessage` hits `undefined`. The adapter's buffer-until-`window.ChannelName`-exists guard covers that race.
 
 ## Receiving (app → web)
 
@@ -34,49 +23,23 @@ window.ChannelName.postMessage(jsonString); // string only
 
 ## Loading & lifecycle
 
-- `NavigationDelegate.onPageFinished` — official docs say only "invoked when a page
-  has finished loading"; it maps to the platform load callbacks
-  (`WebViewClient.onPageFinished` / `didFinish`), so it is **not** a render/hydration
-  signal. Use a web-sent `READY` message for content-critical screens.
-- `onWebResourceError` catches load failures, but not broken-but-200 JS bundles —
-  another reason `READY` + timeout is the robust pattern.
-- Renderer death: on iOS it surfaces through this same `onWebResourceError`
-  (`WebResourceErrorType.webContentProcessTerminated`) and hosts typically reload —
-  design the page so a silent reload recovers (re-send `READY`, keep no critical
-  state only in JS). On Android, `webview_flutter` exposes no `onRenderProcessGone`
-  hook (flutter/flutter#130297, open), so a renderer crash is invisible to the host
-  and by default kills the app process — recovery contract → [contract-design](./contract-design.md).
+- `NavigationDelegate.onPageFinished` — official docs say only "invoked when a page has finished loading"; it maps to the platform load callbacks (`WebViewClient.onPageFinished` / `didFinish`), so it is **not** a render/hydration signal. Use a web-sent `READY` message for content-critical screens.
+- `onWebResourceError` catches load failures, but not broken-but-200 JS bundles — another reason `READY` + timeout is the robust pattern.
+- Renderer death: on iOS it surfaces through this same `onWebResourceError` (`WebResourceErrorType.webContentProcessTerminated`) and hosts typically reload — design the page so a silent reload recovers (re-send `READY`, keep no critical state only in JS). On Android, `webview_flutter` exposes no `onRenderProcessGone` hook (flutter/flutter#130297, open; checked 2026-09-25), so a renderer crash is invisible to the host and by default kills the app process — recovery contract → [contract-design](./contract-design.md).
 
 ## Capabilities
 
-- File inputs on Android need explicit host support:
-  `AndroidWebViewController.setOnShowFileSelector` (added after long-standing
-  flutter/flutter#27924) — without it `<input type="file">` dead-taps, same as raw
-  Android WebView (→ [android-webview](./android-webview.md)).
+- File inputs on Android need explicit host support: `AndroidWebViewController.setOnShowFileSelector` (added after long-standing flutter/flutter#27924) — without it `<input type="file">` dead-taps, same as raw Android WebView (→ [android-webview](./android-webview.md)).
 
 ## Back button
 
-- Flutter apps typically intercept the system back (`PopScope`) and decide between
-  `controller.goBack()` and closing the route — same rule as other hosts: single-screen
-  bridge pages should not depend on webview history; native closes.
+- Flutter apps typically intercept the system back (`PopScope`) and decide between `controller.goBack()` and closing the route — same rule as other hosts: single-screen bridge pages should not depend on webview history; native closes.
 
 ## Layout
 
-- On Android, `webview_flutter` renders through the system Android WebView, so the
-  notes in [android-webview.md](./android-webview.md) apply (viewport meta, the
-  `env(safe-area-inset-*)` support timeline, `textZoom`/font scale). Take insets from
-  app-passed params.
+- On Android, `webview_flutter` renders through the system Android WebView, so the notes in [android-webview.md](./android-webview.md) apply (viewport meta, the `env(safe-area-inset-*)` support timeline, `textZoom`/font scale). Take insets from app-passed params.
 
 ## Sources
 
-- [`webview_flutter`](https://pub.dev/packages/webview_flutter) package; API docs:
-  [`WebViewController`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/WebViewController-class.html)
-  (`addJavaScriptChannel`, `runJavaScript` / `runJavaScriptReturningResult`) and
-  [`NavigationDelegate`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/NavigationDelegate-class.html)
-  (`onPageFinished`, `onWebResourceError`).
-- Android bridge under the hood:
-  [`WebView.addJavascriptInterface`](https://developer.android.com/reference/android/webkit/WebView) /
-  [`@JavascriptInterface`](https://developer.android.com/reference/android/webkit/JavascriptInterface).
-  System back handling: Flutter
-  [`PopScope`](https://api.flutter.dev/flutter/widgets/PopScope-class.html).
-  Android-specific layout notes → [android-webview](./android-webview.md).
+- [`webview_flutter`](https://pub.dev/packages/webview_flutter) package; API docs: [`WebViewController`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/WebViewController-class.html) (`addJavaScriptChannel`, `runJavaScript` / `runJavaScriptReturningResult`) and [`NavigationDelegate`](https://pub.dev/documentation/webview_flutter/latest/webview_flutter/NavigationDelegate-class.html) (`onPageFinished`, `onWebResourceError`).
+- Android bridge under the hood: [`WebView.addJavascriptInterface`](https://developer.android.com/reference/android/webkit/WebView) / [`@JavascriptInterface`](https://developer.android.com/reference/android/webkit/JavascriptInterface). iOS channel alias: pinned `webview_flutter_wkwebview` [`webkit_webview_controller.dart#L432-L438`](https://github.com/flutter/packages/blob/40b7e6446cf69367fc98fd019117ce117f6e6957/packages/webview_flutter/webview_flutter_wkwebview/lib/src/webkit_webview_controller.dart#L432-L438) (`window.<name> = webkit.messageHandlers.<name>` at `atDocumentStart`, `isForMainFrameOnly: false`). Missing Android renderer-death hook: [flutter/flutter#130297](https://github.com/flutter/flutter/issues/130297) ("[webview_flutter] Add support for detecting process termination on Android"; open, checked 2026-09-25). System back handling: Flutter [`PopScope`](https://api.flutter.dev/flutter/widgets/PopScope-class.html). Android-specific layout notes → [android-webview](./android-webview.md).

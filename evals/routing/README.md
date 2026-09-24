@@ -193,4 +193,7 @@ Use hard-collision, exact-primary, acceptable, and registered-edge results for
 discrimination claims. Never commit fabricated predictions. The recorded
 [2026-07-31 targeted metadata comparison](./results/2026-07-31-targeted-metadata-comparison/README.md)
 covers 16 cases and reports both its observed delta and its limits; it is not a
-catalog-wide score.
+catalog-wide score. The
+[2026-09-25 full-catalog boundary edit](./results/2026-09-25-full-catalog-boundary-edit/README.md)
+covers all 138 cases in five batched runs around four description edits;
+its cases shared context within each batch, so it is not a stable score.

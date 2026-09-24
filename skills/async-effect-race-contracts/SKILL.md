@@ -36,13 +36,14 @@ Route the mechanical "is every reactive dependency listed" check to the `react-h
 - **frontend-data-fetching-cache-contracts** — when a data library (TanStack Query, SWR, RTK Query, Apollo) owns the fetch: its query cancellation, dedupe, staleness, and refetch are that layer's contract. If you are hand-writing `useEffect(() => { fetch(...) })`, you are here; if a `useQuery`/`useSWR` hook owns it, you are there.
 - **optimistic-update-rollback-contracts** — races in the apply -> confirm -> rollback -> reconcile of a *mutation* (a failed write that never rolls back, a temp id never swapped). A read-side fetch race is here; a write-side reconciliation race is there.
 - **realtime-transport-contracts** — the subscribe/unsubscribe *lifecycle and recovery* of a socket/SSE connection (reconnect backoff, resume cursor, heartbeat). A one-off listener/subscription cleanup inside an effect is here; connection-drop resilience is there.
+- **cjk-text-and-input** — whether IME composition input should trigger the fetch at all (a query fired mid-composition on `isComposing`/`compositionend`). The take-latest guard for the requests that do fire stays here.
 
 ## PR-worthiness gate
 
 File a finding only when a user-visible or resource contract is actually broken:
 
 - **Missing take-latest**: a deps-driven fetch with no ignore/abort where responses can realistically land out of order (search-as-you-type, tab/route switches) and stale data can win.
-- **Missing/mismatched cleanup**: a subscription/listener/interval/socket opened with no return, or a cleanup that does not undo the setup — an accumulating leak or a setState after unmount.
+- **Missing/mismatched cleanup**: a subscription/listener/interval/socket opened with no return, or a cleanup that does not undo the setup — an accumulating leak, or a late setState that visibly applies stale data (a bare setState after unmount is not a finding by itself; see item 2).
 - **Non-idempotent setup exposed by StrictMode**: a real duplicated side effect (two sockets, doubled analytics/POST), not merely "it runs twice in dev."
 - **Stale closure with impact**: a long-lived callback reading a value that visibly goes stale (a timer showing the mount-time count, a handler using an old prop).
 - **Dependency bug with impact**: an omission causing a stale read, or an unstable reference causing an actual re-render loop.
@@ -55,7 +56,7 @@ Reject weak findings:
 - A lint-only `exhaustive-deps` nit with no resulting stale read or loop — let the linter own it rather than filing a review finding.
 - An effect with `[]` that genuinely reads nothing reactive — not a stale closure.
 
-Minimal useful PR: one failing test — fire two dependency changes, resolve the *first* response last, and assert the newer result wins (or that abort fired); or mount then unmount and assert the subscription/interval was torn down with no setState after unmount.
+Minimal useful PR: one failing test — fire two dependency changes, resolve the *first* response last, and assert the newer result wins (or that abort fired); or mount then unmount and assert the subscription/interval was torn down and no stale result was applied.
 
 ## Output shape
 
@@ -63,7 +64,7 @@ Return compact findings:
 
 - **Contract**: take-latest / cleanup-mirrors-setup / StrictMode-idempotent / stale-closure / dependency-array.
 - **Evidence**: file/line and the effect's setup, its cleanup (or the missing return), and its dependency array.
-- **Symptom**: stale response wins, leak / setState after unmount, doubled side effect, frozen captured value, or re-run loop.
+- **Symptom**: stale response wins, accumulating leak, doubled side effect, frozen captured value, or re-run loop.
 - **Fix**: smallest change — add an ignore/abort guard, add or repair the cleanup, move a POST into an event handler, use `useEffectEvent`/ref/updater, or correct the deps.
 - **Verification**: unit/integration test driving the out-of-order race or the mount/unmount teardown.
 

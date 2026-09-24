@@ -4,12 +4,12 @@
     {
       "id": 1,
       "prompt": "WebSocket client: ws.onclose = () => setTimeout(connect, 1000), and the attempt counter is reset to 0 inside ws.onopen. After a server restart, ops sees a synchronized reconnect spike every second. Separately, a user whose session was revoked loops forever against a close with code 1008.",
-      "expected_output": "Names three broken parts of the reconnect contract — fixed un-jittered interval, counter reset on open instead of after a stability window, and retrying a policy close — gives a capped jittered backoff plus a close-code allowlist, and routes obtaining a fresh token to frontend-auth-flow-contracts.",
+      "expected_output": "Names three broken parts of the reconnect contract — fixed un-jittered interval, counter reset on open instead of after a stability window, and retrying a policy close — gives a capped jittered backoff plus a close-code allowlist, and leaves obtaining a fresh token to the app's auth/session layer, outside this pack.",
       "expectations": [
         "The fixed one-second retry is identified as a thundering-herd source and replaced with capped exponential backoff carrying jitter, for example sleep = random(0, min(cap, base * 2 ** attempt)).",
         "Resetting the attempt counter in onopen is called out, because a flapping server briefly opens and resets backoff; the counter must reset only after the connection stays up past a stability window.",
         "Close-code handling is made explicit: retry transient closes such as 1006, 1011, 1012 and 1013, and stop on auth/policy closes (1008 and application 4xxx) and protocol errors.",
-        "Acquiring or rotating the token itself is routed to frontend-auth-flow-contracts; this skill keeps only the reauth-required signal and how a new token re-enters the socket.",
+        "Acquiring or rotating the token itself is left to the app's auth/session layer rather than routed to frontend-auth-flow-contracts, which does not cover token refresh; this skill keeps only the reauth-required signal and how a new token re-enters the socket.",
         "The verification asserts that delays grow, cap, and vary between attempts, and that a 1008 close schedules no retry."
       ]
     },
@@ -27,11 +27,11 @@
     {
       "id": 3,
       "prompt": "A trading feed dies after roughly one hour. The team added a heartbeat with a five-second pong timeout; it now correctly detects the dead socket and reconnects, but every reconnect closes immediately with application code 4401 and the feed stays down until the user reloads the page.",
-      "expected_output": "Confirms the heartbeat works and is not the blocker, identifies the expired handshake credential as the blocking condition, routes refresh/rotation to frontend-auth-flow-contracts, and keeps pre-expiry in-band refresh, an explicit reauth signal, and not retrying 4xxx as this skill's part.",
+      "expected_output": "Confirms the heartbeat works and is not the blocker, identifies the expired handshake credential as the blocking condition, leaves token refresh/rotation mechanics to the app's auth/session layer outside this pack, and keeps pre-expiry in-band refresh, an explicit reauth signal, and not retrying 4xxx as this skill's part.",
       "expectations": [
         "The response confirms liveness detection is working — the heartbeat closed and reconnected — so the remaining failure is authentication at the handshake, not a dead socket.",
         "It identifies the roughly one-hour lifetime as a token that authenticated only at connect time and expired while the socket stayed open, so each reconnect presents a dead credential.",
-        "Obtaining a fresh token, rotation, and the behavior when refresh itself fails are routed to frontend-auth-flow-contracts.",
+        "Obtaining a fresh token and rotation are assigned to the app's auth/session layer, not to frontend-auth-flow-contracts, which covers login, OTP, passkey, returnTo, and step-up flows rather than token refresh; on the socket side, a failed refresh at most stops the retry loop and surfaces a reauth-needed state.",
         "This skill's remaining work is stated: refresh before expiry in-band or reconnect with a new token, define an explicit reauth-required signal, and stop retrying the 4401 close instead of looping.",
         "The verification advances to just before expiry and asserts the stream survives without processing any message on an expired token."
       ]

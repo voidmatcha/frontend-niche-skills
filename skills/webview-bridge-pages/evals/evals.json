@@ -20,7 +20,7 @@
       "expectations": [
         "The blank-after-background symptom is attributed to renderer process death rather than a paint bug: iOS WKWebView's out-of-process WebContent can be killed under memory pressure, and Android fires `onRenderProcessGone` (API 26+).",
         "It states that on Android the WebView cannot be reused after `onRenderProcessGone` and must be recreated, so the recreate/reload is native-side work, not a page fix.",
-        "It notes that the iOS termination callback (`webViewWebContentProcessDidTerminate`) has been reported not to fire in some cases, so the page must not depend on being told.",
+        "It notes that the host may not surface or wire a termination callback (e.g. webview_flutter on Android exposes no `onRenderProcessGone` hook), so the page's recovery must not depend on the host being told.",
         "The web-side rule is stated as: keep the screen fully reconstructable from URL params or native-supplied data, assume no in-memory DOM/JS state survived, and re-post the `READY`-type message on every load so native can re-handshake.",
         "The `setTimeout` repaint hack is rejected, and the response explains that load-finished callbacks are not render signals and fire on failure too, so they cannot detect this state."
       ]
@@ -46,8 +46,7 @@
         "Moving off `100vh` is endorsed, with `100svh` recommended for a stable full-height layout and `100dvh` reserved for when reflow as chrome shows/hides is actually wanted.",
         "The 'safe from M139 onward' claim is rejected as a blanket rule: `svh`/`dvh` can still disagree with visible geometry on a failing target, and the response asks for recorded `innerHeight`, `documentElement.clientHeight`, `visualViewport.height`, and the event that changes them on the affected app/WebView pair.",
         "It notes that a modern emulator that does not reproduce the geometry is a control, not proof that an older supported target is fixed.",
-        "For the clipped bottom area it requires insets from app-passed params as the canonical source, with `env(safe-area-inset-*)` only as progressive enhancement via a `max()` combination, since Android WebView inset support depends on the Chromium milestone and whether the WebView is fullscreen.",
-        "It warns against reusing one variable name for both a global token and the app override, because a `var()` fallback only applies when the property is undefined."
+        "For the clipped bottom area it requires insets from app-passed params as the canonical source, with `env(safe-area-inset-*)` only as progressive enhancement via a `max()` combination, since Android WebView inset support depends on the Chromium milestone and whether the WebView is fullscreen."
       ]
     },
     {
@@ -70,10 +69,34 @@
       "expectations": [
         "The Android file-input dead-tap is attributed to the host's `WebChromeClient.onShowFileChooser` not being implemented, and the response notes the request is silently dropped with no page-observable error, which is why it ships unnoticed.",
         "The web-side response to that is to confirm support in the contract and gate or hide the upload UI on host capability, or route the upload through a bridge message — not to retry or detect the failure in the page.",
-        "The dropped `target=\"_blank\"` link is explained as the distinct new-window path: iOS cancels it unless the app implements the `WKUIDelegate` window-creation method, and Android requires `setSupportMultipleWindows(true)` plus `WebChromeClient.onCreateWindow`, bypassing the normal navigation interception hook.",
+        "The dead `target=\"_blank\"` link is explained as the distinct, host-specific new-window path: WKWebView cancels it unless the app implements the `WKUIDelegate` window-creation method, and on Android the outcome depends on the host's multiple-window setting (enabled without a working `onCreateWindow`/`onOpenWindow` handler → nothing visible; disabled → it replaces the current page), so the response either asks which host configuration is in use or states the outcome for each configuration, rather than asserting one as the only cause.",
         "The web-side rule is stated as: bridge pages emit no new-window navigations, using same-window navigation the app intercepts or an `OPEN_EXTERNAL`-type bridge message instead.",
         "The Playwright-against-dev-server run is rejected as legacy-engine evidence, because a framework dev runtime and untranspiled `node_modules` ship modern syntax that the browserslist target does not downlevel, so a legacy WebView can fail even when the production build is clean.",
-        "It requires actual-engine evidence — an emulator or WebView Shell on the affected WebView version, plus one modern Android control — and says results should be reported by WebView/Chrome version before Android OS or device."
+        "It requires actual-engine evidence — an emulator or WebView Shell on the affected WebView version, plus one modern Android control — and records the WebView/Chrome engine version, not only the Android OS or device."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Our onboarding bridge page waits ~800ms on a membership API before first render. The app team proposes passing the whole API response as a base64 query param so the page can render instantly. Separately, on Android only, some sessions render with empty membership data even though the app injected it via injectedJavaScriptBeforeContentLoaded.",
+      "expected_output": "Rejects the query-param transport for response-sized payloads (URL length truncation, log/history leakage) in favor of an injected store or host object; explains the Android-only empties as the known injectedJavaScriptBeforeContentLoaded ordering unreliability (#1609) and requires the page to treat the store as maybe-absent with a normal-fetch fallback, plus a schema version and per-entry freshness so app and web can deploy in either order.",
+      "expectations": [
+        "The response rejects putting an API-response-sized payload in a query param, citing practical URL length truncation and leakage into server logs/history.",
+        "It proposes a pre-script injected store or host-object handoff with a schema version, where an unknown version or missing store falls back to the page's normal fetch path.",
+        "It attributes the Android-only empty data to injectedJavaScriptBeforeContentLoaded ordering being unreliable on Android (react-native-webview #1609) rather than to an app-side data bug, and on React Native recommends injectedJavaScriptObject as the upstream-recommended alternative, while keeping the normal-fetch fallback.",
+        "It requires per-entry freshness (storedAt/TTL) and consume-on-read semantics so SPA revisits do not silently render a stale snapshot.",
+        "It states that secrets must not ride the injected global since every script in the page can read it."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Our Next.js Pages Router campaign page is shared as a plain link (`/campaign?variant=b&ref=sms`) and opened in regular mobile Safari and Chrome — there is no app and no WebView. A `useEffect(() => { if (!router.query.variant) router.replace('/') }, [])` guard sends some cold-link visitors to the home page. A teammate suggests adding a READY handshake and having the host pass the variant as an injected global, like our bridge pages do.",
+      "expected_output": "Recognizes there is no native WebView host, so bridge-page contracts do not apply, and routes the bug to deeplink-hydration: the statically optimized page's first render sees an empty router.query, so the guard must wait for router readiness, and the fix needs a cold direct-navigation test.",
+      "expectations": [
+        "The response states that the page runs in an ordinary browser with no native host, so READY handshakes, injected globals, and app-passed params are not a valid fix, and it routes the problem to deeplink-hydration.",
+        "It attributes the bounce to the Pages Router rendering an automatically statically optimized page first with an empty `router.query`, so the guard runs before the params are known.",
+        "The fix it gives gates the redirect on `router.isReady` (or reads `window.location` after mount) and never redirects on a missing param before the router is ready.",
+        "It asks for a direct-navigation test that opens the full URL cold in a fresh context with no in-app navigation, since in-app navigation tests do not catch this.",
+        "It does not require app-WebView evidence (device WebView capture, host inset params, or bridge logs) for this bug."
       ]
     }
   ]

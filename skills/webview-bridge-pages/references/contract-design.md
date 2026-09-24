@@ -6,6 +6,8 @@
 - [Native chrome owns close/back](#native-chrome-owns-closeback)
 - [Actions with unobservable results (purchases etc.)](#actions-with-unobservable-results-purchases-etc)
 - [Loading signal (blank-screen prevention)](#loading-signal-blank-screen-prevention)
+- [Startup data handoff (native prefetch)](#startup-data-handoff-native-prefetch)
+- [Preloaded (hidden) WebView lifecycle](#preloaded-hidden-webview-lifecycle)
 - [Auth & session handoff](#auth--session-handoff)
 - [Navigation & capabilities](#navigation--capabilities)
 - [A/B variants via query params](#ab-variants-via-query-params)
@@ -15,185 +17,108 @@ Decisions to settle in the web↔native contract doc before writing page code.
 
 ## Message contract
 
-- **Prefer one-way (WEB → native).** If the screen renders purely from URL params, do
-  not add an inbound (`window.addEventListener('message')`) listener at all — fewer
-  moving parts and no origin-validation surface.
-- If inbound is unavoidable, validate origin and schema. Any iframe in the page can
-  call the bridge too (Android `addJavascriptInterface` is injected into **every
-  frame** with no origin control), so the native side must treat incoming payloads as
-  untrusted — remote-origin iframes have reached bridge/IPC endpoints with no
-  allow-listing (Tauri CVE-2024-35222). Keep the bridge off untrusted frames, and keep
-  native capability away from anything that renders untrusted HTML. (General HTML-sink
-  XSS hardening and CSP belong to **frontend-security-baseline**; the bridge-specific
-  rule here is origin+schema validation on every inbound message.)
-- One shape for every message: `{ type: string, data?: object }`, `JSON.stringify`
-  once. Keep `type` constants + payload types in one module, mirrored with the app's
-  handler definitions. Strong typing on both sides catches misspelled actions at
-  compile time.
-- Request/reply exists natively on some hosts (iOS 14+ `WKScriptMessageHandlerWithReply`
-  returns a Promise; Android `addWebMessageListener` gives a reply proxy) — use it only
-  when the host set is fixed; a cross-host contract should assume fire-and-forget.
+- **Prefer one-way (WEB → native).** If the screen renders purely from URL params, do not add an inbound (`window.addEventListener('message')`) listener at all — fewer moving parts and no origin-validation surface.
+- If inbound is unavoidable, validate origin and schema. Any iframe in the page can call the bridge too (Android `addJavascriptInterface` is injected into **every frame** with no origin control), so the native side must treat incoming payloads as untrusted — remote-origin iframes have reached bridge/IPC endpoints with no allow-listing (Tauri CVE-2024-35222). Keep the bridge off untrusted frames, and keep native capability away from anything that renders untrusted HTML. (General HTML-sink XSS hardening and CSP belong to **frontend-security-baseline**; the bridge-specific rule here is origin+schema validation on every inbound message.)
+- One shape for every message: `{ type: string, data?: object }`, `JSON.stringify` once. Keep `type` constants + payload types in one module, mirrored with the app's handler definitions. Strong typing on both sides catches misspelled actions at compile time.
+- Request/reply exists natively on some hosts (iOS 14+ `WKScriptMessageHandlerWithReply` returns a Promise; Android `addWebMessageListener` gives a reply proxy) — use it only when the host set is fixed; a cross-host contract should assume fire-and-forget.
 
 ## Native chrome owns close/back
 
-- **Let the app render and handle the close (X) button and the Android hardware back
-  button.** The web page draws no close UI. Benefits: no inbound listener needed,
-  Android back handled natively, exit-confirmation flows stay in one place.
-- Layout around the native button: reserve the status-bar height plus the agreed
-  button area (per platform/notch) so content never sits under native chrome.
-- **Do not rely on WebView history for SPA pages.** WebView `goBack()`/history
-  behaves unreliably with SPA client-side routing on Android: after an in-SPA
-  navigation `canGoBack` reads false and both native `goBack()` and injected
-  `history.back()` fail, while the same code works on iOS (react-native-webview #3100;
-  #2810 related). Tauri on Android hits a related but distinct `canGoBack()`
-  unreliability — it reads false after programmatic navigations until the user first
-  taps the WebView (#13957). Design bridge screens as **single
-  screens with native close** (exception: multi-step funnels — see below).
-- Only add a WEB → native `CLOSE`-type message when the web itself must trigger
-  dismissal.
-- **Multi-step funnels are the exception — decide back semantics explicitly.** If one
-  webview hosts a multi-step flow (signup, checkout, onboarding), the default (native
-  closes on back) dumps users out of the funnel on the first back press. Pick one in
-  the contract: (a) **web owns intra-funnel history** — `history.pushState` per step +
-  a `popstate` handler, binding each step's accumulated form context to the history
-  entry (`history.state`) so back restores inputs instead of an empty re-render
-  (mechanism and prior art → [page-implementation](./page-implementation.md)
-  back-navigation notes) — but this inherits the Android flakiness above, so track your
-  own step index rather than trusting `canGoBack`, and verify hardware-back and
-  edge-swipe per host; or (b) **native forwards back, web decides** — native fires one
-  inbound `BACK` event and takes no native action; the web steps back by its own step
-  index, or at step 1 sends a `CLOSE` message so native dismisses (the established
-  Capacitor App-plugin `backButton` pattern, copied by Tauri PR #14133 — registering the
-  listener disables native's default back entirely, so there is no native "consumed"
-  reply). If the event carries a `canGoBack` field it is just the WebView's own
-  unreliable `canGoBack()` — advisory at most; never let it drive the close decision.
-  Adds one inbound listener — weigh against the one-way preference.
+- **Let the app render and handle the close (X) button and the Android hardware back button.** The web page draws no close UI. Benefits: no inbound listener needed, Android back handled natively, exit-confirmation flows stay in one place.
+- Layout around the native button: reserve the status-bar height plus the agreed button area (per platform/notch) so content never sits under native chrome.
+- **Do not rely on WebView history for SPA pages.** WebView `goBack()`/history behaves unreliably with SPA client-side routing on Android: after an in-SPA navigation `canGoBack` reads false and both native `goBack()` and injected `history.back()` fail, while the same code works on iOS (react-native-webview #3100; #2810 related). Tauri on Android hits a related but distinct `canGoBack()` unreliability — it reads false after programmatic navigations until the user first taps the WebView (#13957). Design bridge screens as **single screens with native close** (exception: multi-step funnels — see below).
+- Only add a WEB → native `CLOSE`-type message when the web itself must trigger dismissal.
+- **Multi-step funnels are the exception — decide back semantics explicitly.** If one webview hosts a multi-step flow (signup, checkout, onboarding), the default (native closes on back) dumps users out of the funnel on the first back press. Pick one in the contract: (a) **web owns intra-funnel history** — `history.pushState` per step + a `popstate` handler, binding each step's accumulated form context to the history entry (`history.state`) so back restores inputs instead of an empty re-render (mechanism and prior art → [page-implementation](./page-implementation.md) back-navigation notes) — but this inherits the Android flakiness above, so track your own step index rather than trusting `canGoBack`, and verify hardware-back and edge-swipe per host; or (b) **native forwards back, web decides** — native fires one inbound `BACK` event and takes no native action; the web steps back by its own step index, or at step 1 sends a `CLOSE` message so native dismisses (the established Capacitor App-plugin `backButton` pattern, copied by Tauri PR #14133 — registering the listener disables native's default back entirely, so there is no native "consumed" reply). If the event carries a `canGoBack` field it is just the WebView's own unreliable `canGoBack()` — advisory at most; never let it drive the close decision. Adds one inbound listener — weigh against the one-way preference.
 
 ## Actions with unobservable results (purchases etc.)
 
-When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands natively
-(IAP sheet), the web cannot observe cancel/failure in a one-way design:
+When the web sends a request (e.g. `REQUEST_PURCHASE`) and the result lands natively (IAP sheet), the web cannot observe cancel/failure in a one-way design:
 
-- **Never permanently disable the button after sending unless the contract includes
-  an explicit native ack/result or a web-side timeout.** With no re-enable signal,
-  one cancelled purchase kills the CTA permanently.
-- Write into the contract doc: native ignores duplicate requests while one is in flight
-  (the OS payment sheet is modal anyway), and native closes the screen on success.
+- **Never permanently disable the button after sending unless the contract includes an explicit native ack/result or a web-side timeout.** With no re-enable signal, one cancelled purchase kills the CTA permanently.
+- Write into the contract doc: native ignores duplicate requests while one is in flight (the OS payment sheet is modal anyway), and native closes the screen on success.
 
 ## Loading signal (blank-screen prevention)
 
-- Document load (`onLoadEnd` / `didFinish` / `onPageFinished`) ≠ content rendered.
-  The `load` event "doesn't necessarily correspond with anything the user cares about"
-  (web.dev); Android docs state that an `onPageFinished` callback "does not
-  guarantee that the next frame drawn by WebView will reflect the state of the DOM
-  at this point"; SPA frameworks render meaningful content only after hydration
-  (Next.js: `router.query` is empty until then).
-- For screens where a blank cold load is costly (payment, onboarding): app shows a
-  native loading state, web posts a `READY`-type message after first meaningful render,
-  app swaps with a timeout fallback. Load-finished callbacks cannot detect a broken JS
-  bundle (they fire on failure too); `READY` shows the web app actually ran.
-- Skip the signal for low-stakes screens — it costs an app-side loading + timeout
-  policy.
-- **Pair READY with an error policy** in the same contract: what the app does when
-  `READY` never arrives (timeout → fallback or dismiss), what the page shows on its
-  own API failures (web-owned error state with retry — native can't see them),
-  bridge-unavailable = noop by design, and who logs which telemetry (exposure and
-  purchase events app-side; page errors web-side).
-- **The renderer can die mid-session, not just on cold load.** iOS WKWebView's
-  out-of-process WebContent can be killed under memory pressure
-  (`webViewWebContentProcessDidTerminate` — which itself sometimes doesn't fire,
-  rn-webview #2559); Android fires `onRenderProcessGone` (API 26+), after which the
-  WebView can't be reused and must be recreated. The page comes back **blank with no JS
-  state**. Native owns the recreate/reload; the web-side rule is the cold-load rule
-  again — keep the screen reconstructable from params/native and **re-post `READY` on
-  every (re)load** so native can re-handshake (restore route/scroll). Never assume
-  in-memory DOM/JS state survived.
+- Document load (`onLoadEnd` / `didFinish` / `onPageFinished`) ≠ content rendered. The `load` event "doesn't necessarily correspond with anything the user cares about" (web.dev); Android docs state that an `onPageFinished` callback "does not guarantee that the next frame drawn by WebView will reflect the state of the DOM at this point"; SPA frameworks render meaningful content only after hydration (Next.js Pages Router: on an automatically statically optimized page, `router.query` is empty until then).
+- For screens where a blank cold load is costly (payment, onboarding): app shows a native loading state, web posts a `READY`-type message after first meaningful render, app swaps with a timeout fallback. Load-finished callbacks cannot detect a broken JS bundle (they fire on failure too); `READY` shows the web app actually ran.
+- Skip the signal for low-stakes screens — it costs an app-side loading + timeout policy.
+- **Pair READY with an error policy** in the same contract: what the app does when `READY` never arrives (timeout → fallback or dismiss), what the page shows on its own API failures (web-owned error state with retry — native can't see them), bridge-unavailable = noop by design, and who logs which telemetry (exposure and purchase events app-side; page errors web-side).
+- **READY doubles as the measurement hook — carry timing fields.** Load-finished callbacks measure document load, not user-visible readiness (see above), so if the team wants a "tap → first meaningful screen" metric, put it in the READY payload: elapsed ms from navigation start (`performance.now()` at send), the epoch timestamp of the send (same device clock as native `Date.now()`, so native can join it with its own tap/`loadStart` timestamps and attribute cold-load time to WebView-creation vs web segments), and a `reason`/state discriminator when the page has fallback render paths (timeout fallbacks firing in production is an anomaly signal, not a distribution). Route the two kinds of signal differently: latency distributions can go to a sampled RUM pipeline, but rare anomaly signals (fallback reasons, bridge send failures) must go to full-volume logging — a session-sampled pipeline silently drops the rare events that matter most.
+- **The renderer can die mid-session, not just on cold load.** iOS WKWebView's out-of-process WebContent can be killed under memory pressure (`webViewWebContentProcessDidTerminate`); Android fires `onRenderProcessGone` (API 26+), after which the WebView can't be reused and must be recreated — and if the app doesn't handle that callback, Android crashes or kills the app instead. Whether the host hears about the death depends on what its wrapper exposes and wires: `webview_flutter` has no Android `onRenderProcessGone` hook (flutter/flutter#130297, open; checked 2026-09-25), and wrapper callbacks can regress (react-native-webview's `onContentProcessDidTerminate` stopped firing in 11.22.0–11.22.4 and was fixed in 11.22.5, #2559). As a defensive rule, don't make the page's recovery depend on the host being told. The page comes back **blank with no JS state**. Native owns the recreate/reload; the web-side rule is the cold-load rule again — keep the screen reconstructable from params/native and **re-post `READY` on every (re)load** so native can re-handshake (restore route/scroll). Never assume in-memory DOM/JS state survived.
+
+## Startup data handoff (native prefetch)
+
+When the page's first render waits on an API the app could have called earlier, the app can fetch in parallel with WebView creation and hand the response to the page — the pattern behind Meituan's "client proxy request". Contract points, in order of what goes wrong without them:
+
+- **Transport by size.** Query params work for small scalar inputs but have practical URL length limits and leak into server logs/history — API-response-sized payloads get truncated (a public floating-WebView write-up hit exactly this when passing API-response-sized data page-to-page via query params, and moved to app-storage handoff). For structured payloads, inject a JS global before page scripts run, or use a host object the page polls.
+- **Injection timing is host-specific.** RN's `injectedJavaScriptBeforeContentLoaded` can run after the page's own scripts on Android, and some reports say it does not run at all, or only on first launch (react-native-webview #1609, closed unfixed; checked 2026-09-24) — so the web side must treat the injected store as *maybe absent* and fall back to its normal fetch path. On RN, prefer `injectedJavaScriptObject` (read via `window.ReactNativeWebView.injectedObjectJson()`), which the upstream docs recommend over the pre-content script for this reason; it is read through the host object rather than by a racing script, but still guard for it returning empty.
+- **Version + freshness fields make it safe to evolve.** Give the store a schema version (unknown version → treat as absent → normal fetch, so app and web can deploy in either order) and per-entry `storedAt`/TTL so the page can distinguish fresh / stale / missing instead of rendering an old cart as current.
+- **Consume-on-read for SPA revisits.** A handed-off response describes page state at injection time; if the SPA can revisit the route in-session, delete the entry after first use or a stale snapshot silently resurfaces.
+- **No secrets.** An injected global is readable by every script in the page — same rule as query-param tokens in [Auth & session handoff](#auth--session-handoff) below.
+
+## Preloaded (hidden) WebView lifecycle
+
+Some apps create WebViews before the user navigates — hidden/offscreen preloading (Shopify's Mobile Bridge preloads and pools WebViews; Shopify Checkout Sheet Kit exposes `preload()` as an explicit hint with `invalidate()`; Android WebView exposes Preconnect/Prefetch/Prerender through androidx.webkit, feature-gated). If the host does this, the page's lifecycle assumptions break silently:
+
+- **READY fires at preload time, not display time.** Analytics "exposure" events, timers, and readiness metrics all run while the user has seen nothing. Put it in the contract: either the app passes a `preloaded=1` style param and later signals activation (an inbound message, or the page observing visibility), or the page sends distinct `LOADED` and `ACTIVATED` messages. Where the host has a native activation hook, forward it rather than inferring — Android's `WebViewCompat.prerenderUrlAsync` reports `onPrerenderActivated` when the hidden page is swapped in. Latency metrics measured on a hidden load must be re-baselined at activation or they report misleading numbers.
+- **Staleness is the app's problem but the page's symptom.** A preloaded page shows data as of preload time; the contract needs a staleness/invalidate rule (Checkout Sheet Kit documents the preloaded checkout as a snapshot of the cart at `preload()` time and makes the app call `preload()` again or `invalidate()` when the cart changes; even closing checkout does not invalidate it) and the page should re-validate on activation.
+- Don't assume `document.visibilityState`/`document.prerendering` alone detects hidden preloads without verifying on the actual host — an explicit contract signal beats inference.
 
 ## Auth & session handoff
 
-Decide in the contract where identity comes from — in order of preference. (Scope: this
-is only the **WebView handoff** — where identity originates once the page is already
-inside a native session; login/signup/returnTo flows → **frontend-auth-flow-contracts**,
-token storage / CSP / cookie SameSite → **frontend-security-baseline**.)
+Decide in the contract where identity comes from — in order of preference. (Scope: this is only the **WebView handoff** — where identity originates once the page is already inside a native session; login/signup/returnTo flows → **frontend-auth-flow-contracts**, token storage / CSP / cookie SameSite → **frontend-security-baseline**.)
 
 - **None** — the page renders purely from params (simplest; no identity surface).
-- **Shared cookie session** — host-specific behavior (e.g. React Native WebView's
-  `sharedCookiesEnabled` is an **iOS/macOS** prop, bridging `NSHTTPCookieStorage` into
-  WKWebView's separate cookie store; Android's WebView already shares the cookie store,
-  so the flag is a no-op there. Verify per host and OS version).
-- **Bridge-injected token** — app sends it after a handshake message; note this
-  requires an inbound message, weigh against the one-way preference.
-- **Query-param token — avoid.** URLs leak into server logs, browser history, and
-  referrer headers; treat any token that touched a URL as exposed.
-- **Never initiate OAuth/social login inside the webview.** Google rejects
-  authorization requests from embedded webviews with `403: disallowed_useragent`
-  (all embedded webviews blocked since 2021, per RFC 8252 native-app guidance);
-  other IdPs behave similarly. A "Sign in with …" button rendered in a bridge page
-  dead-ends with no web-side recovery. The contract must route login through the
-  system browser (Android Custom Tabs / iOS `ASWebAuthenticationSession`) via a
-  bridge message or deep link, with the app re-entering the page with the session.
+- **Shared cookie session** — host-specific behavior (e.g. React Native WebView's `sharedCookiesEnabled` is an **iOS/macOS** prop, bridging `NSHTTPCookieStorage` into WKWebView's separate cookie store. On Android, WebView cookies live in the app-wide `CookieManager`, so whether they match the app's native HTTP session depends on how the app's networking stack writes cookies. Verify per host and OS version).
+- **Bridge-injected token** — app sends it after a handshake message; note this requires an inbound message, weigh against the one-way preference.
+- **Query-param token — avoid.** URLs leak into server logs, browser history, and referrer headers; treat any token that touched a URL as exposed.
+- **Never initiate OAuth/social login inside the webview.** Google rejects authorization requests from embedded webviews with `403: disallowed_useragent` (a Google policy: all embedded webviews blocked starting September 30, 2021; RFC 8252 says native apps "MUST NOT use embedded user-agents" for authorization requests and lets authorization endpoints block them, but does not require the block); other IdPs behave similarly. A "Sign in with …" button rendered in a bridge page dead-ends with no web-side recovery. The contract must route login through the system browser (Android Custom Tabs / iOS `ASWebAuthenticationSession`) via a bridge message or deep link, with the app re-entering the page with the session.
+
+### The API must distinguish auth failure from a legitimately empty state
+
+Agree this with the API owner, not just the app team. If a rejected identity comes back shaped like a valid "you have nothing" answer, the page cannot tell them apart, and it will render the empty state to a user who actually has data.
+
+A typical failure: a page shows subscription status, and the endpoint answers an invalid or expired token with `200` and a well-formed "not subscribed" body — the same shape a real non-subscriber gets. A guard for a malformed body passes, because the body is not malformed. A subscriber whose session expired sees the non-subscriber screen and a purchase button. Probe for it directly: call the endpoint with a deliberately invalid token and compare the response with a genuine empty-state response.
+
+The page cannot fix this on its own:
+
+- A shared session established by the host is usually set, not verified. In that design the handoff endpoint writes a cookie and returns success regardless, so nothing on the web side has yet checked whether the identity is real.
+- The first request that could reveal it is the data call itself — so if that call hides the failure, every later screen inherits the lie.
+
+Ask for either:
+
+- an explicit failure result (a non-2xx, or `result: FAILURE`) on a rejected identity — the page then takes its existing error path and asks the host to close, no page change needed; or
+- a field that states whether the caller was authenticated, if the endpoint must keep answering `200` for unauthenticated callers.
+
+Prefer the first. It needs no page change and matches what the error path already does.
+
+Write the decision into the contract. "The endpoint returns the same body for an expired token as for a real empty state" is a property someone has to know about, whether or not it gets changed.
 
 ## Navigation & capabilities
 
-Bridge screens should be single screens — but define in the contract what happens
-when the page would navigate or use device capabilities:
+Bridge screens should be single screens — but define in the contract what happens when the page would navigate or use device capabilities:
 
-- External links: in-app, system browser, or blocked? Deep links into other native
-  screens: which scheme/route? Downloads, `<a download>`, file inputs/camera,
-  permission prompts: several of these **silently no-op or behave differently inside
-  WebViews** — don't assume browser behavior; test the specific host.
-- **New-window navigations are a distinct path**: `target="_blank"` / `window.open`
-  don't hit the same interception hooks as plain navigations. iOS cancels them unless
-  the app implements `WKUIDelegate` `webView(_:createWebViewWith:…)` (JS `window.open`
-  additionally gated by `javaScriptCanOpenWindowsAutomatically`, default off); Android
-  requires `setSupportMultipleWindows(true)` + `WebChromeClient.onCreateWindow`, and
-  these requests bypass `shouldOverrideUrlLoading`. Web-side rule: bridge pages emit
-  **no new-window navigations** — same-window nav the app intercepts, or an
-  `OPEN_EXTERNAL`-type bridge message. (Opener-leak / `rel=noopener` concerns in plain
-  browsers → **frontend-security-baseline**.)
-- **`input[type=file]` dead-taps on Android hosts** unless the app implements
-  `WebChromeClient.onShowFileChooser`; the page cannot detect the miss (silent no-op,
-  works fine in browsers and WKWebView). Confirm support in the contract, gate/hide
-  upload UI on host capability, or route the upload through a bridge message —
-  mechanism → [android-webview](./android-webview.md).
-- The app side typically enforces the policy via navigation interception
-  (e.g. RN `onShouldStartLoadWithRequest`, `originWhitelist`); the web side should not
-  emit navigations that aren't in the agreed policy.
+- External links: in-app, system browser, or blocked? Deep links into other native screens: which scheme/route? Downloads, `<a download>`, file inputs/camera, permission prompts: several of these **silently no-op or behave differently inside WebViews** — don't assume browser behavior; test the specific host.
+- **Camera/microphone access needs a host-side grant, and each host defaults differently.** Android: the app must override `WebChromeClient.onPermissionRequest` and call `grant()` for the requested `RESOURCE_VIDEO_CAPTURE`/`RESOURCE_AUDIO_CAPTURE` — "If this method isn't overridden, the permission is denied." react-native-webview's Android client maps those resources to the `CAMERA`/`RECORD_AUDIO` runtime permissions, asks the OS for any missing ones asynchronously, and grants only the resources whose permission came back granted. iOS 15+: `WKUIDelegate` `webView(_:requestMediaCapturePermissionFor:initiatedByFrame:type:decisionHandler:)` decides; if the app doesn't implement it, the system returns `.prompt`. react-native-webview surfaces that decision as `mediaCapturePermissionGrantType` (iOS 15+, default `prompt`, "resulting in the user being prompted repeatedly"). Put the grant policy (which origins; prompt, grant, or deny) in the contract. Web-side rule: treat denial, a host that never grants, and a grant that resolves only after an OS prompt as normal states — render a recoverable no-camera state and don't gate `READY` on capture. The page's own `getUserMedia()` rejection handling, device changes, and track teardown → **media-capture-device-contracts**.
+- **New-window navigations are a distinct path**: `target="_blank"` / `window.open` don't hit the same interception hooks as plain navigations. iOS cancels them unless the app implements `WKUIDelegate` `webView(_:createWebViewWith:…)` (JS `window.open` additionally gated by `javaScriptCanOpenWindowsAutomatically`, default off). A raw Android WebView defaults `setSupportMultipleWindows` to false, and then treats them as top-level navigations that replace the current page; with multiple windows on, the app must implement `WebChromeClient.onCreateWindow` (default returns false). react-native-webview turns multiple windows on by default and reports them through `onOpenWindow`; with that prop unset, its Android `onCreateWindow` hands the load to a new WebView it never attaches (nothing visible happens), while its iOS delegate loads the URL in the current WebView. Web-side rule: bridge pages emit **no new-window navigations** — same-window nav the app intercepts, or an `OPEN_EXTERNAL`-type bridge message. (Opener-leak / `rel=noopener` concerns in plain browsers → **frontend-security-baseline**.)
+- **`input[type=file]` dead-taps on Android hosts** unless the app implements `WebChromeClient.onShowFileChooser`; the page cannot detect the miss (silent no-op, works fine in browsers and WKWebView). Confirm support in the contract, gate/hide upload UI on host capability, or route the upload through a bridge message — mechanism → [android-webview](./android-webview.md).
+- The app side typically enforces the policy via navigation interception (e.g. RN `onShouldStartLoadWithRequest`, `originWhitelist`); the web side should not emit navigations that aren't in the agreed policy.
 
 ## A/B variants via query params
 
-- One remote-config key (Firebase Remote Config, an in-house flag system — any
-  assignment source) per experiment variable → one query param each. The app reads
-  the keys and composes the URL. Orthogonal slots compose; whole-URL swapping explodes
-  combinatorially with parallel experiments.
-- Implement each axis as an independent slot: text variants as a
-  `Record<VariantType, i18nKey>` map, visual variants as CSS-class modifiers, block
-  variants as conditional render. Adding a variant = one union member + one map line.
+- One remote-config key (Firebase Remote Config, an in-house flag system — any assignment source) per experiment variable → one query param each. The app reads the keys and composes the URL. Orthogonal slots compose; whole-URL swapping explodes combinatorially with parallel experiments.
+- Implement each axis as an independent slot: text variants as a `Record<VariantType, i18nKey>` map, visual variants as CSS-class modifiers, block variants as conditional render. Adding a variant = one union member + one map line.
 - Keep a separate base-URL config key for emergency URL swaps.
-- Metrics: prefer logging exposure/clicks/conversion on the **app side** (it knows the
-  assigned variants); web analytics is secondary — beware double counting.
+- Metrics: prefer logging exposure/clicks/conversion on the **app side** (it knows the assigned variants); web analytics is secondary — beware double counting.
 
 ## Sources
 
-- web.dev "User-centric performance metrics"; Android `WebViewClient.onPageFinished`
-  reference; Next.js Automatic Static Optimization docs; Zellic "WebView security";
-  Android "Access native APIs with JavaScript bridge"; Apple WKUserContentController /
-  WKScriptMessageHandlerWithReply; react-native-webview docs + issues #2810/#3100.
-- Renderer-death recovery: Apple `WKNavigationDelegate.webViewWebContentProcessDidTerminate`;
-  Android `WebViewClient.onRenderProcessGone` (API 26+); react-native-webview #2199 / #2559.
-- Bridge security boundary: [CVE-2024-35222](https://nvd.nist.gov/vuln/detail/CVE-2024-35222)
-  (Tauri remote-origin iframes reached IPC without allow-listing) ·
-  [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()`
-  unreliable). Funnel back option (b): Capacitor App-plugin `backButton`, adopted by
-  Tauri PR #14133.
-- OAuth-in-webview block: Google Developers Blog
-  ["Upcoming security changes to Google's OAuth 2.0 authorization endpoint in embedded webviews"](https://developers.googleblog.com/en/upcoming-security-changes-to-googles-oauth-20-authorization-endpoint-in-embedded-webviews/)
-  and Google's `disallowed_useragent` remediation FAQ; IETF
-  [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) (OAuth 2.0 for Native Apps).
-- New-window path: Apple
-  [`webView(_:createWebViewWith:for:windowFeatures:)`](https://developer.apple.com/documentation/webkit/wkuidelegate/webview(_:createwebviewwith:for:windowfeatures:))
-  (navigation canceled when unimplemented/nil); Android
-  [`WebChromeClient.onCreateWindow`](https://developer.android.com/reference/android/webkit/WebChromeClient)
-  (+ `setSupportMultipleWindows`); in the wild:
-  [Capacitor #798](https://github.com/ionic-team/capacitor/issues/798)
-  (`window.open` `target=_blank` silently ignored).
+- web.dev ["User-centric performance metrics"](https://web.dev/articles/user-centric-performance-metrics); Android [`WebViewClient.onPageFinished`](https://developer.android.com/reference/android/webkit/WebViewClient) reference; Next.js [Automatic Static Optimization](https://nextjs.org/docs/pages/building-your-application/rendering/automatic-static-optimization) docs; Zellic ["You're Probably Using WebViews Wrong"](https://www.zellic.io/blog/webview-security/); Android ["Access native APIs with JavaScript bridge"](https://developer.android.com/develop/ui/views/layout/webapps/native-api-access-jsbridge); Apple [`WKUserContentController`](https://developer.apple.com/documentation/webkit/wkusercontentcontroller) / [`WKScriptMessageHandlerWithReply`](https://developer.apple.com/documentation/webkit/wkscriptmessagehandlerwithreply), with the JS-side Promise documented in WebKit's pinned [`WKScriptMessageHandlerWithReply.h#L41-L61`](https://github.com/WebKit/WebKit/blob/31875dc6237b81e4faf20e0a83f968ba10f062c7/Source/WebKit/UIProcess/API/Cocoa/WKScriptMessageHandlerWithReply.h#L41-L61) ("a JavaScript Promise object was returned"); react-native-webview [docs](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Guide.md) + issues [#2810](https://github.com/react-native-webview/react-native-webview/issues/2810) / [#3100](https://github.com/react-native-webview/react-native-webview/issues/3100).
+- Renderer-death recovery: Apple `WKNavigationDelegate.webViewWebContentProcessDidTerminate`; Android [`WebViewClient.onRenderProcessGone`](https://developer.android.com/reference/android/webkit/WebViewClient) (API 26+; the WebView "can't be used"; returning false means the "application will crash if render process crashed, or be killed if render process was killed by the system"); [flutter/flutter#130297](https://github.com/flutter/flutter/issues/130297) (no Android process-termination hook in `webview_flutter`; open, checked 2026-09-25); react-native-webview [#2199](https://github.com/react-native-webview/react-native-webview/issues/2199) and, as a historical wrapper regression, [#2559](https://github.com/react-native-webview/react-native-webview/issues/2559) (`onContentProcessDidTerminate` not called from 11.22.0; "resolved in version 11.22.5", closed 2022-07-06).
+- Bridge security boundary: [CVE-2024-35222](https://nvd.nist.gov/vuln/detail/CVE-2024-35222) (Tauri remote-origin iframes reached IPC without allow-listing) · [tauri #13957](https://github.com/tauri-apps/tauri/issues/13957) (Android `canGoBack()` unreliable). Funnel back option (b): Capacitor [App plugin `backButton`](https://capacitorjs.com/docs/apis/app) ("Listening for this event will disable the default back button behaviour"), adopted by Tauri [PR #14133](https://github.com/tauri-apps/tauri/pull/14133) (merged 2025-10-15; cites Capacitor's plugin as its reference).
+- Camera/microphone host grant: Android [`WebChromeClient.onPermissionRequest`](https://developer.android.com/reference/android/webkit/WebChromeClient) ("If this method isn't overridden, the permission is denied") and [`PermissionRequest`](https://developer.android.com/reference/android/webkit/PermissionRequest) (`RESOURCE_VIDEO_CAPTURE` / `RESOURCE_AUDIO_CAPTURE`); Apple [`webView(_:requestMediaCapturePermissionFor:initiatedByFrame:type:decisionHandler:)`](https://developer.apple.com/documentation/webkit/wkuidelegate/webview(_:requestmediacapturepermissionfor:initiatedbyframe:type:decisionhandler:)) (iOS 15+; "If you don't implement this method in your delegate, the system returns `prompt`"); react-native-webview [Reference `mediaCapturePermissionGrantType`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md#mediacapturepermissiongranttype) and pinned Android [`RNCWebChromeClient.java#L143-L190`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java#L143-L190) (resource → `CAMERA`/`RECORD_AUDIO`, async OS request) and [`#L249-L303`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java#L249-L303) (the permission listener grants only the resources whose OS permission came back granted).
+- Cookie store: react-native-webview [Reference `sharedCookiesEnabled`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md#sharedcookiesenabled) (platform "iOS and macOS"); Android [`CookieManager`](https://developer.android.com/reference/android/webkit/CookieManager) ("Manages the cookies used by an application's WebView instances").
+- Startup data handoff: Meituan tech blog ["WebView性能、体验分析与优化"](https://tech.meituan.com/2017/06/09/webviewperf.html) (client proxy request — native fetches in parallel with WebView init); Woowa Brothers ["웹과 네이티브, 조화로운 공존은 가능한가? 플로팅웹뷰 도입으로 찾은 희망"](https://techblog.woowahan.com/24165/) (query-param truncation → app-storage handoff, page-to-page); [react-native-webview #1609](https://github.com/react-native-webview/react-native-webview/issues/1609) (`injectedJavaScriptBeforeContentLoaded` ordering unreliable on Android); [react-native-webview Reference](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md) (`injectedJavaScriptObject` / `injectedObjectJson()`; "not 100% reliable" on Android for the pre-content script).
+- Preloaded WebView lifecycle: Shopify Engineering ["Mobile Bridge: Making WebViews Feel Native"](https://shopify.engineering/mobilebridge-native-webviews) (background preload + pooling, P75 6s → 1.4s); Shopify [Checkout Sheet Kit preloading](https://shopify.dev/docs/storefronts/mobile/checkout-kit/preloading) (preload-as-hint semantics, app-owned `invalidate()`); Android Developers [Speculative loading in WebView](https://developer.android.com/develop/ui/views/layout/webapps/speculative-loading) (Preconnect / Prefetch / Prerender via androidx.webkit, feature-gated; `PrerenderOperationCallback.onPrerenderActivated` on swap-in).
+- OAuth-in-webview block: Google Developers Blog ["Upcoming security changes to Google's OAuth 2.0 authorization endpoint in embedded webviews"](https://developers.googleblog.com/en/upcoming-security-changes-to-googles-oauth-20-authorization-endpoint-in-embedded-webviews/) and Google's `disallowed_useragent` remediation FAQ; IETF [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) (OAuth 2.0 for Native Apps).
+- New-window path: Apple [`webView(_:createWebViewWith:for:windowFeatures:)`](https://developer.apple.com/documentation/webkit/wkuidelegate/webview(_:createwebviewwith:for:windowfeatures:)) (returns "A new web view or nil"; WebKit's pinned [`WKUIDelegate.h#L95`](https://github.com/WebKit/WebKit/blob/31875dc6237b81e4faf20e0a83f968ba10f062c7/Source/WebKit/UIProcess/API/Cocoa/WKUIDelegate.h#L95): "If you do not implement this method, the web view will cancel the navigation."); Android [`WebChromeClient.onCreateWindow`](https://developer.android.com/reference/android/webkit/WebChromeClient) (default returns false) and [`WebSettings.setSupportMultipleWindows`](https://developer.android.com/reference/android/webkit/WebSettings) (default false; disabled → "treated as top-level navigations, replacing the current page in the same WebView"); react-native-webview [Reference](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md) (`setSupportMultipleWindows` default `true`; `onOpenWindow`) and pinned [`RNCWebChromeClient.java#L86-L111`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java#L86-L111) (creates an unattached `WebView`, forwards the URL only when `onOpenWindow` is set) and [`RNCWebViewImpl.m#L382-L396`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/apple/RNCWebViewImpl.m#L382-L396) (iOS: `onOpenWindow` if set, else `loadRequest` in the same WebView); in the wild: [Capacitor #798](https://github.com/ionic-team/capacitor/issues/798) (iOS: `window.open` `target=_blank` from inside an iframe silently ignored).

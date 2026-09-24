@@ -5,201 +5,42 @@
 - [Query params on SPA hydration](#query-params-on-spa-hydration)
 - [Back navigation & form state](#back-navigation--form-state)
 - [Layout & viewport inside a WebView](#layout--viewport-inside-a-webview)
-- [Sources](#sources)
 - [Paint / hit-test diagnostics](#paint--hit-test-diagnostics)
 - [Rotation and viewport settling](#rotation-and-viewport-settling)
+- [Sources](#sources)
 
 Web-side implementation rules once the contract is settled.
 
 ## Query params on SPA hydration
 
-- All render inputs (variant flags, prices, expiry, locale, status-bar height) arrive
-  as URL query params. Parse them in **one tested function** (e.g.
-  `parseScreenQuery()`).
-- Gate on router readiness (Next.js `router.isReady`); handle `string | string[]`. The
-  readiness mechanic itself (router.query empty on first render, redirects firing before
-  `router.isReady`, lost deep-link destinations) is owned by **deeplink-hydration** —
-  here the params are render inputs the app composed into the URL, not a destination.
+- All render inputs (variant flags, prices, expiry, locale, status-bar height) arrive as URL query params. Parse them in **one tested function** (e.g. `parseScreenQuery()`).
+- Gate on router readiness (Next.js `router.isReady`); handle `string | string[]`. The readiness mechanic itself (router.query empty on first render, redirects firing before `router.isReady`, lost deep-link destinations) is owned by **deeplink-hydration** — here the params are render inputs the app composed into the URL, not a destination.
 - Unknown/missing enum values → fall back to `control`/default. Never crash on a param.
-- Pre-formatted values (currency strings) are display-only — require the app to
-  `encodeURIComponent` them; hide the row when missing.
-- Timers: compute from an absolute timestamp every tick
-  (`Math.max(0, expiresAtMs - Date.now())`), never decrement a counter — WebViews
-  suspend/resume. Clamp at zero. Agree on the unit (unix seconds vs ms) in the
-  contract.
+- Pre-formatted values (currency strings) are display-only — require the app to `encodeURIComponent` them; hide the row when missing.
+- Timers: compute from an absolute timestamp every tick (`Math.max(0, expiresAtMs - Date.now())`), never decrement a counter — WebViews suspend/resume. Clamp at zero. Agree on the unit (unix seconds vs ms) in the contract.
 
 ## Back navigation & form state
 
-- **Inside a WebView, back is usually a full page load.** Android WebView ships with
-  the back/forward cache **disabled** (Chrome on Android has had it since 96; the
-  Chromium bfcache Intent-to-Ship explicitly excluded WebView). Hosts can opt in via
-  androidx.webkit `WebSettingsCompat.setBackForwardCacheEnabled` (experimental in
-  1.12.0, stable in 1.15.0, behind a `WebViewFeature.BACK_FORWARD_CACHE` runtime
-  check) — but don't design assuming it's on. WKWebView usually restores from WebKit's
-  in-memory page cache, but that's not guaranteed either (HTTPS +
-  `Cache-Control: no-store`, cache eviction/memory pressure, content-process
-  termination → fresh load).
-- **What survives a non-bfcache back:** `history.state` (stored per session-history
-  entry) survives; the JS heap and component state do not; browser form re-fill is
-  best-effort only (the HTML spec's "persisted user state" is implementation-defined —
-  never rely on it); `sessionStorage` survives reloads and same-tab navigations but
-  assume it's gone when the app process is killed.
-- **Detect the restore mode** with `pageshow`: `event.persisted === true` is a bfcache
-  restore (state intact, re-sync timers); `false` is a fresh load — restore drafts
-  yourself.
-- **Pattern — bind step/form drafts to the history entry.** Write the accumulated
-  step/form context into the entry itself: `history.replaceState` the draft on change
-  (or `pushState` per funnel step), then restore from `history.state` on load and from
-  `event.state` on `popstate`. Back then restores the previous step **with its
-  inputs**, not an empty re-render, because the entry's state survives a non-bfcache
-  back. Constraints that follow from the mechanism: the context must be
-  structured-clone-serializable and size-bounded, and history-entry state is
-  client-only (restore after mount when SSR is involved). For a single form, a
-  `sessionStorage` draft keyed by form id (write on change, restore on mount) covers
-  back + reload within the app session. (React prior art: toss/use-funnel implements
-  the per-step variant of this via router adapters.)
-- Funnel back **semantics** (who owns the back button) →
-  [contract-design](./contract-design.md).
+- **Inside a WebView, back is usually a full page load.** Android WebView ships with the back/forward cache **disabled** (Chrome on Android has had it since 96; the Chromium bfcache Intent-to-Ship explicitly excluded WebView). Hosts can opt in via androidx.webkit `WebSettingsCompat.setBackForwardCacheEnabled` (experimental in 1.12.0, stable in 1.15.0, behind a `WebViewFeature.BACK_FORWARD_CACHE` runtime check) — but don't design assuming it's on. WKWebView usually restores from WebKit's in-memory page cache, but that's not guaranteed either (HTTPS + `Cache-Control: no-store`, cache eviction/memory pressure, content-process termination → fresh load).
+- **What survives a non-bfcache back:** `history.state` (stored per session-history entry) survives; the JS heap and component state do not; browser form re-fill is best-effort only (the HTML spec's "persisted user state" is implementation-defined — never rely on it); `sessionStorage` survives reloads and same-tab navigations but assume it's gone when the app process is killed.
+- **Detect the restore mode** with `pageshow`: `event.persisted === true` is a bfcache restore (state intact, re-sync timers); `false` is a fresh load — restore drafts yourself.
+- **Pattern — bind step/form drafts to the history entry.** Write the accumulated step/form context into the entry itself: `history.replaceState` the draft on change (or `pushState` per funnel step), then restore from `history.state` on load and from `event.state` on `popstate`. Back then restores the previous step **with its inputs**, not an empty re-render, because the entry's state survives a non-bfcache back. Constraints that follow from the mechanism: the context must be structured-clone-serializable and size-bounded, and history-entry state is client-only (restore after mount when SSR is involved). For a single form, a `sessionStorage` draft keyed by form id (write on change, restore on mount) covers back + reload within the app session. (React prior art: toss/use-funnel implements the per-step variant of this via router adapters.)
+- Funnel back **semantics** (who owns the back button) → [contract-design](./contract-design.md).
 
 ## Layout & viewport inside a WebView
 
-- **Viewport meta is mandatory** — without it Android WebView may lay out at ~980px
-  desktop width: `width=device-width, initial-scale=1, viewport-fit=cover`.
-- **Don't trust `100vh`.** It measures the large viewport; use `100svh` for stable
-  full-height layouts, `100dvh` only when you want reflow as chrome shows/hides.
-- **`svh`/`dvh` can still disagree with visible geometry on a failing target.**
-  Chromium issue 331326389 documents one `clientHeight` failure around
-  navigation and keyboard state; separate reports cover other initial-load
-  symptoms. Do not merge those reports into a blanket pre-M139 rule. On the
-  affected app/WebView pair, record `innerHeight`,
-  `documentElement.clientHeight`, `visualViewport.height`, and the event that
-  changes them. A JS-measured `--vh`, an app-provided inset/height, or anchoring
-  a CTA to a measured positioned container are possible local repairs, but each
-  needs cold-load, rotation, keyboard, and hit-test verification. A modern
-  emulator that does not reproduce the geometry is a control, not proof that
-  an older supported target is fixed.
-- **Gate first paint on a measured height.** If the base can be briefly wrong at first
-  paint (`--vh`/`--app-height` not set yet → `1vh` falls back to the large viewport),
-  hold rendering until the JS height is measured (`> 0`) so the page doesn't flash at the
-  wrong height. Always pair the gate with a forced-reveal timeout, so a measurement that
-  never arrives can't leave the page stuck blank.
-- **Safe-area insets are not portable.** `env(safe-area-inset-*)` works in WKWebView,
-  but Android WebView support depends on Chromium milestone and whether the host
-  WebView is fullscreen or overlapping system UI: M136 handles display-cutout/system-bar
-  safe areas for fullscreen WebViews, M139 handles IME via visual viewport, and M144
-  expands display-cutout/system-bar safe areas to all WebViews. The robust cross-host
-  pattern: **the app passes `statusBarHeight` (and bottom inset if needed) as query
-  params** — prefer params over app-injected CSS variables (no injection-timing race,
-  testable in a browser).
-  Combine with `env()` as progressive enhancement:
-  `padding-top: max(var(--inset-top, 0px), env(safe-area-inset-top, 0px))`.
-  If the app does inject pixel insets, divide by `initial-scale` when it isn't 1.
-- **An app-override inset var must not share a name with a global token.** If `--sab` is
-  defined on `:root` (e.g. `--sab: env(safe-area-inset-bottom)`), then `var(--sab, 16px)`
-  uses that global value and **never the `16px` fallback** — per spec a `var()` fallback
-  applies only when the property is *undefined*, and the `:root` rule makes it always
-  defined (computing to `0` in a broken Android WebView). For "use the app value, else a
-  hardcoded design default", read a **distinct app-only variable** (e.g. `--app-safe-bottom`)
-  set inline only when the app passes it; otherwise the fallback is dead code and you
-  silently inherit `env()`/`0`. The `max(var(--app-x,0px), env(...))` pattern above
-  sidesteps this — the trap is reusing one shared name for both the global token and the
-  app override.
-- **Bottom-fixed CTA hides trailing content.** Reserve its height plus the bottom
-  inset:
-  `padding-bottom: calc(<cta-height> + max(var(--inset-bottom,0px), env(safe-area-inset-bottom,0px)))`.
-  The height-reserve is needed everywhere (check it on desktop too); only the inset
-  portion is device-only — `env()` reads 0 on desktop.
-- **iOS scroll/overscroll quirks.** Scope `overscroll-behavior` to the scrolling
-  element, not blanket `html` — on iOS it disables intended inner bounce and has clashed
-  with the native `bounces` setting (WebKit 243270; use `contain` on inner scroll
-  areas). A `position:fixed` element's hit area can also desync from its painted
-  position after an interrupted/fast scroll (taps land in the old spot until the next
-  touch) — avoid critical taps in fixed bars mid-momentum.
-- **Keyboard (IME):** modern Chrome/WebView resizes only the *visual* viewport by
-  default; `svh/dvh` units do NOT react to the keyboard. The `interactive-widget`
-  viewport meta and the VirtualKeyboard API are Chromium-*browser* mechanisms and are
-  **not honored inside an in-app WebView**: on Android, keyboard resize is
-  host-controlled (`windowSoftInputMode="adjustResize"` / inset forwarding — put it in
-  the app contract; the Chrome 108 `interactive-widget` change explicitly does not
-  affect WebView, and M139+ resizes the visual viewport so obscured content becomes
-  scrollable), and iOS WKWebView supports neither (`interactive-widget` unimplemented,
-  WebKit bug 259770; VirtualKeyboard API is Chromium-only). To keep an input visible
-  above the keyboard in a WebView, listen to `visualViewport` `resize`/`scroll` and
-  `scrollIntoView` the focused input; in Chromium *browser* contexts you may
-  additionally use `interactive-widget=resizes-content` or the VirtualKeyboard API.
-  Never clear element focus in resize handlers — that creates a
-  focus-loss/keyboard-dismiss loop.
-- **Small form-control text can trigger focus zoom in iOS WebKit contexts.** A
-  widely reproduced authoring threshold is below `16px`, but treat that as a
-  target-device behavior, not a Web standard invariant. Use `16px` as a
-  conservative default for `input`/`select`/`textarea`/`contenteditable`, then
-  reproduce focus and blur on the supported WKWebView versions. Do not use
-  `maximum-scale=1`/`user-scalable=no` as the page-side fix: a default
-  `WKWebViewConfiguration` honors author scale limits because
-  `ignoresViewportScaleLimits` defaults to `false`, so that workaround can
-  disable user zoom. Prefer readable control text and preserve pinch zoom.
-- **System font scale breaks layouts on Android.** WebView text follows the OS
-  accessibility font size via `textZoom` (~85% at the smallest preset; up to ~130%
-  before Android 14, up to **200%** non-linear on Android 14+). Don't silently
-  override it to 100 — that defeats user accessibility. Verify the layout at 130%
-  (and ideally 200% on Android 14+), and agree with the app side on a clamp
-  (e.g. RN `textZoom` prop capped to a max the layout tolerates).
-- **Dark mode: the `color-scheme` meta tag is load-bearing in Android WebView.**
-  Unlike browsers, Android WebView's default Force Dark strategy ignores
-  `prefers-color-scheme` media queries unless the page declares
-  `<meta name="color-scheme" content="light dark">` — without it the host can
-  user-agent-darken (auto-invert) the page with `prefers-color-scheme` evaluating
-  false, producing broken brand colors or double-darkening when the app theme is dark.
-  Web-side fix: the meta tag (or explicit `content="light"` to opt out of darkening)
-  plus `prefers-color-scheme` styles. The app-side knob →
-  [android-webview](./android-webview.md).
-
-## Sources
-
-- Chrome for Developers "Web on Android"
-  (https://developer.chrome.com/docs/android/) and Chrome Android
-  viewport-resize-behavior changes
-  (https://developer.chrome.com/blog/viewport-resize-behavior/).
-- Android Developers window-insets, edge-to-edge, and display-cutout docs:
-  https://developer.android.com/develop/ui/views/layout/insets,
-  https://developer.android.com/develop/ui/views/layout/edge-to-edge,
-  https://developer.android.com/develop/ui/views/layout/display-cutout.
-- CSS Values viewport-relative lengths (svh/dvh/lvh)
-  (https://drafts.csswg.org/css-values-4/#viewport-relative-lengths) and
-  CanIWebView (https://caniwebview.com/).
-- Scroll/overscroll: WebKit bug 243270
-  (https://bugs.webkit.org/show_bug.cgi?id=243270; `bounces` vs `overscroll-behavior`)
-  and bug 262287
-  (https://bugs.webkit.org/show_bug.cgi?id=262287; `position:fixed`
-  interrupted-momentum hit-test). Input focus zoom: the CSS-Tricks target-device
-  reproduction of the conservative `16px` mitigation
-  (https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/), Apple
-  `WKWebViewConfiguration.ignoresViewportScaleLimits` documentation
-  (https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits),
-  and WCAG 1.4.4 resize-text understanding
-  (https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html).
-- Initial-load viewport-height reports: Chromium issue 331326389
-  (`clientHeight` wrong around navigation/keyboard state), Stack Overflow
-  77033005 (`100dvh` extends past bottom on Android Chrome), and 79831083
-  (standalone PWA `dvh` wrong on initial load). JS `--vh` compatibility
-  pattern: CSS-Tricks "The trick to viewport units on mobile".
-- Keyboard mechanisms: Chrome 108 viewport-resize change ("These changes do not
-  affect WebView") — https://developer.chrome.com/blog/viewport-resize-behavior;
-  WebKit bug 259770 (`interactive-widget` unimplemented) —
-  https://bugs.webkit.org/show_bug.cgi?id=259770; MDN VirtualKeyboard API
-  (Chromium-only, experimental).
-- Dark mode: Android WebView dark-theme doc
-  (https://developer.android.com/develop/ui/views/layout/webapps/dark-theme;
-  meta tag required for `prefers-color-scheme` in default Force Dark mode).
-- Back/forward cache: MDN bfcache glossary + web.dev/articles/bfcache; Chromium
-  bfcache Intent-to-Ship excluding WebView
-  (https://groups.google.com/a/chromium.org/g/bfcache-dev/c/0zTVPni5F9g); androidx.webkit
-  release notes (`setBackForwardCacheEnabled`,
-  https://developer.android.com/jetpack/androidx/releases/webkit); WebKit
-  "Page Cache I – The Basics" (https://webkit.org/blog/427/webkit-page-cache-i-the-basics/);
-  MDN `PageTransitionEvent.persisted`; WHATWG HTML "persisted user state"
-  (implementation-defined form restore); toss/use-funnel browser adapter source
-  (`packages/browser/src/index.ts` — context in `history.state`).
+- **Viewport meta is mandatory.** When the host enables wide-viewport mode (Android `setUseWideViewPort(true)`; react-native-webview's Android `scalesPageToFit` defaults to `true` and sets it), a page without a viewport meta gets a wide viewport instead of the WebView's width — Chromium's WebView layout notes list 980px for that case in their "Chrome for Android behavior" table. Always ship `width=device-width, initial-scale=1, viewport-fit=cover`.
+- **Don't trust `100vh`.** It measures the large viewport; use `100svh` for stable full-height layouts, `100dvh` only when you want reflow as chrome shows/hides.
+- **`svh`/`dvh` can still disagree with visible geometry on a failing target.** Chromium issue 331326389 documents one `clientHeight` failure around navigation and keyboard state; separate reports cover other initial-load symptoms. Do not merge those reports into a blanket pre-M139 rule. On the affected app/WebView pair, record `innerHeight`, `documentElement.clientHeight`, `visualViewport.height`, and the event that changes them. A JS-measured `--vh`, an app-provided inset/height, or anchoring a CTA to a measured positioned container are possible local repairs, but each needs cold-load, rotation, keyboard, and hit-test verification. A modern emulator that does not reproduce the geometry is a control, not proof that an older supported target is fixed.
+- **Gate first paint on a measured height.** If the base can be briefly wrong at first paint (`--vh`/`--app-height` not set yet → `1vh` falls back to the large viewport), hold rendering until the JS height is measured (`> 0`) so the page doesn't flash at the wrong height. Always pair the gate with a forced-reveal timeout, so a measurement that never arrives can't leave the page stuck blank.
+- **Safe-area insets are not portable.** `env(safe-area-inset-*)` works in WKWebView, though the values can arrive "some arbitrary time after page load" (WebKit bug 191872, NEW, checked 2026-09-25); Android WebView support depends on Chromium milestone and whether the host WebView is fullscreen or overlapping system UI: M136 handles display-cutout/system-bar safe areas for fullscreen WebViews, M139 handles IME via visual viewport, and M144 expands display-cutout/system-bar safe areas to all WebViews. The robust cross-host pattern: **the app passes `statusBarHeight` (and bottom inset if needed) as query params** — prefer params over app-injected CSS variables (no injection-timing race, testable in a browser). Combine with `env()` as progressive enhancement: `padding-top: max(var(--inset-top, 0px), env(safe-area-inset-top, 0px))`. If the app does inject pixel insets, divide by `initial-scale` when it isn't 1.
+- **An app-override inset var must not share a name with a global token.** If `--sab` is defined on `:root` (e.g. `--sab: env(safe-area-inset-bottom)`), then `var(--sab, 16px)` uses that global value and **never the `16px` fallback** — per spec a `var()` fallback applies only when the property is *undefined*, and the `:root` rule makes it always defined (computing to `0` in a broken Android WebView). For "use the app value, else a hardcoded design default", read a **distinct app-only variable** (e.g. `--app-safe-bottom`) set inline only when the app passes it; otherwise the fallback is dead code and you silently inherit `env()`/`0`. The `max(var(--app-x,0px), env(...))` pattern above sidesteps this — the trap is reusing one shared name for both the global token and the app override.
+- **Bottom-fixed CTA hides trailing content.** Reserve its height plus the bottom inset: `padding-bottom: calc(<cta-height> + max(var(--inset-bottom,0px), env(safe-area-inset-bottom,0px)))`. The height-reserve is needed everywhere (check it on desktop too); only the inset portion is device-only — `env()` reads 0 on desktop.
+- **iOS scroll/overscroll quirks.** Scope `overscroll-behavior` to the scrolling element, not blanket `html` — on iOS it disables intended inner bounce and older WebKit let it override the native `bounces` setting (WebKit 243270, since fixed; use `contain` on inner scroll areas). Interrupting momentum scroll with a programmatic `scrollTo` could leave a scroll container unrendered (WebKit 262287, since fixed) — if a chat-style or snap list scrolls itself during momentum, reproduce on the supported iOS versions.
+- **Keyboard (IME):** modern Chrome/WebView resizes only the *visual* viewport by default; `svh/dvh` units do NOT react to the keyboard. Chrome documents the `interactive-widget` viewport meta and the VirtualKeyboard API as *browser* mechanisms, and notes that its Chrome 108 resize change does "not affect WebView" — **don't rely on either inside an in-app WebView without verifying on the host**. On Android, keyboard resize is host-controlled (`windowSoftInputMode="adjustResize"` / inset forwarding — put it in the app contract; M139+ resizes the visual viewport so obscured content becomes scrollable), and iOS WKWebView supports neither (`interactive-widget` unimplemented, WebKit bug 259770; VirtualKeyboard API is Chromium-only). To keep an input visible above the keyboard in a WebView, listen to `visualViewport` `resize`/`scroll` and `scrollIntoView` the focused input; in Chromium *browser* contexts you may additionally use `interactive-widget=resizes-content` or the VirtualKeyboard API. Never clear element focus in resize handlers — that creates a focus-loss/keyboard-dismiss loop.
+- **Small form-control text can trigger focus zoom in iOS WebKit contexts.** A widely reproduced authoring threshold is below `16px`, but treat that as a target-device behavior, not a Web standard invariant. Use `16px` as a conservative default for `input`/`select`/`textarea`/`contenteditable`, then reproduce focus and blur on the supported WKWebView versions. Do not use `maximum-scale=1`/`user-scalable=no` as the page-side fix: a default `WKWebViewConfiguration` honors author scale limits because `ignoresViewportScaleLimits` defaults to `false`, so that workaround can disable user zoom. Prefer readable control text and preserve pinch zoom.
+- **System font scale breaks layouts on Android.** WebView text follows the OS accessibility font size via `textZoom` (up to **200%** non-linear on Android 14+; earlier and smaller presets vary, so read the actual scale on the target). Don't silently override it to 100 — that defeats user accessibility. Verify the layout at the largest scale the supported OS versions offer (200% on Android 14+), and agree with the app side on a clamp (e.g. RN `textZoom` prop capped to a max the layout tolerates).
+- **Dark mode: Android WebView behavior depends on the app's target API.** For apps targeting API 32 or lower that use the legacy Force Dark path (`FORCE_DARK_ON`/ `FORCE_DARK_AUTO`), the default darkening strategy honors `prefers-color-scheme` only when the page declares `<meta name="color-scheme" content="dark light">`; under user-agent darkening WebView auto-inverts the page and `prefers-color-scheme: dark` evaluates false. For apps targeting API 33+, WebView sets `prefers-color-scheme` from the app theme (`isLightTheme`), and algorithmic darkening — only if the app allows it — applies to content that doesn't use `prefers-color-scheme` and whose author hasn't disabled darkening. Web-side rule for either host: declare the `color-scheme` meta and ship `prefers-color-scheme` styles, so the page never depends on algorithmic inversion. The app-side knob → [android-webview](./android-webview.md).
 
 ## Paint / hit-test diagnostics
 
@@ -215,32 +56,27 @@ If the container background and hit area exist but child text/buttons disappear,
 
 ## Rotation and viewport settling
 
-On mobile WebViews, rotation can briefly expose a mismatch between the layout
-viewport and the visible viewport. Treat this as a measurement problem before
-masking it with background color.
+On mobile WebViews, rotation can briefly expose a mismatch between the layout viewport and the visible viewport. Treat this as a measurement problem before masking it with background color.
 
-1. Keep the WebView page root viewport-based (`width: 100%` or `100vw` as the
-   page requires), then cap the readable/card content with inner `max-width`. Avoid
-   a narrow centered root that contains children sized to `100vw`; during rotation
-   this can make the old viewport overflow from one side.
-2. If the page needs JS-derived viewport values, listen to `window.resize`,
-   `orientationchange`, and `window.visualViewport.resize` when present. Re-read
-   dimensions in `requestAnimationFrame` and, for Android WebView, once more after
-   a short settle delay.
-3. Use native WebView background/container styling only for native surface flash or
-   blank-layer issues. It does not fix DOM alignment drift.
-4. Keep page-specific compensation local to that page. Do not promote transforms,
-   forced repaint tricks, or fixed delays as a general WebView rule without device
-   evidence.
+1. Keep the WebView page root viewport-based (`width: 100%` or `100vw` as the page requires), then cap the readable/card content with inner `max-width`. Avoid a narrow centered root that contains children sized to `100vw`; during rotation this can make the old viewport overflow from one side.
+2. If the page needs JS-derived viewport values, listen to `window.resize`, `orientationchange`, and `window.visualViewport.resize` when present. Re-read dimensions in `requestAnimationFrame` and, for Android WebView, once more after a short settle delay.
+3. Use native WebView background/container styling only for native surface flash or blank-layer issues. It does not fix DOM alignment drift.
+4. Keep page-specific compensation local to that page. Do not promote transforms, forced repaint tricks, or fixed delays as a general WebView rule without device evidence.
 
-Evidence anchors: MDN `VisualViewport` documents visual-vs-layout viewport and the
-`resize` event; Chrome's Visual Viewport article documents viewport API
-inconsistency and listening to visual viewport changes; Android Developers documents
-WebView layout/visual viewport mechanics; field reports show orientation values can
-stabilize only after resize/rAF/short delays.
+Evidence anchors: MDN `VisualViewport` documents visual-vs-layout viewport and the `resize` event; Chrome's Visual Viewport article documents viewport API inconsistency and listening to visual viewport changes; Android Developers documents WebView layout/visual viewport mechanics; field reports show orientation values can stabilize only after resize/rAF/short delays.
 
-Sources:
-- https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport
-- https://developer.chrome.com/blog/visual-viewport-api
-- https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets
-- https://stackoverflow.com/questions/12452349/mobile-viewport-height-after-orientation-change
+Sources for these anchors are in [Sources](#sources).
+
+## Sources
+
+- Chrome for Developers "Web on Android" (https://developer.chrome.com/docs/android/) and Chrome Android viewport-resize-behavior changes (https://developer.chrome.com/blog/viewport-resize-behavior/).
+- Android Developers window-insets, edge-to-edge, and display-cutout docs: https://developer.android.com/develop/ui/views/layout/insets, https://developer.android.com/develop/ui/views/layout/edge-to-edge, https://developer.android.com/develop/ui/views/layout/display-cutout.
+- CSS Values viewport-relative lengths (svh/dvh/lvh) (https://drafts.csswg.org/css-values-4/#viewport-relative-lengths) and CanIWebView (https://caniwebview.com/).
+- Scroll/overscroll: WebKit bug 243270 (https://bugs.webkit.org/show_bug.cgi?id=243270; "WKWebView's scrollView.bounces=false is not working" — fix commit 254582@main keeps the client `bounces` setting from being "overwritten by overscroll behavior"; RESOLVED FIXED, checked 2026-09-25) and bug 262287 (https://bugs.webkit.org/show_bug.cgi?id=262287; "Interrupting scroll momentum causes container to not render" — programmatic `scrollTo` during momentum; RESOLVED FIXED).
+- Dark mode: Android Developers "Darken web content in WebView" (https://developer.android.com/develop/ui/views/layout/webapps/dark-theme; API 33+ `isLightTheme` → `prefers-color-scheme`; legacy `ForceDarkStrategy` requires the `color-scheme` meta tag for `prefers-color-scheme` in default Force Dark mode).
+- Safe-area timing and font scale: WebKit bug 191872 (https://bugs.webkit.org/show_bug.cgi?id=191872; WKWebView sets `env(safe-area-inset-*)` "until some arbitrary time after page load"; NEW, checked 2026-09-25); Android 14 features (https://developer.android.com/about/versions/14/features; "the system supports font scaling up to 200%").
+- No-viewport width: Android `WebSettings.setUseWideViewPort` (https://developer.android.com/reference/android/webkit/WebSettings; false → layout width is the WebView width, true + no tag → wide viewport), the pinned Chromium layout notes' Chrome-for-Android table (980px for no viewport tag; https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md), and react-native-webview `scalesPageToFit` ([Reference.md](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md), default `true`; [`RNCWebViewManager.kt#L605-L609`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManager.kt#L605-L609) sets `useWideViewPort`). Input focus zoom: the CSS-Tricks target-device reproduction of the conservative `16px` mitigation (https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/), Apple `WKWebViewConfiguration.ignoresViewportScaleLimits` documentation (https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits), and WCAG 1.4.4 resize-text understanding (https://www.w3.org/WAI/WCAG22/Understanding/resize-text.html).
+- Initial-load viewport-height reports: Chromium issue 331326389 (https://issues.chromium.org/issues/331326389; "Wrong clientHeight value leads to dangerous layout shift on Android"), Stack Overflow 77033005 (https://stackoverflow.com/questions/77033005; "100dvh extends past bottom on Android Chrome fullscreen"), and 79831083 (https://stackoverflow.com/questions/79831083; "Chrome PWA no longer calculating dvh properly on initial load"). JS `--vh` compatibility pattern: CSS-Tricks "The trick to viewport units on mobile" (https://css-tricks.com/the-trick-to-viewport-units-on-mobile/).
+- Keyboard mechanisms: Chrome 108 viewport-resize change ("These changes do not affect WebView") — https://developer.chrome.com/blog/viewport-resize-behavior; WebKit bug 259770 (`interactive-widget` unimplemented) — https://bugs.webkit.org/show_bug.cgi?id=259770; MDN VirtualKeyboard API (Chromium-only, experimental).
+- Back/forward cache: MDN bfcache glossary (https://developer.mozilla.org/en-US/docs/Glossary/bfcache) + web.dev (https://web.dev/articles/bfcache); Chromium bfcache Intent-to-Ship excluding WebView (https://groups.google.com/a/chromium.org/g/bfcache-dev/c/0zTVPni5F9g); androidx.webkit release notes (`setBackForwardCacheEnabled`, https://developer.android.com/jetpack/androidx/releases/webkit); WebKit "Page Cache I – The Basics" (https://webkit.org/blog/427/webkit-page-cache-i-the-basics/); MDN `PageTransitionEvent.persisted` (https://developer.mozilla.org/en-US/docs/Web/API/PageTransitionEvent/persisted); WHATWG HTML "persisted user state" (https://html.spec.whatwg.org/multipage/browsing-the-web.html; "implementation-defined", e.g. form-control values); toss/use-funnel browser adapter source, pinned (https://github.com/toss/use-funnel/blob/26a9aa78723b84178e40eadab38378a052dcaf12/packages/browser/src/index.ts — context in `window.history.state`, written via `pushState`/`replaceState`).
+- Rotation and viewport settling: https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport, https://developer.chrome.com/blog/visual-viewport-api, https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets, https://stackoverflow.com/questions/12452349/mobile-viewport-height-after-orientation-change.

@@ -5,96 +5,44 @@ description: "Use for pre-release security review or remediation when a frontend
 
 # BFF proxy security contracts
 
-A frontend-owned server route is still a server trust boundary. The dangerous shape is a
-thin relay that lets the browser choose a destination, method, headers, or business action
-and assumes the upstream will reject anything unintended. Treat each proxy route as a
-small capability, not as a transparent tunnel.
+A frontend-owned server route is still a server trust boundary. The dangerous shape is a thin relay that lets the browser choose a destination, method, headers, or business action and assumes the upstream will reject anything unintended. Treat each proxy route as a small capability, not as a transparent tunnel.
 
 ## Boundary with sibling skills
 
-- Use **frontend-security-baseline** for browser XSS, CSP, token storage, cookies, CSRF,
-  redirects, and client-bundled secrets.
+- Use **frontend-security-baseline** for browser XSS, CSP, token storage, cookies, CSRF, redirects, and client-bundled secrets.
 - Use **frontend-auth-flow-contracts** for login/signup/callback/passkey UI behavior.
-- Use **file-ingest-contracts** for drag/drop, picker, paste, `accept`/`file.type`, and
-  preview URL lifecycle in the browser.
-- Use this skill for frontend-owned **server** routes that build or relay upstream HTTP
-  requests, including upload-specific or WebView-specific gateway endpoints.
-- This does not replace upstream object authorization, persistent replay/idempotency,
-  authoritative metering of business value (elapsed time, credits, usage), or a full
-  backend threat model.
+- Use **file-ingest-contracts** for drag/drop, picker, paste, `accept`/`file.type`, and preview URL lifecycle in the browser.
+- Use this skill for frontend-owned **server** routes that build or relay upstream HTTP requests, including upload-specific or WebView-specific gateway endpoints.
+- This does not replace upstream object authorization, persistent replay/idempotency, authoritative metering of business value (elapsed time, credits, usage), or a full backend threat model.
 
-Read [prior-art](./references/prior-art.md) when the decision needs source-backed comparison
-with OWASP, the Next.js BFF guidance, Backstage, Grafana, Formidable, or public proxy
-implementations.
+Read [prior-art](./references/prior-art.md) when the decision needs source-backed comparison with OWASP, the Next.js BFF guidance, Backstage, Grafana, Formidable, or public proxy implementations.
 
 ## Default workflow
 
-1. **Inventory every ingress.** Find normal request, multipart upload, streaming, callback,
-   WebSocket/SSE, admin/tool, and versioned endpoints that can reach the same upstream
-   operation. A policy on `/api/request` is not effective if `/api/upload` reaches the same
-   action without it.
-2. **Write a capability matrix before changing code.** For each ingress, record:
-   client selector, server-owned target, allowed methods, auth/role requirement, CSRF/origin
-   policy when the route is cookie-authenticated, accepted query/body/file shape, forwarded
-   headers, redirect behavior, response handling, timeout, and size/rate budgets.
-3. **Prefer server-owned routes.** Let the client choose a semantic route name or a
-   canonical relative path that must match an anchored positive allowlist. When the
-   destination is known in advance, do not accept a complete URL.
-4. **Parse once, compare exact components.** Use one URL parser for validation and request
-   construction. Pin scheme, origin, port, and pathname as applicable. Keep query
-   parameters separate from the route selector. Do not use a denylist or regex as the only
-   defense for an arbitrary URL.
-5. **Bind policy to the capability, not the transport.** Method, auth, role, body, and
-   response rules must apply to every ingress that can invoke the operation. An upload
-   endpoint should expose only upload capabilities, not every same-origin API path.
-6. **Bound multipart and streaming work before parsing.** Set maximum files, per-file and
-   aggregate sizes, field count, total field bytes, and request timeout where product
-   latency permits. Preserve or regenerate the correct multipart boundary, and clean up
-   temporary files on success, parse error, abort, and upstream failure.
-7. **Forward the minimum.** Build a small header allowlist; do not relay browser cookies,
-   `Authorization`, hop-by-hop headers, or upstream debug metadata by default. Server-owned
-   credentials and role claims must override, not merge behind, client values.
-8. **Fail closed without leaking internals.** Disable redirects or validate every hop.
-   Return stable public errors; log a correlation key plus method, canonical route, and
-   status without credentials, raw bodies, or upstream stack messages.
-9. **Separate gateway mitigation from authoritative business controls.** A per-request
-   numeric cap can block one oversized payload, but it does not stop replay of many valid
-   requests. Persistent state, idempotency, metered business-value checks (elapsed
-   time, credits, usage), quotas, and distributed rate limits belong where all
-   instances and ingress paths share authority.
+1. **Inventory every ingress.** Find normal request, multipart upload, streaming, callback, WebSocket/SSE, admin/tool, and versioned endpoints that can reach the same upstream operation. A policy on `/api/request` is not effective if `/api/upload` reaches the same action without it.
+2. **Write a capability matrix before changing code.** For each ingress, record: client selector, server-owned target, allowed methods, auth/role requirement, CSRF/origin policy when the route is cookie-authenticated, accepted query/body/file shape, forwarded headers, redirect behavior, response handling, timeout, and size/rate budgets.
+3. **Prefer server-owned routes.** Let the client choose a semantic route name or a canonical relative path that must match an anchored positive allowlist. When the destination is known in advance, do not accept a complete URL.
+4. **Parse once, compare exact components.** Use one URL parser for validation and request construction. Pin scheme, origin, port, and pathname as applicable. Keep query parameters separate from the route selector. Do not use a denylist or regex as the only defense for an arbitrary URL.
+5. **Bind policy to the capability, not the transport.** Method, auth, role, body, and response rules must apply to every ingress that can invoke the operation. An upload endpoint should expose only upload capabilities, not every same-origin API path.
+6. **Bound multipart and streaming work before parsing.** Set maximum files, per-file and aggregate sizes, field count, total field bytes, and request timeout where product latency permits. Preserve or regenerate the correct multipart boundary, and clean up temporary files on success, parse error, abort, and upstream failure.
+7. **Forward the minimum.** Build a small header allowlist; do not relay browser cookies, `Authorization`, hop-by-hop headers, or upstream debug metadata by default. Server-owned credentials and role claims must override, not merge behind, client values.
+8. **Fail closed without leaking internals.** Disable redirects or validate every hop. Return stable public errors; log a correlation key plus method, canonical route, and status without credentials, raw bodies, or upstream stack messages.
+9. **Separate gateway mitigation from authoritative business controls.** A per-request numeric cap can block one oversized payload, but it does not stop replay of many valid requests. Persistent state, idempotency, metered business-value checks (elapsed time, credits, usage), quotas, and distributed rate limits belong where all instances and ingress paths share authority.
 
 ## Pre-release prevention gate
 
 Use this before an external assessment, not only after a finding arrives.
 
-1. **Trace sources to outbound sinks.** Start from query, route params, headers, cookies,
-   JSON/form bodies, and multipart metadata that can influence `fetch`, Axios, proxy
-   middleware, SDK clients, redirects, or server-side file transfer.
-2. **Search for sibling ingress.** For every protected business action, find normal,
-   upload, streaming, callback, legacy, versioned, admin/tool, and WebView-facing paths
-   that can invoke it. One guarded transport does not protect another.
-3. **Block release on missing capability contracts.** A relay is not ready when the
-   request can choose a complete destination, an unknown same-origin path, an unsupported
-   method, client-supplied auth or identity headers that bypass validation or override
-   server-injected credentials, an unbounded body/file shape, a redirect hop outside
-   the validated target, or a cookie-authenticated mutating route with no CSRF/origin
-   evidence (its own control, or an explicit co-gate with frontend-security-baseline).
-4. **Run negative proof, not source-only review.** Exercise malformed and alternate
-   selectors, verify rejection before parser/outbound invocation, use a local OOB listener
-   for SSRF, and compare protected state before and after forbidden mutations.
-5. **Run positive compatibility proof.** Exercise every legitimate route family,
-   including Unicode or whitespace path segments when user text enters the path, and
-   confirm multipart reconstruction uses the generated boundary.
+1. **Trace sources to outbound sinks.** Start from query, route params, headers, cookies, JSON/form bodies, and multipart metadata that can influence `fetch`, Axios, proxy middleware, SDK clients, redirects, or server-side file transfer.
+2. **Search for sibling ingress.** For every protected business action, find normal, upload, streaming, callback, legacy, versioned, admin/tool, and WebView-facing paths that can invoke it. One guarded transport does not protect another.
+3. **Block release on missing capability contracts.** A relay is not ready when the request can choose a complete destination, an unknown same-origin path, an unsupported method, client-supplied auth or identity headers that bypass validation or override server-injected credentials, an unbounded body/file shape (JSON as well as multipart), a route or ingress with no declared method/auth/role rule, a redirect hop outside the validated target, or a cookie-authenticated mutating route with no CSRF/origin evidence (its own control, or an explicit co-gate with frontend-security-baseline).
+4. **Run negative proof, not source-only review.** Exercise malformed and alternate selectors, verify rejection before parser/outbound invocation, use a local OOB listener for SSRF, and compare protected state before and after forbidden mutations.
+5. **Run positive compatibility proof.** Exercise every legitimate route family, including Unicode or whitespace path segments when user text enters the path, and confirm multipart reconstruction uses the generated boundary.
 6. **Assign residual ownership explicitly.** Classify each remaining item as:
    - **code-local:** this frontend-owned server boundary can decide and enforce it;
-   - **upstream:** authoritative ownership, metered usage (e.g. elapsed time), replay/idempotency, shared quota,
-     or distributed concurrency must be enforced where persistent state is shared;
-   - **operational:** credential rotation, historical log investigation, session/token
-     migration, and production egress policy require deployment authority.
-7. **Do not overclaim completion.** A request-size or per-request-value cap can close the
-   published payload while repeated valid requests still abuse the business flow. Likewise,
-   code remediation is not proof that exposed credentials were rotated or that past abuse
-   did not occur. Mark those as release follow-up instead of lowering the gate.
+   - **upstream:** authoritative ownership, metered usage (e.g. elapsed time), replay/idempotency, shared quota, or distributed concurrency must be enforced where persistent state is shared;
+   - **operational:** credential rotation, historical log investigation, session/token migration, and production egress policy require deployment authority.
+7. **Do not overclaim completion.** A request-size or per-request-value cap can close the published payload while repeated valid requests still abuse the business flow. Likewise, code remediation is not proof that exposed credentials were rotated or that past abuse did not occur. Mark those as release follow-up instead of lowering the gate.
 
 ## Trap-first review map
 
@@ -128,63 +76,45 @@ rg -n "new Map\\(|rateLimit|rateLimiter|setInterval|LRU|memoryStore|cluster|serv
 
 ## Verification ladder
 
-1. **Pure policy tests:** known-good route/method pairs, unknown paths, prefix/suffix
-   lookalikes, case variants, duplicate slash, dot segments, encoded separators,
-   backslashes, userinfo, fragments, arrays, and missing values.
-2. **Handler tests:** verify rejection occurs before parser/upstream invocation; verify each
-   legitimate capability reaches the next intended gate.
-3. **Multipart tests:** assert field/file budgets and that outgoing `Content-Type` uses the
-   regenerated form boundary rather than the browser's original boundary.
-4. **OOB SSRF test:** run a local listener and verify malicious selectors produce no
-   connection. A status code alone is not enough.
-5. **State-invariant test:** query state, attempt the forbidden mutation through every
-   ingress, query again, and compare.
-6. **Replay/concurrency test:** send many individually valid requests when the business
-   action grants value. Record this as upstream/operational follow-up if the BFF cannot
-   authoritatively decide.
+1. **Pure policy tests:** known-good route/method pairs, unknown paths, prefix/suffix lookalikes, case variants, duplicate slash, dot segments, encoded separators, backslashes, userinfo, fragments, arrays, and missing values.
+2. **Handler tests:** verify rejection occurs before parser/upstream invocation; verify each legitimate capability reaches the next intended gate.
+3. **Multipart tests:** assert field/file budgets and that outgoing `Content-Type` uses the regenerated form boundary rather than the browser's original boundary.
+4. **OOB SSRF test:** run a local listener and verify malicious selectors produce no connection. A status code alone is not enough.
+5. **State-invariant test:** query state, attempt the forbidden mutation through every ingress, query again, and compare.
+6. **Replay/concurrency test:** send many individually valid requests when the business action grants value. Record this as upstream/operational follow-up if the BFF cannot authoritatively decide.
 
 ## PR-worthiness gate
 
 File a finding or patch when all hold:
 
 1. A frontend-owned server route constructs or relays an upstream request.
-2. Client-controlled data selects or materially changes target, method, auth, headers,
-   body/file shape, or business action.
+2. Client-controlled data selects or materially changes target, method, auth, headers, body/file shape, or business action.
 3. The relevant rule is absent, fail-open, or inconsistent across ingress paths.
-4. The fix is bounded: named route/capability table, strict allowlist, one shared policy
-   seam, multipart budget, header minimization, redirect/error hardening, or a regression
-   test covering the boundary.
+4. The fix is bounded: named route/capability table, strict allowlist, one shared policy seam, multipart budget, header minimization, redirect/error hardening, or a regression test covering the boundary.
 
 Reject weak findings:
 
-- A canonical relative path matched against an anchored positive allowlist is not the same
-  as regex-validating an arbitrary URL.
+- A canonical relative path matched against an anchored positive allowlist is not the same as regex-validating an arbitrary URL.
 - A configured upstream base URL is not client-controlled by itself.
-- Do not demand request-time private-IP resolution when the client cannot affect scheme,
-  host, or port and redirects are disabled. Treat DNS/egress controls as defense in depth;
-  add dynamic-target SSRF controls when a request can influence the destination.
-- Missing gateway rate limiting is not automatically a code bug when an authoritative
-  upstream already enforces persistent quotas; verify the real owner first.
-- Do not replace a small capability allowlist with a policy framework unless route growth
-  or repeated drift provides evidence.
+- Do not demand request-time private-IP resolution when the client cannot affect scheme, host, or port and redirects are disabled. Treat DNS/egress controls as defense in depth; add dynamic-target SSRF controls when a request can influence the destination. The checks that still matter are same-host ones: object-level authorization on the id, and a dot-segment policy test, because `encodeURIComponent` does not escape `.`, so an id of `..` stays a double-dot segment that the URL parser resolves (`/v1/orders/..` becomes `/v1/`). That is a same-host capability issue, not host-level SSRF.
+- Missing gateway rate limiting is not automatically a code bug when an authoritative upstream already enforces persistent quotas; verify the real owner first.
+- Do not replace a small capability allowlist with a policy framework unless route growth or repeated drift provides evidence.
 
 ## Output shape
 
 - **Ingress/capability:** which browser-facing server route reaches which upstream action.
 - **Trust break:** exact client-controlled selector/header/body/file and the missing rule.
 - **Cross-ingress check:** normal/upload/stream/versioned paths that can invoke the action.
-- **Minimal fix:** named route, anchored route-method-auth policy, boundary/budget, or
-  redacted error change.
-- **Verification:** policy test, pre-forward handler test, OOB connection count, and state
-  invariant.
-- **Residual owner:** code-local, upstream/shared infrastructure, or operational
-  credential/log follow-up.
-- **Release verdict:** PASS, BLOCK, or PASS with named upstream/operational follow-up;
-  never fold unresolved authority or credential work into a generic “fixed” claim.
+- **Minimal fix:** named route, anchored route-method-auth policy, boundary/budget, or redacted error change.
+- **Verification:** policy test, pre-forward handler test, OOB connection count, and state invariant.
+- **Residual owner:** code-local, upstream/shared infrastructure, or operational credential/log follow-up.
+- **Release verdict:** PASS, BLOCK, or PASS with named upstream/operational follow-up; never fold unresolved authority or credential work into a generic “fixed” claim.
 
 ## Sources
 
 - OWASP SSRF Prevention Cheat Sheet: <https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html>
+- MDN `encodeURIComponent()` (escapes all characters except `A–Z a–z 0–9 - _ . ! ~ * ' ( )`): <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent>
+- WHATWG URL Standard, path state (a double-dot path segment shortens the path, so `/usr/..` becomes `/`): <https://url.spec.whatwg.org/#path-state>
 - OWASP REST Security Cheat Sheet: <https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html>
 - OWASP Authorization Cheat Sheet: <https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html>
 - OWASP File Upload Cheat Sheet: <https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html>

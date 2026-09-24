@@ -21,7 +21,7 @@ Only T1 is implemented as a refactor. T2/T3 become a cleanup plan or TODO with t
 ## Workflow
 
 1. **Freeze the contract before merging.** For every candidate, list component names/files, caller contexts, user-visible purpose, design/token authority, accessibility role/name/state, i18n/copy ownership, data shape, loading/error/empty states, and responsive breakpoints.
-2. **Find candidate clusters.** Prefer existing repo evidence: repeated JSX/template/SFC structure, prop/event names, slots/snippets/children, CSS/class token sets, copied handlers/hooks/composables, repeated mapping logic, or duplicated fixtures/stories/tests. If a framework-specific scanner is already installed or explicitly allowed (React: `react-unify scan <src>`, `duplicalis scan`), run it for leads only — scanners stay read-only/`--propose` (never auto-apply); do not add dependencies just to inspect.
+2. **Find candidate clusters.** Prefer existing repo evidence: repeated JSX/template/SFC structure, prop/event names, slots/snippets/children, CSS/class token sets, copied handlers/hooks/composables, repeated mapping logic, or duplicated fixtures/stories/tests. If a duplicate-component scanner is already installed or explicitly allowed (React examples in [prior-art](./references/prior-art.md)), run it for leads only, never auto-apply its output, and run it in local/no-LLM mode: react-unify without `--propose` (that flag adds an LLM step that sends component source to a provider API), duplicalis with its default local embedding model rather than `MODEL=remote`. Do not add dependencies just to inspect.
 3. **Classify the duplication.** Use the smallest fitting category:
    - `prop-parameterizable`: same component; differences are data/text/icon/color props.
    - `slot-composition`: same shell, variable inner content — use the framework's composition primitive (slot/children/snippet/render prop).
@@ -54,15 +54,9 @@ Only T1 is implemented as a refactor. T2/T3 become a cleanup plan or TODO with t
 
 ## PR-worthiness gate
 
-Require at least two concrete source locations with the same user-facing
-semantics, interaction/state model, accessibility contract, and stable variant
-axis. Only T1 evidence justifies an implementation; lock behavior before moving
-the boundary.
+Require at least two concrete source locations with the same user-facing semantics, interaction/state model, accessibility contract, and stable variant axis. Only T1 evidence justifies an implementation; lock behavior before moving the boundary.
 
-Reject weak findings: similar names or screenshots without source evidence,
-shared styling with different semantics, duplication across only one unstable
-experiment, a scanner score without contract comparison, or an abstraction
-whose first API needs caller-specific escape hatches.
+Reject weak findings: similar names or screenshots without source evidence, shared styling with different semantics, duplication across only one unstable experiment, a scanner score without contract comparison, or an abstraction whose first API needs caller-specific escape hatches.
 
 ## Output shape
 

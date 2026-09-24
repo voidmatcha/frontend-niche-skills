@@ -16,7 +16,7 @@
     {
       "id": 2,
       "prompt": "An auditor filed a critical finding against our CSP: `script-src 'nonce-r4nd0m' 'strict-dynamic' https: 'unsafe-inline'`. Their report says `'unsafe-inline'` plus the `https:` host source means inline script and any HTTPS origin can execute, so the CSP is worthless. They want it merged before release. Confirm and write the fix.",
-      "expected_output": "Rejects the finding as written: in a CSP3 browser a nonce plus `'strict-dynamic'` causes host-source expressions and `'unsafe-inline'` to be ignored, so those tokens are the intentional, security-neutral legacy fallback rather than the bypass. States the evidence that would change the verdict and routes nothing away from this skill except where the real weakness turns out to live.",
+      "expected_output": "Rejects the finding as written: in a CSP3 browser a nonce plus `'strict-dynamic'` causes host-source expressions and `'unsafe-inline'` to be ignored, so those tokens are the intentional, security-neutral legacy fallback rather than the bypass. States the evidence that would change the verdict.",
       "expectations": [
         "The response explains that `'strict-dynamic'` makes CSP3 browsers ignore `https:` and `'unsafe-inline'`, so their presence after the nonce is a backward-compatibility fallback for older browsers, not an executable bypass.",
         "It refuses to merge the finding as a critical bypass on the policy string alone and says so plainly.",

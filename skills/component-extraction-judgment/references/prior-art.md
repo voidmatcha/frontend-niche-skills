@@ -2,16 +2,16 @@
 
 This reference is intentionally public and generic. It must not contain company-specific repository paths, screenshots, or product terms.
 
-## Near-duplicate component scanners (links verified 2026-07)
+## Near-duplicate component scanners (links verified 2026-09-25)
 
-- [`Muronuch/react-unify`](https://github.com/Muronuch/react-unify) scans React/TypeScript source for structurally similar components using AST-shaped fingerprints and writes a clickable report. Its README emphasizes read-only operation, human/agent control over every diff, optional LLM proposals, and TypeScript verification for proposed unified components.
-- [`pfrankov/duplicalis`](https://github.com/pfrankov/duplicalis) classifies duplicate React components with categories such as `#prop-parameterizable`, `#copy-paste-variant`, `#logic-duplicate`, `#style-duplicate`, `#wrapper-duplicate`, and `#forked-clone`. Those labels map well to a judgment matrix, but they are still signals rather than permission to merge.
+- [`Muronuch/react-unify`](https://github.com/Muronuch/react-unify) scans React/TypeScript source for structurally similar components using AST-shaped fingerprints and writes a clickable report. Its README says the scanner is "Read-only. Never modifies your source." and that the default scan "never calls an LLM"; the opt-in `--propose` flag "adds an LLM step that drafts a unified component" and needs a provider API key, so it sends component source off-machine. Treat it as prior art more than a recommended tool: the repository is very new with a single contributor and no stars (created and last pushed 2026-04-17; checked 2026-09-25).
+- [`pfrankov/duplicalis`](https://github.com/pfrankov/duplicalis) classifies duplicate React components with categories such as `#prop-parameterizable`, `#copy-paste-variant`, `#logic-duplicate`, `#style-duplicate`, `#wrapper-duplicate`, and `#forked-clone`. Those labels map well to a judgment matrix, but they are still signals rather than permission to merge. Its first run downloads a local embedding model; its README also documents `MODEL=remote` with an `API_URL`/`API_KEY` for a remote embeddings API, which sends source to that service — keep the local model unless remote use is allowed.
 
 ## Design fidelity and extraction adjacent tools
 
 - [`jovd83/design-fidelity-auditor`](https://github.com/jovd83/design-fidelity-auditor) frames design alignment as a review artifact: inspect implementation files plus design authority, produce a scorecard, distinguish confirmed violations from ambiguous drift, and avoid silently redesigning UI.
 - [`gbechtold/Hi-Fidelity-Design`](https://github.com/gbechtold/Hi-Fidelity-Design) uses a design/implementation IR, mapping, numeric deltas, and reports sorted by largest mismatch. The useful transfer here is evidence tiering and adapter boundaries, not copying its implementation.
-- [Claude Figma plugin](https://claude.com/plugins/figma) documents design context extraction, design tokens, Figma component mapping, and implementation from Figma references. Component extraction decisions should preserve that design authority instead of flattening variants into one generic component.
+- [Figma's guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server) is the client-neutral entry point for agent design-context extraction: it says the server can "Pull in variables, components, and layout data directly into your IDE", and that Code Connect "keeps your generated code consistent with your codebase" by reusing your actual components. Component extraction decisions should preserve that design authority instead of flattening variants into one generic component.
 - [`dennisonbertram/steal-react-component`](https://github.com/dennisonbertram/steal-react-component) is extraction-oriented prior art for recovering components/design systems from live sites. It is adjacent to implementation reconstruction, but this skill is for refactoring code you own, not cloning production sites.
 
 ## Accessibility and rendered-contract checks

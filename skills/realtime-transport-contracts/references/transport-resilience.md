@@ -8,17 +8,22 @@ Use this reference only after `realtime-transport-contracts` triggers and the ta
 - WHATWG HTML Living Standard, §9.2 Server-sent events: normative behavior for `id`/`retry`, the `Last-Event-ID` header, and reconnection. <https://html.spec.whatwg.org/multipage/server-sent-events.html>
 - MDN, `WebSocket.bufferedAmount`: bytes queued by `send()` but not yet transmitted; the standard WebSocket API has no automatic backpressure, so poll this to pace/throttle sends. <https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/bufferedAmount>
 - WHATWG WebSockets Standard: if data would need buffering but the send buffer is full, the user agent must fail the WebSocket and close the connection. <https://websockets.spec.whatwg.org/>
-- MDN, `CloseEvent.code`: integer 1000-4999; 1006 (abnormal, never sent in a frame — set locally when the connection disappears), 1011 (server error). Retry transient closes (1006/1011/1012/1013); do not loop on auth/policy (1008, 4xxx) or protocol (1002/1003). Some browsers report 1005 vs 1006 for the same drop — handle both. <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code>
-- MDN, Writing WebSocket client applications: protocol ping/pong frames are not exposed to the browser API, so implement an application-level ping/pong heartbeat. <https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications>
-- RFC 6455, The WebSocket Protocol: Ping/Pong control frames (§5.5.2-5.5.3) and close-code semantics; a peer that does not answer pings within a timeout is treated as dead. <https://www.rfc-editor.org/rfc/rfc6455.html>
+- MDN, `CloseEvent.code`: the close-code table, including 1005 (no status received), 1006 (abnormal, never sent in a frame — set locally when the connection disappears), 1011 (server error), 1012 (service restart), and 1013 (try again later). <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code>
+  - Design advice (this skill's, not MDN's): retry transient closes (1006/1011/1012/1013); do not loop on auth/policy (1008, app-level 4xxx) or protocol (1002/1003) closes.
+- WHATWG WebSockets Standard §5, Ping and Pong frames: protocol Ping and Pong frames "are not currently exposed in the API"; the `WebSocket` interface has no ping method. So client liveness needs an application-level heartbeat. <https://websockets.spec.whatwg.org/#ping-and-pong-frames>
+- MDN, Writing WebSocket client applications: an example app where the client sends an application-level "ping" message every second and the server replies "pong" — the shape of an app heartbeat. <https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications>
+- RFC 6455, The WebSocket Protocol: Ping/Pong control frames (§5.5.2-5.5.3) and close-code semantics; §10.2 says servers "SHOULD verify the |Origin| field is an origin they expect" and otherwise respond 403. <https://www.rfc-editor.org/rfc/rfc6455.html>
+- OWASP, WebSocket Security Cheat Sheet: never use `ws://` in production; browsers send cookies with the handshake, so validate `Origin` against an allowlist to stop cross-site WebSocket hijacking; query-string tokens "will appear in access logs and should be redacted", while message-based token passing avoids log exposure. <https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html>
+- Microsoft Learn, ASP.NET Core SignalR JavaScript client: "It doesn't automatically reconnect by default"; with no arguments `withAutomaticReconnect()` waits "0, 2, 10, and 30 seconds" and stops after four failed attempts. <https://learn.microsoft.com/en-us/aspnet/core/signalr/javascript-client>
 - AWS Architecture Blog, Exponential Backoff And Jitter: full jitter `sleep = random(0, min(cap, base*2**attempt))` reduces contention and total time vs un-jittered backoff; equal and decorrelated jitter are alternatives. <https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/>
 - WebSocket.org, WebSocket Authentication: the handshake authenticates only at connect time; refresh a long-lived token in-band (push a fresh token over the open socket) or by reconnecting, and define an explicit reauth-required signal since there is no built-in auth-expired response. <https://websocket.org/guides/authentication/>
 
 ## Evidence framing
 
 - Treat code-search hits as leads, not findings. Show the concrete symptom (herd, dropped/duplicated event, corrupted state, frozen UI, memory/close, message on an expired token) and the code path that produces it.
-- Before claiming a gap, check whether a client library (Socket.IO, Phoenix Channels, Ably, Pusher, `@microsoft/signalr`) already owns backoff+jitter, resume, and heartbeat via config.
-- `bufferedAmount` used as a pacing gate is a positive control, not a defect. Server-side pings + browser auto-pong is a valid liveness design from the client's side.
+- Before claiming a gap, check per contract whether the client library (Socket.IO, Phoenix Channels, Ably, Pusher, `@microsoft/signalr`) is configured to own it. Libraries own only some of backoff, jitter, resume, and heartbeat; for example, SignalR auto-reconnect is opt-in and uses fixed delays with no jitter.
+- `bufferedAmount` used as a pacing gate is a positive control, not a defect.
+- Server pings with a browser auto-pong keep proxies alive and let the server reap dead clients, but they give client JavaScript no signal. The client still needs an application-level timeout, or a server-sent app heartbeat it watches for, to detect a zombie.
 - Distinguish "no resume" (missed/duplicated events) from "no dedupe/order" (mis-applied deltas) — they are separate contracts and separate fixes.
 
 ## Test shapes
@@ -28,4 +33,5 @@ Use this reference only after `realtime-transport-contracts` triggers and the ta
 - Close handling: a 1008/4xxx auth close does not schedule a retry; a 1006/1011 does.
 - Delta folding: feed duplicated, reordered, and gapped sequences; assert idempotent apply, reorder buffering, and resync (not silent skip) on an unfillable gap.
 - Liveness: stop pongs; assert the heartbeat timeout closes and reconnects; a backgrounded/offline tab does not spin.
+- Handshake: a connection attempt with a foreign `Origin` is rejected (403) by the server; no production socket URL uses `ws://`; access logs for the socket or SSE endpoint show no raw token.
 - Auth: advance to just before token expiry; assert an in-band refresh (or reconnect) keeps the stream alive and no message is processed on an expired token.

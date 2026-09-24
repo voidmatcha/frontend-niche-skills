@@ -27,15 +27,9 @@ WebView regressions need separate evidence tiers. Do not treat one browser test 
    - Not proof that an old Android WebView can parse/render the page.
 
 3. **Android actual-engine check**
-   - Use Android emulator, WebView Shell (`org.chromium.webview_shell` — the bare
-     system-WebView harness preinstalled on emulator images), or the app package that
-     hosts the WebView. Chrome is a supporting check only: Chrome and the WebView
-     provider are separate packages that can differ in version and behavior.
+   - Use Android emulator, WebView Shell (`org.chromium.webview_shell` — the bare system-WebView harness preinstalled on emulator images), or the app package that hosts the WebView. Chrome is a supporting check only: Chrome and the WebView provider are separate packages that can differ in version and behavior.
    - Capture screenshot, console/logcat, loaded URL, Android API, device/AVD, and WebView/Chrome package version.
-   - At minimum, compare the affected old engine with one modern Android/WebView control.
-     Pinning an old engine usually means an emulator system image old enough to ship the
-     affected WebView, with auto-update disabled — Play-enabled images and retail devices
-     update WebView on first sync, so a fresh modern emulator cannot reproduce old-engine bugs.
+   - At minimum, compare the affected old engine with one modern Android/WebView control. Pinning an old engine usually means an emulator system image old enough to ship the affected WebView, with auto-update disabled — Play-enabled images and retail devices update WebView on first sync, so a fresh modern emulator cannot reproduce old-engine bugs.
 
 4. **App integration check**
    - Required when the claim includes RN bridge, safe-area query injection, deep links, auth/API, QA menus, close/back behavior, payments, or native lifecycle.
@@ -57,6 +51,7 @@ Before changing WebView page code, freeze the runtime facts that can make a corr
 - Network path: local server, DNS/VPN, `adb reverse`, and API environment are known separately.
 - Runtime identity: Android API/model/WebView or Chrome package version, or iOS simulator/device + WebKit/WKWebView path.
 - Orientation state: initial orientation and any rotation sequence are recorded.
+- Module freshness: if any `node_modules` package was swapped in place (copied dist, linked local build) without a version bump, webpack (including Next.js's webpack build) may keep serving the old module — `node_modules` is snapshotted by `package.json` version (`snapshot.managedPaths`), so new exports come back `undefined` and the failure masquerades as a host/platform bug (e.g. "bridge messages dropped, but only on Android"). Clear the build cache (`.next`, `node_modules/.cache`) and restart the dev server before trusting any cross-host difference. For a package you link or edit in place on purpose, list it in `snapshot.unmanagedPaths` (webpack 5.90.0+) so its files are snapshotted individually instead of by version.
 
 If any item is unknown, treat the next step as environment diagnosis, not UI fixing.
 
@@ -185,6 +180,7 @@ Include:
 
 Use these as source anchors when updating this reference:
 
+- Chromium WebView Shell, pinned [`android_webview/docs/webview-shell.md`](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/webview-shell.md) ("the emulator comes with WebView shell preinstalled").
 - Chrome DevTools: Android WebView remote debugging uses app-side `WebView.setWebContentsDebuggingEnabled(true)` and `chrome://inspect` (<https://developer.chrome.com/docs/devtools/remote-debugging/webviews>).
 - Android docs: the WebView debugging page was restructured into a "Debug web apps" overview (<https://developer.android.com/develop/ui/views/layout/webapps/debugging>) that no longer shows `setWebContentsDebuggingEnabled` inline — the app-side flag + DevTools flow is documented in the Chrome DevTools guide above and the [`WebView` API reference](https://developer.android.com/reference/android/webkit/WebView#setWebContentsDebuggingEnabled(boolean)).
 - Android adb docs: `adb forward` and `adb shell screenrecord` are documented platform tools (<https://developer.android.com/tools/adb>). `adb reverse` is an adb capability commonly required for emulator-to-host local servers; verify with `adb help` on the local SDK version.
@@ -192,3 +188,4 @@ Use these as source anchors when updating this reference:
 - Appium context guide: native app and WebView contexts are separate; switching context changes what element lookup/interaction means (<https://appium.io/docs/en/latest/guides/context/>).
 - Maestro upstream docs: `takeScreenshot` saves a PNG and `assertScreenshot` compares against a known-good screenshot for visual regression (`mobile-dev-inc/maestro-docs`).
 - Local Xcode `xcrun simctl io help`: documents `screenshot` and `recordVideo` operations; it does not expose an absolute orientation setter, so any iOS rotation automation must state its mechanism and limitation.
+- webpack docs: `snapshot.managedPaths` — paths managed by a package manager are snapshotted by package name + version, not file contents, so in-place `node_modules` swaps go unnoticed until the cache is cleared (<https://webpack.js.org/configuration/other-options/#managedpaths>); `snapshot.unmanagedPaths` (5.90.0+) carves a linked package out of that so its files are snapshotted individually (<https://webpack.js.org/configuration/other-options/#unmanagedpaths>).

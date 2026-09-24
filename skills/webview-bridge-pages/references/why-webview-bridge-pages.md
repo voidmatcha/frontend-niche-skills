@@ -32,7 +32,7 @@
 
 ## TL;DR
 
-Building bridge pages inside native WebViews hits a fixed cluster of non-obvious, version-gated failures: `100vh` overshoots the visible area (use `svh`/`dvh`), the Android viewport height is wrong on initial load until a touch or keyboard toggle forces a recalculation, `env(safe-area-inset-*)` reports `0px` or arrives late, the native↔JS message bridge is not ready when your first message fires (so the message is dropped), and a renderer crash leaves a blank screen unless the host explicitly recreates the WebView. Every pitfall below is backed by a primary source — a spec, a browser bug tracker, official platform docs, or open-source framework code — and most are corroborated by multiple independent projects.
+Bridge pages inside native WebViews can hit a recurring cluster of non-obvious, often version- or host-dependent failures: `100vh` can overshoot the visible area (prefer `svh`/`dvh`); Android viewport height has been reported wrong on initial load in specific WebView/app pairings; `env(safe-area-inset-*)` can report `0px` or arrive late; the native↔JS bridge may not be ready when the first message fires, so an unbuffered message can be dropped; and a renderer crash leaves a blank screen unless the host recreates the WebView. The sections below cite a source for each pitfall and say where the evidence is only a target-specific report rather than a cross-version invariant.
 
 ---
 
@@ -76,7 +76,7 @@ In the non-exhaustive public snapshot opened for this pack, no single resource c
 | 6 | An iOS WebKit target zooms on small form-control text | The commonly reported `< 16px` threshold is authoring guidance rather than a standards-defined boundary; reproduce on the supported WKWebView matrix | [CSS-Tricks target-device reproduction](https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/); [Apple `ignoresViewportScaleLimits`](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits) |
 | 7 | Layout breaks under large accessibility font scaling on Android | Android 14 supports nonlinear font scaling up to 200%; WebView text zoom is a separate host setting | [Android 14 features](https://developer.android.com/about/versions/14/features); [Pinned Chromium WebView layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md) |
 | 8 | Timers (`setTimeout`/`setInterval`) drift or stop when the WebView is backgrounded | Hidden/frozen pages suspend freezable tasks and throttle chained timers | [Chrome Page Lifecycle API](https://developer.chrome.com/docs/web-platform/page-lifecycle-api); [Chrome 88 timer throttling](https://developer.chrome.com/blog/timer-throttling-in-chrome-88) |
-| 9 | Page renders at ~980px wide / wrong scale when no viewport meta is set | Chromium's documented no-viewport fallback uses a 980px layout width | [Pinned Chromium WebView layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md) |
+| 9 | Page renders at ~980px wide / wrong scale when no viewport meta is set | With wide-viewport mode on, a page with no viewport tag gets a wide viewport; Chromium's WebView layout notes list 980px for that case in their Chrome for Android table. WebView's own default (wide viewport off) uses the WebView width | [Android `WebSettings.setUseWideViewPort`](https://developer.android.com/reference/android/webkit/WebSettings); [Pinned Chromium WebView layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md); [pinned react-native-webview Reference](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md) (`scalesPageToFit`, default `true`) |
 | 10 | Fixed UI is obscured when the on-screen keyboard opens | Browser viewport policy and in-app WebView host policy differ; do not assume `interactive-widget` controls an embedded host | [CSSWG css-viewport §3.4](https://drafts.csswg.org/css-viewport/); [Chrome viewport resize behavior](https://developer.chrome.com/blog/viewport-resize-behavior/) |
 
 ---
@@ -89,68 +89,29 @@ Because the default `vh` unit is defined against the **large viewport**, not the
 
 The spec is explicit that this is a web-compatibility decision, not an accident: "following Safari's lead, most UAs mapped these units to the larger size … However at this point the mapping to the large viewport-percentage units is presumed to be required for Web compatibility." MDN restates the rule plainly: "`vh` is equivalent to `lvh`" ([MDN `<length>`](https://developer.mozilla.org/en-US/docs/Web/CSS/length)).
 
-**Fix:** prefer the unit whose semantics match the target: `svh` for the
-small viewport, `dvh` for the dynamic viewport, and `lvh` for the large
-viewport. Check current support for the WebView versions the host actually
-ships. If a supported target lacks the units, a JS-published `innerHeight`
-custom property is a compatibility option, but it needs resize, keyboard, and
-rotation regression evidence rather than being installed unconditionally
-([MDN `<length>`](https://developer.mozilla.org/en-US/docs/Web/CSS/length);
-[CSS-Tricks fallback pattern](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/)).
+**Fix:** prefer the unit whose semantics match the target: `svh` for the small viewport, `dvh` for the dynamic viewport, and `lvh` for the large viewport. Check current support for the WebView versions the host actually ships. If a supported target lacks the units, a JS-published `innerHeight` custom property is a compatibility option, but it needs resize, keyboard, and rotation regression evidence rather than being installed unconditionally ([MDN `<length>`](https://developer.mozilla.org/en-US/docs/Web/CSS/length); [CSS-Tricks fallback pattern](https://css-tricks.com/the-trick-to-viewport-units-on-mobile/)).
 
 ## Why is the WebView viewport height wrong right after the page loads on Android?
 
-Chromium issue 331326389 documents a wrong `clientHeight` and dangerous layout
-shift on Android. Separate community reports describe related first-load,
-fullscreen, and standalone-PWA symptoms that change after touch or keyboard
-activity ([Chromium issue 331326389](https://issues.chromium.org/issues/331326389);
-[SO 77033005](https://stackoverflow.com/questions/77033005);
-[SO 79831083](https://stackoverflow.com/questions/79831083);
-[Next.js discussion #63724](https://github.com/vercel/next.js/discussions/63724)).
+Chromium issue 331326389 documents a wrong `clientHeight` and dangerous layout shift on Android. Separate community reports describe related first-load, fullscreen, and standalone-PWA symptoms that change after touch or keyboard activity ([Chromium issue 331326389](https://issues.chromium.org/issues/331326389); [SO 77033005](https://stackoverflow.com/questions/77033005); [SO 79831083](https://stackoverflow.com/questions/79831083); [Next.js discussion #63724](https://github.com/vercel/next.js/discussions/63724)).
 
-These reports do not establish one cross-version WebView invariant: they cover
-different modes, browser builds, and host surfaces. Record initial
-`innerHeight`, `documentElement.clientHeight`, `visualViewport.height`, host
-insets, and the event that changes them on the failing target. Do not infer a
-milestone or install a forced-resize workaround from the issue title alone.
+These reports do not establish one cross-version WebView invariant: they cover different modes, browser builds, and host surfaces. Record initial `innerHeight`, `documentElement.clientHeight`, `visualViewport.height`, host insets, and the event that changes them on the failing target. Do not infer a milestone or install a forced-resize workaround from the issue title alone.
 
 ## How do `svh`/`dvh` behave when the on-screen keyboard opens?
 
-In browser contexts, the CSS viewport draft defines
-`interactive-widget=resizes-visual` as the default: the visual viewport changes
-while the initial viewport does not. Chrome documents
-`interactive-widget=resizes-content` as a browser opt-in
-([CSSWG css-viewport §3.4](https://drafts.csswg.org/css-viewport/);
-[Chrome viewport resize behavior](https://developer.chrome.com/blog/viewport-resize-behavior/)).
+In browser contexts, the CSS viewport draft defines `interactive-widget=resizes-visual` as the default: the visual viewport changes while the initial viewport does not. Chrome documents `interactive-widget=resizes-content` as a browser opt-in ([CSSWG css-viewport §3.4](https://drafts.csswg.org/css-viewport/); [Chrome viewport resize behavior](https://developer.chrome.com/blog/viewport-resize-behavior/)).
 
-An in-app WebView adds host window and keyboard policy, so the browser opt-in
-is not proof that the embed will resize the same way. Measure both viewports on
-the supported host, coordinate native inset/keyboard configuration, and keep
-focused controls reachable without assuming a particular unit will shrink.
+An in-app WebView adds host window and keyboard policy, so the browser opt-in is not proof that the embed will resize the same way. Measure both viewports on the supported host, coordinate native inset/keyboard configuration, and keep focused controls reachable without assuming a particular unit will shrink.
 
 ## Why is `env(safe-area-inset-*)` zero or late inside a WebView?
 
-The pinned `@capacitor-community/safe-area` README documents its own
-version-gated Android workaround and a keyboard bottom-inset issue. Treat those
-numbers as the plugin maintainers' compatibility policy at that commit, not as
-a general platform support matrix
-([pinned README](https://github.com/capacitor-community/safe-area/blob/3042a26e278c7babf83c72c37fa0e1e9c0a32d35/README.md)).
+The pinned `@capacitor-community/safe-area` README documents its own version-gated Android workaround and a keyboard bottom-inset issue. Treat those numbers as the plugin maintainers' compatibility policy at that commit, not as a general platform support matrix ([pinned README](https://github.com/capacitor-community/safe-area/blob/3042a26e278c7babf83c72c37fa0e1e9c0a32d35/README.md)).
 
-WebKit bug 191872 reports delayed WKWebView values; its status was `NEW` when
-rechecked on 2026-07-31. React Native WebView issues #155 and #3828 provide
-wrapper-specific reproductions for delayed iOS values and zero Android values
-([WebKit bug 191872](https://bugs.webkit.org/show_bug.cgi?id=191872);
-[#155](https://github.com/react-native-webview/react-native-webview/issues/155);
-[#3828](https://github.com/react-native-webview/react-native-webview/issues/3828)).
-Use a runtime inset probe and host/app version matrix; do not convert one
-wrapper's threshold into a universal WebView cutoff.
+WebKit bug 191872 reports delayed WKWebView values; its status was `NEW` when rechecked on 2026-07-31. React Native WebView issues #155 and #3828 provide wrapper-specific reproductions for delayed iOS values and zero Android values ([WebKit bug 191872](https://bugs.webkit.org/show_bug.cgi?id=191872); [#155](https://github.com/react-native-webview/react-native-webview/issues/155); [#3828](https://github.com/react-native-webview/react-native-webview/issues/3828)). Use a runtime inset probe and host/app version matrix; do not convert one wrapper's threshold into a universal WebView cutoff.
 
 ## Why does my first message to native get dropped on app cold start?
 
-Because a host-specific bridge object or queue may not be initialized when the
-page fires its first message. The classic WebViewJavascriptBridge pattern
-pushes callbacks onto `window.WVJBCallbacks` until that bridge exists
-([pinned README](https://github.com/marcuswestin/WebViewJavascriptBridge/blob/9a1ae72d99241065cdad6e56f9474c107820e61a/README.md)).
+Because a host-specific bridge object or queue may not be initialized when the page fires its first message. The classic WebViewJavascriptBridge pattern pushes callbacks onto `window.WVJBCallbacks` until that bridge exists ([pinned README](https://github.com/marcuswestin/WebViewJavascriptBridge/blob/9a1ae72d99241065cdad6e56f9474c107820e61a/README.md)).
 
 ```js
 function setupWebViewJavascriptBridge(callback) {
@@ -163,7 +124,7 @@ function setupWebViewJavascriptBridge(callback) {
 
 > **Mechanism caveat (honest):** the current (v6) snippet triggers bridge load via a hidden iframe pointing at `https://__bridge_loaded__`, *not* a `WebViewJavascriptBridgeReady` DOM event. The DOM-event form existed only in older (pre-v6) versions; the README explicitly warns you must update the snippet when upgrading from v5.0.x to 6.0.x. The buffer-and-flush *concept* is unchanged.
 
-The same first-message reliability problem appears across frameworks. React Native WebView issue #1698 is "`window.ReactNativeWebView` in undefined on iOS and Android" — the bridge object is not yet available when code reads it ([#1698](https://github.com/react-native-webview/react-native-webview/issues/1698)). In `flutter_inappwebview`, issue #218 is "`window.flutter_inappwebview.callHandler is not a function`," and the documented fix is to gate the JS call on a `flutterInAppWebViewPlatformReady` event and register the Dart-side handler early ([#218](https://github.com/pichillilorenzo/flutter_inappwebview/issues/218)).
+The same first-message reliability problem appears across frameworks. React Native WebView issue #1698 is titled "`window.ReactNativeWebView` in undefined" — the bridge object is not yet available when code reads it ([#1698](https://github.com/react-native-webview/react-native-webview/issues/1698)). In `flutter_inappwebview`, issue #218 is "`window.flutter_inappwebview.callHandler is not a function`," and the documented fix is to gate the JS call on a `flutterInAppWebViewPlatformReady` event and register the Dart-side handler early ([#218](https://github.com/pichillilorenzo/flutter_inappwebview/issues/218)).
 
 **Fix:** never assume the bridge exists at script-eval time. Buffer outbound messages (e.g., a `READY`/auth handshake) in a queue and flush them when the bridge signals it is loaded, and register native-side handlers before the page's JS can call them.
 
@@ -173,54 +134,29 @@ The crashed WebView cannot be reused — the host app must detect the renderer d
 
 > "`override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean { if (!detail.didCrash()) { // Renderer is killed because the system ran out of memory. The app can recover gracefully by creating a new WebView instance in the foreground. … } }`" — [Android "Manage WebView objects"](https://developer.android.com/develop/ui/views/layout/webapps/managing-webview)
 
-The docs are explicit that the affected Android WebView must be removed,
-destroyed, and replaced; returning `true` lets the app keep running. Hotwire
-Turbo's pinned `TurboSession.kt` marks a lost renderer so that session is not
-reused ([pinned source](https://github.com/hotwired/turbo-android/blob/daceb0a42109f4494e90a098e3cb4a9383369b79/turbo/src/main/kotlin/dev/hotwire/turbo/session/TurboSession.kt)).
+The docs are explicit that the affected Android WebView must be removed, destroyed, and replaced; returning `true` lets the app keep running. Hotwire Turbo's pinned `TurboSession.kt` marks a lost renderer so that session is not reused ([pinned source](https://github.com/hotwired/turbo-android/blob/daceb0a42109f4494e90a098e3cb4a9383369b79/turbo/src/main/kotlin/dev/hotwire/turbo/session/TurboSession.kt)).
 
 **Implication for the page side:** a bridge page must tolerate being reloaded into a fresh WebView at any time — it cannot assume in-memory JS state survives, so render inputs should be reconstructible from query params or a re-fetched state, and the `READY` handshake (above) must be idempotent.
 
 ## Why does iOS zoom in when I focus a text input?
 
-Small form-control text can trigger focus zoom in iOS WebKit contexts. A widely
-cited target-device reproduction reports this threshold:
+Small form-control text can trigger focus zoom in iOS WebKit contexts. A widely cited target-device reproduction reports this threshold:
 
 > "If the `font-size` of an `<input>` is 16px or larger, Safari on iOS will focus into the input normally. But as soon as the `font-size` is 15px or less, the viewport will zoom into that input." — [CSS-Tricks "16px or Larger Text Prevents iOS Form Zoom"](https://css-tricks.com/16px-or-larger-text-prevents-ios-form-zoom/)
 
-Treat `16px` as a conservative authoring mitigation, not a standards-defined
-boundary across every OS/WebView version. Reproduce focus and blur on the
-supported host. Avoid disabling user scaling: Apple documents that
-`WKWebViewConfiguration.ignoresViewportScaleLimits` defaults to `false`, so a
-default WKWebView honors author scale restrictions
-([Apple documentation](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits)).
+Treat `16px` as a conservative authoring mitigation, not a standards-defined boundary across every OS/WebView version. Reproduce focus and blur on the supported host. Avoid disabling user scaling: Apple documents that `WKWebViewConfiguration.ignoresViewportScaleLimits` defaults to `false`, so a default WKWebView honors author scale restrictions ([Apple documentation](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/ignoresviewportscalelimits)).
 
 ## How does Android font scaling affect a WebView page?
 
-Two separate mechanisms apply. Android 14 introduced nonlinear font scaling up
-to 200% ([Android 14 features](https://developer.android.com/about/versions/14/features)).
-WebView also has a host-controlled text-zoom setting, documented separately in
-the [pinned Chromium WebView layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md).
-Do not derive one from the other; verify layout with the OS accessibility scale
-and the host's actual WebView setting.
+Two separate mechanisms apply. Android 14 introduced nonlinear font scaling up to 200% ([Android 14 features](https://developer.android.com/about/versions/14/features)). WebView also has a host-controlled text-zoom setting, documented separately in the [pinned Chromium WebView layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md). Do not derive one from the other; verify layout with the OS accessibility scale and the host's actual WebView setting.
 
 ## Why does no `<meta viewport>` make the page render at ~980px?
 
-The pinned Chromium layout table documents a 980px layout width and
-fit-to-screen initial scale for its no-viewport case, while
-`width=device-width` yields device width at scale 1
-([pinned layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md)).
-Ship an explicit viewport contract and verify host settings rather than
-assuming mobile defaults.
+It depends on the host's wide-viewport setting. Android's `setUseWideViewPort` defaults to false, and while it is false "the layout width is always set to the width of the WebView control"; when it is true and the page has no viewport tag or width, "a wide viewport will be used" ([`WebSettings`](https://developer.android.com/reference/android/webkit/WebSettings)). react-native-webview's Android `scalesPageToFit` defaults to `true` and turns wide-viewport mode on ([pinned Reference](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/docs/Reference.md); [pinned `RNCWebViewManager.kt#L605-L609`](https://github.com/react-native-webview/react-native-webview/blob/d65a961080dad3e82d33370ad6e8d90e973fcbd3/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManager.kt#L605-L609)). The 980px layout width with fit-to-screen initial scale comes from the pinned Chromium notes' *Chrome for Android* table, while `width=device-width` yields device width at scale 1 ([pinned layout notes](https://chromium.googlesource.com/chromium/src/+/63bff19b5ebeb07282b0845d31c5a2d2858e9619/android_webview/docs/web-page-layout.md)). Ship an explicit viewport contract and verify host settings rather than assuming mobile defaults.
 
 ## Why do my timers drift or stop when the WebView is backgrounded?
 
-Chrome documents suspension of freezable tasks in a frozen page and throttling
-of chained timers in hidden pages
-([Page Lifecycle API](https://developer.chrome.com/docs/web-platform/page-lifecycle-api);
-[timer throttling](https://developer.chrome.com/blog/timer-throttling-in-chrome-88)).
-The host decides how an embedded WebView is backgrounded, so record
-`visibilitychange`, page/host lifecycle, and elapsed wall time on the failing
-surface before assigning the mechanism.
+Chrome documents suspension of freezable tasks in a frozen page and throttling of chained timers in hidden pages ([Page Lifecycle API](https://developer.chrome.com/docs/web-platform/page-lifecycle-api); [timer throttling](https://developer.chrome.com/blog/timer-throttling-in-chrome-88)). The host decides how an embedded WebView is backgrounded, so record `visibilitychange`, page/host lifecycle, and elapsed wall time on the failing surface before assigning the mechanism.
 
 **Fix (flagged as inference):** the suspend/throttle mechanism is spec- and docs-confirmed, but the specific remediation — compute durations from an absolute timestamp (`Date.now()`) and recompute elapsed time on resume rather than trusting timer cadence — is **derived engineering guidance**, not a verbatim instruction in Chrome's official docs. The docs justify it (freeze/resume events let you record state and resume work) but do not literally prescribe "use an absolute timestamp."
 
@@ -228,13 +164,7 @@ surface before assigning the mechanism.
 
 ## A note on `position: fixed` inside a frozen/oversized viewport
 
-When the viewport height is wrong or the visual and layout viewports disagree,
-a fixed CTA can render under host chrome. Fixed positioning normally uses the
-viewport, while absolute positioning uses its containing block
-([MDN `position`](https://developer.mozilla.org/en-US/docs/Web/CSS/position)).
-Moving the bar into a measured positioned container can be a local workaround,
-but it is an applied fix that needs geometry and hit-test evidence on the
-failing host.
+When the viewport height is wrong or the visual and layout viewports disagree, a fixed CTA can render under host chrome. Fixed positioning normally uses the viewport, while absolute positioning uses its containing block ([MDN `position`](https://developer.mozilla.org/en-US/docs/Web/CSS/position)). Moving the bar into a measured positioned container can be a local workaround, but it is an applied fix that needs geometry and hit-test evidence on the failing host.
 
 ---
 
@@ -258,32 +188,19 @@ failing host.
 
 ### Should I use `svh`, `lvh`, or `dvh` for a full-height WebView layout?
 
-Use `svh` when the smallest viewport is the safe contract and `dvh` when
-layout should track the current viewport; `lvh` matches the large viewport.
-Check the actual embedded-engine matrix. Add a JS-set fallback only for a
-supported target that lacks the required unit, and test its resize, rotation,
-and keyboard lifecycle.
+Use `svh` when the smallest viewport is the safe contract and `dvh` when layout should track the current viewport; `lvh` matches the large viewport. Check the actual embedded-engine matrix. Add a JS-set fallback only for a supported target that lacks the required unit, and test its resize, rotation, and keyboard lifecycle.
 
 ### Is the Android initial-load viewport bug fixed?
 
-Do not answer from a browser milestone alone. Chromium issue 331326389 and the
-community reports cover related but not identical environments. Reproduce a
-cold load on the supported app/WebView pair and record the viewport values and
-event sequence before classifying or removing a workaround.
+Do not answer from a browser milestone alone. Chromium issue 331326389 and the community reports cover related but not identical environments. Reproduce a cold load on the supported app/WebView pair and record the viewport values and event sequence before classifying or removing a workaround.
 
 ### What triggers the frozen Android viewport to recalculate?
 
-Touch and keyboard activity changed geometry in the cited reports; that does
-not make either a reliable general-purpose repair. Record which event changes
-the failing target and fix the page/host contract instead of synthesizing a
-touch or resize.
+Touch and keyboard activity changed geometry in the cited reports; that does not make either a reliable general-purpose repair. Record which event changes the failing target and fix the page/host contract instead of synthesizing a touch or resize.
 
 ### Why is `env(safe-area-inset-*)` zero on Android?
 
-Possible causes include engine behavior, edge-to-edge host configuration,
-viewport metadata, and wrapper-specific inset forwarding. The pinned Capacitor
-README and React Native issues provide concrete versioned reports, not a
-universal cutoff. Compare native and computed insets on the failing host.
+Possible causes include engine behavior, edge-to-edge host configuration, viewport metadata, and wrapper-specific inset forwarding. The pinned Capacitor README and React Native issues provide concrete versioned reports, not a universal cutoff. Compare native and computed insets on the failing host.
 
 ### How do I keep the first native message from being dropped?
 
@@ -295,24 +212,17 @@ The host must detect renderer death (`onRenderProcessGone` on Android, `webViewW
 
 ### How do I stop iOS from zooming in on input focus?
 
-Use readable form-control text; `16px` is a conservative, widely reproduced
-mitigation. Preserve user scaling and verify focus/blur on the supported
-WKWebView versions instead of treating the threshold as standards-defined.
+Use readable form-control text; `16px` is a conservative, widely reproduced mitigation. Preserve user scaling and verify focus/blur on the supported WKWebView versions instead of treating the threshold as standards-defined.
 
 ---
 
-*Sources are linked inline. Immutable repository sources are commit-pinned;
-official living documentation and issue trackers are labeled as current or
-dated observations. Community reports are reproduction leads rather than
-platform-level evidence.*
+*Sources are linked inline. Immutable repository sources are commit-pinned; official living documentation and issue trackers are labeled as current or dated observations. Community reports are reproduction leads rather than platform-level evidence.*
 
 ---
 
 ## Related ecosystem references
 
-The WebView skill is the knowledge layer: it describes the page-side contract,
-layout, lifecycle, and diagnostics. Transport implementations and ecosystem
-references remain useful, but none of them replaces the consolidated checklist.
+The WebView skill is the knowledge layer: it describes the page-side contract, layout, lifecycle, and diagnostics. Transport implementations and ecosystem references remain useful, but none of them replaces the consolidated checklist.
 
 ### Bridge libraries and transport implementations
 
@@ -339,6 +249,4 @@ references remain useful, but none of them replaces the consolidated checklist.
 - `@webview-bridge/web`: approximately 60k npm weekly downloads at the time of review.
 - Small viewport-fix hooks exist but show low adoption, so this project keeps WebView diagnostics as skill guidance rather than shipping another generic viewport utility.
 
-The download/star figures above are a dated discovery snapshot and were not
-re-fetched in the 2026-07-31 claim-entailment pass; do not reuse them as current
-adoption numbers.
+The download/star figures above are a dated discovery snapshot and were not re-fetched in the 2026-07-31 claim-entailment pass; do not reuse them as current adoption numbers.

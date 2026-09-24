@@ -1,11 +1,11 @@
 ---
 name: core-web-vitals-performance-contracts
-description: "Use when field or lab Core Web Vitals regress and the cause must be attributed: LCP is discovered late or blocked, CLS comes from unreserved media/fonts/injected UI/layout animation, INP is delayed by long tasks or heavy handlers, or slow TTFB gates the page. Covers whole-page LCP/CLS/INP/TTFB evidence and budgets. Use responsive-image-contracts for srcset/sizes/fetchpriority mechanics, ssr-hydration-mismatch for SSR streaming correctness, css-transition-animation-contracts for animation jank, and client-error-observability-contracts for RUM wiring."
+description: "Use when field or lab Core Web Vitals regress and the cause must be attributed: LCP is discovered late or blocked, CLS comes from unreserved media/fonts/injected UI/layout animation, INP is delayed by long tasks or heavy handlers, or slow TTFB gates the page. Covers whole-page LCP/CLS/INP/TTFB evidence and budgets. Use responsive-image-contracts for srcset/sizes/fetchpriority mechanics and ssr-hydration-mismatch for SSR streaming correctness. Wiring the web-vitals library for field capture belongs here; no sibling owns RUM."
 ---
 
 # Core web vitals performance contracts
 
-Core Web Vitals are three field metrics — LCP (loading), CLS (visual stability), INP (responsiveness, "good" at 2.5 s / 0.1 / 200 ms) — plus TTFB as an upstream diagnostic. This is a review lens for attributing a failing vital to a specific element, shift, or task and prescribing the narrowest fix; it is not a metrics tutorial (web.dev owns that).
+Core Web Vitals are three field metrics — LCP (loading), CLS (visual stability), INP (responsiveness) — whose p75 "good" thresholds are 2.5 s, 0.1, and 200 ms respectively — plus TTFB as an upstream diagnostic. This is a review lens for attributing a failing vital to a specific element, shift, or task and prescribing the narrowest fix; it is not a metrics tutorial (web.dev owns that).
 
 ## Checklist (lead with the trap)
 
@@ -14,7 +14,7 @@ Core Web Vitals are three field metrics — LCP (loading), CLS (visual stability
 3. **Unblock the critical path and TTFB before micro-tuning.** Render-blocking CSS/synchronous `<script>` in `<head>` and a slow TTFB (aim under 800 ms) can make good LCP unreachable regardless of image work — check them and non-streaming SSR before blaming the asset.
 4. **Attribute every layout shift to a source — don't just quote the CLS number.** Each shift traces to something concrete — an unreserved media/iframe/embed/ad box, a web-font swap with mismatched fallback metrics (FOUT reflow), a consent banner or toast injected above existing content, or an animation of layout properties. Fix the source, not the aggregate.
 5. **Reserve space and animate on the compositor.** Give media and late/async content an explicit box (`width`/`height` or `aspect-ratio`), tame font swap with `font-display: optional` for body text or a metric-matched fallback via `size-adjust`, and animate `transform`/`opacity` — never layout properties.
-6. **INP: break up long tasks and shrink handler work.** INP (over 200 ms is poor; it replaced FID) has three phases — input delay, processing, presentation. A long task (>50 ms) overlapping the interaction inflates whichever phase it lands on. Do the minimum in `click`/`keydown`/`pointerdown` handlers, defer non-urgent work, and yield with `scheduler.yield()`/`scheduler.postTask()` so the browser can paint feedback first — feature-detect each method (`globalThis.scheduler?.yield`, `?.postTask`): Safari does not ship the Scheduler API, so keep a `setTimeout(0)`/`requestIdleCallback` chunking fallback. Watch `setInterval` and third-party timers that steal the main thread.
+6. **INP: break up long tasks and shrink handler work.** INP (good ≤200 ms, needs improvement 200–500 ms, poor >500 ms at p75; it replaced FID) has three phases — input delay, processing, presentation. A long task (>50 ms) overlapping the interaction inflates whichever phase it lands on. Do the minimum in `click`/`keydown`/`pointerdown` handlers, defer non-urgent work, and yield with `scheduler.yield()`/`scheduler.postTask()` so the browser can paint feedback first — feature-detect each method (`globalThis.scheduler?.yield`, `?.postTask`): not every engine ships the Scheduler API (check MDN compat; checked 2026-09-25), so keep a `setTimeout(0)`/`requestIdleCallback` chunking fallback. Watch `setInterval` and third-party timers that steal the main thread.
 7. **INP: budget hydration and render bursts.** A large hydration pass or one big render/state update is a long task that inflates input delay exactly when users first interact (the main thread is busiest at startup). Attribute it with Long Animation Frames (`blockingDuration`) rather than guessing which script is at fault.
 
 ## Quick probes
@@ -36,8 +36,8 @@ rg -n 'setInterval\(|scheduler\.yield|scheduler\.postTask|requestIdleCallback' s
 - This skill: whole-page LCP/CLS/INP/TTFB budgeting — which element is LCP, whether it is discoverable + prioritized + unblocked, per-shift CLS attribution, main-thread/long-task/INP work.
 - **responsive-image-contracts** — `srcset`/`sizes`/`fetchpriority`/`<picture>` mechanics; it owns image-load priority for the LCP `<img>`, this skill owns whether that image is even the LCP element and the whole-page budget.
 - **ssr-hydration-mismatch** — hydration correctness and SSR streaming mechanics; this skill owns hydration *cost* as an INP/long-task source, that skill owns the mismatch itself.
-- **css-transition-animation-contracts** — animation lifecycle and jank mechanics; this skill flags layout-property animation only as a CLS/INP source.
-- **client-error-observability-contracts** — RUM/field capture wiring (`web-vitals`, error payloads); this skill consumes field data, that skill owns the capture contract.
+- **css-transition-animation-contracts** — enter/exit animation lifecycle and completion events; this skill owns layout-property animation as a CLS/INP source.
+- **client-error-observability-contracts** — error capture and payloads (stacks, source maps, rejections); it does not capture performance metrics. Field capture of vitals is wired here with the `web-vitals` library (`onLCP`/`onCLS`/`onINP`, the `web-vitals/attribution` build for root-cause data, `navigator.sendBeacon` to an analytics endpoint); no sibling owns RUM.
 
 ## PR-worthiness gate
 
@@ -68,7 +68,9 @@ Reject weak findings:
 - Fetch Priority API (preload keeps low priority without it) — <https://web.dev/articles/fetch-priority>
 - CLS metric and Optimize CLS (reserve space, late-injected content) — <https://web.dev/articles/cls> , <https://web.dev/articles/optimize-cls>
 - Best practices for fonts (`font-display: optional`, `size-adjust`) — <https://web.dev/articles/font-best-practices>
-- INP metric (200 ms threshold, replaced FID, three phases) — <https://web.dev/articles/inp>
+- INP metric (good ≤200 ms, poor >500 ms at p75, replaced FID, three phases) — <https://web.dev/articles/inp>
+- Web Vitals overview (LCP 2.5 s, INP 200 ms, CLS 0.1 "good" thresholds, p75) — <https://web.dev/articles/vitals>
+- `web-vitals` library README (`onLCP`/`onINP`/`onCLS`, attribution build, `sendBeacon` to an analytics endpoint), pinned — <https://github.com/GoogleChrome/web-vitals/blob/01e8b5d444810e2b81afd2b1b0194399185499a7/README.md>
 - Optimize INP, long tasks, and input delay (yield, third-party timers) — <https://web.dev/articles/optimize-inp> , <https://web.dev/articles/optimize-long-tasks> , <https://web.dev/articles/optimize-input-delay>
 - TTFB and Optimize TTFB (under 800 ms, streaming SSR) — <https://web.dev/articles/ttfb> , <https://web.dev/articles/optimize-ttfb>
 - Find slow interactions in the field (Long Animation Frames, `blockingDuration`) — <https://web.dev/articles/find-slow-interactions-in-the-field>

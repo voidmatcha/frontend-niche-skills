@@ -1,0 +1,560 @@
+{
+ "schema_version": 4,
+ "dataset_id": "frontend-niche-skills-routing-v3",
+ "dataset_sha256": "c0160a3364d2ce8ffdafeb94b03b777652c2397f8459c1187e03febd54f6cd18",
+ "metadata_catalog_sha256": "0ed484ed4cd38218bbdb172ecf2f7cba66b9af6252d640d4166fc9d941260a55",
+ "predictions": [
+  {
+   "case_id": "route-001",
+   "predicted_skill": "realtime-transport-contracts"
+  },
+  {
+   "case_id": "route-002",
+   "predicted_skill": "design-to-code-fidelity"
+  },
+  {
+   "case_id": "route-003",
+   "predicted_skill": "contenteditable-selection-contracts"
+  },
+  {
+   "case_id": "route-004",
+   "predicted_skill": "semantic-markup-contracts"
+  },
+  {
+   "case_id": "route-005",
+   "predicted_skill": "frontend-security-baseline"
+  },
+  {
+   "case_id": "route-006",
+   "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+   "case_id": "route-007",
+   "predicted_skill": "realtime-transport-contracts"
+  },
+  {
+   "case_id": "route-008",
+   "predicted_skill": "i18n-copy-and-layout"
+  },
+  {
+   "case_id": "route-009",
+   "predicted_skill": "payment-page-client-security"
+  },
+  {
+   "case_id": "route-010",
+   "predicted_skill": "webview-bridge-pages"
+  },
+  {
+   "case_id": "route-011",
+   "predicted_skill": "i18n-copy-and-layout"
+  },
+  {
+   "case_id": "route-012",
+   "predicted_skill": "overlay-focus-scroll-contracts"
+  },
+  {
+   "case_id": "route-013",
+   "predicted_skill": "bff-proxy-security-contracts"
+  },
+  {
+   "case_id": "route-014",
+   "predicted_skill": "async-effect-race-contracts"
+  },
+  {
+   "case_id": "route-015",
+   "predicted_skill": "iframe-embed-contracts"
+  },
+  {
+   "case_id": "route-016",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-017",
+   "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+   "case_id": "route-018",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-019",
+   "predicted_skill": "js-form-validation-contracts"
+  },
+  {
+   "case_id": "route-020",
+   "predicted_skill": "semantic-markup-contracts"
+  },
+  {
+   "case_id": "route-021",
+   "predicted_skill": "component-extraction-judgment"
+  },
+  {
+   "case_id": "route-022",
+   "predicted_skill": "frontend-auth-flow-contracts"
+  },
+  {
+   "case_id": "route-023",
+   "predicted_skill": "frontend-data-fetching-cache-contracts"
+  },
+  {
+   "case_id": "route-024",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-025",
+   "predicted_skill": "view-transitions-contracts"
+  },
+  {
+   "case_id": "route-026",
+   "predicted_skill": "browser-storage-durability-contracts"
+  },
+  {
+   "case_id": "route-027",
+   "predicted_skill": "webview-bridge-pages"
+  },
+  {
+   "case_id": "route-028",
+   "predicted_skill": "frontend-auth-flow-contracts"
+  },
+  {
+   "case_id": "route-029",
+   "predicted_skill": "design-to-code-fidelity"
+  },
+  {
+   "case_id": "route-030",
+   "predicted_skill": "large-list-data-grid-contracts"
+  },
+  {
+   "case_id": "route-031",
+   "predicted_skill": "file-ingest-contracts"
+  },
+  {
+   "case_id": "route-032",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-033",
+   "predicted_skill": "contenteditable-selection-contracts"
+  },
+  {
+   "case_id": "route-034",
+   "predicted_skill": "core-web-vitals-performance-contracts"
+  },
+  {
+   "case_id": "route-035",
+   "predicted_skill": "datetime-correctness"
+  },
+  {
+   "case_id": "route-036",
+   "predicted_skill": "frontend-security-baseline"
+  },
+  {
+   "case_id": "route-037",
+   "predicted_skill": "payment-page-client-security"
+  },
+  {
+   "case_id": "route-038",
+   "predicted_skill": "cjk-text-and-input"
+  },
+  {
+   "case_id": "route-039",
+   "predicted_skill": "frontend-security-baseline"
+  },
+  {
+   "case_id": "route-040",
+   "predicted_skill": "design-to-code-fidelity"
+  },
+  {
+   "case_id": "route-041",
+   "predicted_skill": "file-ingest-contracts"
+  },
+  {
+   "case_id": "route-042",
+   "predicted_skill": "a11y-contract-testing"
+  },
+  {
+   "case_id": "route-043",
+   "predicted_skill": "css-transition-animation-contracts"
+  },
+  {
+   "case_id": "route-044",
+   "predicted_skill": "pointer-gesture-contracts"
+  },
+  {
+   "case_id": "route-045",
+   "predicted_skill": "iframe-embed-contracts"
+  },
+  {
+   "case_id": "route-046",
+   "predicted_skill": "cjk-text-and-input"
+  },
+  {
+   "case_id": "route-047",
+   "predicted_skill": "async-effect-race-contracts"
+  },
+  {
+   "case_id": "route-048",
+   "predicted_skill": "js-form-validation-contracts"
+  },
+  {
+   "case_id": "route-049",
+   "predicted_skill": "design-to-code-fidelity"
+  },
+  {
+   "case_id": "route-050",
+   "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+   "case_id": "route-051",
+   "predicted_skill": "overlay-focus-scroll-contracts"
+  },
+  {
+   "case_id": "route-052",
+   "predicted_skill": "iframe-embed-contracts"
+  },
+  {
+   "case_id": "route-053",
+   "predicted_skill": "deeplink-hydration"
+  },
+  {
+   "case_id": "route-054",
+   "predicted_skill": "overlay-focus-scroll-contracts"
+  },
+  {
+   "case_id": "route-055",
+   "predicted_skill": "bff-proxy-security-contracts"
+  },
+  {
+   "case_id": "route-056",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-057",
+   "predicted_skill": "user-activation-contracts"
+  },
+  {
+   "case_id": "route-058",
+   "predicted_skill": "contenteditable-selection-contracts"
+  },
+  {
+   "case_id": "route-059",
+   "predicted_skill": "js-form-validation-contracts"
+  },
+  {
+   "case_id": "route-060",
+   "predicted_skill": "pointer-gesture-contracts"
+  },
+  {
+   "case_id": "route-061",
+   "predicted_skill": "frontend-data-fetching-cache-contracts"
+  },
+  {
+   "case_id": "route-062",
+   "predicted_skill": "pwa-offline-cache-contracts"
+  },
+  {
+   "case_id": "route-063",
+   "predicted_skill": "datetime-correctness"
+  },
+  {
+   "case_id": "route-064",
+   "predicted_skill": "view-transitions-contracts"
+  },
+  {
+   "case_id": "route-065",
+   "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+   "case_id": "route-066",
+   "predicted_skill": "async-effect-race-contracts"
+  },
+  {
+   "case_id": "route-067",
+   "predicted_skill": "a11y-contract-testing"
+  },
+  {
+   "case_id": "route-068",
+   "predicted_skill": "realtime-transport-contracts"
+  },
+  {
+   "case_id": "route-069",
+   "predicted_skill": "file-ingest-contracts"
+  },
+  {
+   "case_id": "route-070",
+   "predicted_skill": "component-extraction-judgment"
+  },
+  {
+   "case_id": "route-071",
+   "predicted_skill": "js-form-validation-contracts"
+  },
+  {
+   "case_id": "route-072",
+   "predicted_skill": "pointer-gesture-contracts"
+  },
+  {
+   "case_id": "route-073",
+   "predicted_skill": "resize-observer-layout-contracts"
+  },
+  {
+   "case_id": "route-074",
+   "predicted_skill": "large-list-data-grid-contracts"
+  },
+  {
+   "case_id": "route-075",
+   "predicted_skill": "datetime-correctness"
+  },
+  {
+   "case_id": "route-076",
+   "predicted_skill": "pwa-offline-cache-contracts"
+  },
+  {
+   "case_id": "route-077",
+   "predicted_skill": "optimistic-update-rollback-contracts"
+  },
+  {
+   "case_id": "route-078",
+   "predicted_skill": "history-scroll-restoration-contracts"
+  },
+  {
+   "case_id": "route-079",
+   "predicted_skill": "payment-page-client-security"
+  },
+  {
+   "case_id": "route-080",
+   "predicted_skill": "pwa-offline-cache-contracts"
+  },
+  {
+   "case_id": "route-081",
+   "predicted_skill": "a11y-contract-testing"
+  },
+  {
+   "case_id": "route-082",
+   "predicted_skill": "webview-bridge-pages"
+  },
+  {
+   "case_id": "route-083",
+   "predicted_skill": "constraint-validation-contracts"
+  },
+  {
+   "case_id": "route-084",
+   "predicted_skill": "core-web-vitals-performance-contracts"
+  },
+  {
+   "case_id": "route-085",
+   "predicted_skill": "resize-observer-layout-contracts"
+  },
+  {
+   "case_id": "route-086",
+   "predicted_skill": "bff-proxy-security-contracts"
+  },
+  {
+   "case_id": "route-087",
+   "predicted_skill": "download-export-safety"
+  },
+  {
+   "case_id": "route-088",
+   "predicted_skill": "money-and-precision-contracts"
+  },
+  {
+   "case_id": "route-089",
+   "predicted_skill": "media-capture-device-contracts"
+  },
+  {
+   "case_id": "route-090",
+   "predicted_skill": "file-ingest-contracts"
+  },
+  {
+   "case_id": "route-091",
+   "predicted_skill": "download-export-safety"
+  },
+  {
+   "case_id": "route-092",
+   "predicted_skill": "core-web-vitals-performance-contracts"
+  },
+  {
+   "case_id": "route-093",
+   "predicted_skill": "history-scroll-restoration-contracts"
+  },
+  {
+   "case_id": "route-094",
+   "predicted_skill": "deeplink-hydration"
+  },
+  {
+   "case_id": "route-095",
+   "predicted_skill": "view-transitions-contracts"
+  },
+  {
+   "case_id": "route-096",
+   "predicted_skill": "payment-page-client-security"
+  },
+  {
+   "case_id": "route-097",
+   "predicted_skill": "optimistic-update-rollback-contracts"
+  },
+  {
+   "case_id": "route-098",
+   "predicted_skill": "webview-bridge-pages"
+  },
+  {
+   "case_id": "route-099",
+   "predicted_skill": "ssr-hydration-mismatch"
+  },
+  {
+   "case_id": "route-100",
+   "predicted_skill": "resize-observer-layout-contracts"
+  },
+  {
+   "case_id": "route-101",
+   "predicted_skill": "browser-storage-durability-contracts"
+  },
+  {
+   "case_id": "route-102",
+   "predicted_skill": "css-transition-animation-contracts"
+  },
+  {
+   "case_id": "route-103",
+   "predicted_skill": "frontend-security-baseline"
+  },
+  {
+   "case_id": "route-104",
+   "predicted_skill": "constraint-validation-contracts"
+  },
+  {
+   "case_id": "route-105",
+   "predicted_skill": "css-transition-animation-contracts"
+  },
+  {
+   "case_id": "route-106",
+   "predicted_skill": "large-list-data-grid-contracts"
+  },
+  {
+   "case_id": "route-107",
+   "predicted_skill": "client-error-observability-contracts"
+  },
+  {
+   "case_id": "route-108",
+   "predicted_skill": "money-and-precision-contracts"
+  },
+  {
+   "case_id": "route-109",
+   "predicted_skill": "bff-proxy-security-contracts"
+  },
+  {
+   "case_id": "route-110",
+   "predicted_skill": "browser-page-lifecycle-bfcache-contracts"
+  },
+  {
+   "case_id": "route-111",
+   "predicted_skill": "deeplink-hydration"
+  },
+  {
+   "case_id": "route-112",
+   "predicted_skill": "responsive-image-contracts"
+  },
+  {
+   "case_id": "route-113",
+   "predicted_skill": "media-capture-device-contracts"
+  },
+  {
+   "case_id": "route-114",
+   "predicted_skill": "datetime-correctness"
+  },
+  {
+   "case_id": "route-115",
+   "predicted_skill": "css-transition-animation-contracts"
+  },
+  {
+   "case_id": "route-116",
+   "predicted_skill": "client-error-observability-contracts"
+  },
+  {
+   "case_id": "route-117",
+   "predicted_skill": "pwa-offline-cache-contracts"
+  },
+  {
+   "case_id": "route-118",
+   "predicted_skill": "cjk-text-and-input"
+  },
+  {
+   "case_id": "route-119",
+   "predicted_skill": "money-and-precision-contracts"
+  },
+  {
+   "case_id": "route-120",
+   "predicted_skill": "responsive-image-contracts"
+  },
+  {
+   "case_id": "route-121",
+   "predicted_skill": "download-export-safety"
+  },
+  {
+   "case_id": "route-122",
+   "predicted_skill": "media-capture-device-contracts"
+  },
+  {
+   "case_id": "route-123",
+   "predicted_skill": "ssr-hydration-mismatch"
+  },
+  {
+   "case_id": "route-124",
+   "predicted_skill": "history-scroll-restoration-contracts"
+  },
+  {
+   "case_id": "route-125",
+   "predicted_skill": "client-error-observability-contracts"
+  },
+  {
+   "case_id": "route-126",
+   "predicted_skill": "i18n-copy-and-layout"
+  },
+  {
+   "case_id": "route-127",
+   "predicted_skill": "view-transitions-contracts"
+  },
+  {
+   "case_id": "route-128",
+   "predicted_skill": "component-extraction-judgment"
+  },
+  {
+   "case_id": "route-129",
+   "predicted_skill": "optimistic-update-rollback-contracts"
+  },
+  {
+   "case_id": "route-130",
+   "predicted_skill": "responsive-image-contracts"
+  },
+  {
+   "case_id": "route-131",
+   "predicted_skill": "i18n-copy-and-layout"
+  },
+  {
+   "case_id": "route-132",
+   "predicted_skill": "ssr-hydration-mismatch"
+  },
+  {
+   "case_id": "route-133",
+   "predicted_skill": "semantic-markup-contracts"
+  },
+  {
+   "case_id": "route-134",
+   "predicted_skill": "ssr-hydration-mismatch"
+  },
+  {
+   "case_id": "route-135",
+   "predicted_skill": "constraint-validation-contracts"
+  },
+  {
+   "case_id": "route-136",
+   "predicted_skill": "frontend-data-fetching-cache-contracts"
+  },
+  {
+   "case_id": "route-137",
+   "predicted_skill": "media-capture-device-contracts"
+  },
+  {
+   "case_id": "route-138",
+   "predicted_skill": "frontend-auth-flow-contracts"
+  }
+ ]
+}

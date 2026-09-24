@@ -20,15 +20,15 @@ Use this skill as the front door for ambiguous or multi-symptom frontend reports
 
 | Report signal | Likely follow-up skill |
 | --- | --- |
-| Native WebView, in-app browser, bridge messages, safe-area/keyboard, app resume, hit-test vs paint | `webview-bridge-pages` |
+| Native WebView, in-app WebView, bridge messages, safe-area/keyboard, app resume, hit-test vs paint, OAuth/social login inside an app WebView, the native app's camera/microphone permission grant | `webview-bridge-pages` |
 | Browser iframe/embed/widget, parent-guest postMessage, sandbox/allow, READY/init, dynamic height, embedded storage | `iframe-embed-contracts` |
 | Browser Back/Forward restores stale state, duplicates resources, or exposes bfcache eligibility/lifecycle problems | `browser-page-lifecycle-bfcache-contracts` |
-| SPA Back/Forward or same-document hash navigation restores the wrong scroll position, double-scrolls after async rendering, or misses a fragment target | `history-scroll-restoration-contracts` |
+| SPA Back/Forward or same-document hash navigation restores the wrong scroll position, double-scrolls after async rendering, misses a fragment target, or keeps a stale scroll offset after a redirect or `router.replace` | `history-scroll-restoration-contracts` |
 | Camera/microphone permission, device selection/change, MediaStreamTrack state, teardown, or reacquisition fails | `media-capture-device-contracts` |
 | Div/button/link/heading/label/list/table/interactive nesting concern | `semantic-markup-contracts` |
 | Modal, drawer, sheet, popover, menu, command palette, focus trap, inert, aria-hidden, scroll lock, Escape/backdrop | `overlay-focus-scroll-contracts` |
 | Single-pointer drag/swipe/resize/draw loses active-pointer ownership or event delivery, sticks after cancellation, or conflicts with native scrolling; not pinch/rotate/multi-contact geometry | `pointer-gesture-contracts` |
-| Dialog/menu/combobox/tab/custom widget role/name/state/focus regression | `a11y-contract-testing` |
+| Dialog/menu/combobox/tab/custom widget role/name/state/focus regression; form errors not exposed to assistive tech (`aria-invalid`, `aria-errormessage`, announcement) | `a11y-contract-testing` |
 | View Transitions API silently aborts, freezes on an old snapshot, ignores reduced motion, or ghosts | `view-transitions-contracts` |
 | CSS enter/exit transition is cut off, or cleanup waits forever for transition completion | `css-transition-animation-contracts` |
 | Responsive image chooses the wrong candidate, over-downloads, lazy-loads the hero, or causes CLS | `responsive-image-contracts` |
@@ -37,15 +37,15 @@ Use this skill as the front door for ambiguous or multi-symptom frontend reports
 | Translation expansion, pluralization, bidi/RTL, locale formatting, hardcoded copy | `i18n-copy-and-layout` |
 | Money/quantity total, rounding, minor units, exact-integer range, or localized amount parsing | `money-and-precision-contracts` |
 | Deep link, query params, router readiness, auth redirect landing on wrong page | `deeplink-hydration` |
-| WebSocket/SSE reconnect, resume cursor, duplicate/gapped deltas, zombie connection, backpressure, socket auth | `realtime-transport-contracts` |
+| WebSocket/SSE reconnect, resume cursor, duplicate/gapped deltas, zombie connection, backpressure, socket auth, handshake security (`wss://`, `Origin`, token in URL) | `realtime-transport-contracts` |
 | Login/signup/reset/OAuth/passkey/OTP/autocomplete/return-target UI contract | `frontend-auth-flow-contracts` |
 | Popup, clipboard, share, picker, fullscreen, or payment API fails outside valid user activation | `user-activation-contracts` |
-| XSS, raw HTML, sanitizer, CSP, opener, storage, URL parsing, third-party scripts outside payment | `frontend-security-baseline` |
+| XSS, raw HTML, sanitizer, CSP, opener, auth-token storage, return-URL/URL parsing (checkout pages included), logout that leaves session data behind (`Clear-Site-Data`); third-party scripts outside payment pages | `frontend-security-baseline` |
 | Frontend-owned BFF/API proxy, client-selected target/path, multipart relay, alternate ingress, forwarded auth/headers | `bff-proxy-security-contracts` |
-| Checkout/payment/PAN/CVV/hosted fields/runtime scripts/CSP/SRI/PCI evidence | `payment-page-client-security` |
+| Checkout/payment cardholder data (PAN/CVV/hosted fields), payment-page script inventory, CSP/SRI/header controls as PCI evidence | `payment-page-client-security` |
 | Files entering the page through drag-drop, picker, paste, directories, type checks, or preview URLs | `file-ingest-contracts` |
 | CSV/Excel export, Blob URL, file download, clipboard, filename, export schema | `download-export-safety` |
-| Timezone, DST, date-only input, `datetime-local`, relative time, server/client clock | `datetime-correctness` |
+| Timezone, DST, date-only input, `datetime-local`, relative time, a stored instant or zone that is wrong (a server/first-render disagreement goes to `ssr-hydration-mismatch`) | `datetime-correctness` |
 | Native validation, `setCustomValidity`, `reportValidity`, `:user-invalid`, invalid-to-valid clearing | `constraint-validation-contracts` |
 | React Hook Form, Formik, Final Form, vee-validate, schema resolver, stale errors, disabled submit, async/server validation | `js-form-validation-contracts` |
 | Hydration warning, server/client mismatch, randomness, locale/time, browser-only APIs, storage/auth state | `ssr-hydration-mismatch` |

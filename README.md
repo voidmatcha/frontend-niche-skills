@@ -19,10 +19,10 @@
 
 <p align="center">
 <a href="#skills">41 skills</a> ·
-<a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">blinded routing comparison, 16 of 138 cases</a> ·
+<a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">blinded routing runs, all 138 cases</a> ·
 <a href="./evals/behavioral/">two self-run behavioral tests, both tied</a> ·
 <a href="./docs/oss-validation-cases.md">commit-pinned OSS casebook</a> ·
-<a href="#development-checks">173 eval-case specs</a> ·
+<a href="#development-checks">177 eval-case specs</a> ·
 <a href="./.github/workflows/link-check.yml">CI-checked citations</a>
 </p>
 
@@ -119,7 +119,7 @@ Use this after scanning the grouped skill list. Start from the failure signal, p
 
 | Failure signal | Start with | First question to ask |
 | --- | --- | --- |
-| Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app browser; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
+| Page runs inside React Native WebView, WKWebView, Android WebView, Flutter WebView, or an in-app WebView; safe area, keyboard, resume, bridge, or paint differs from desktop Chrome. | `webview-bridge-pages` | Is this layout, hit-test, paint/compositing, bridge timing, or host lifecycle? |
 | A browser iframe/widget is blank, accepts spoofed messages, loses READY/init, flickers while resizing, lacks a required capability, or loses embedded sign-in. | `iframe-embed-contracts` | What are the exact parent/guest origins, delivered frame policies, authenticated message handshake, sizing protocol, and storage mode? |
 | Browser Back/Forward restores stale or private UI, or a timer/socket/observer is dead or duplicated after return. | `browser-page-lifecycle-bfcache-contracts` | Was this a persisted restore, what state/resource needs idempotent reconciliation, and what does the real history traversal show? |
 | SPA Back/Forward or same-document hash navigation returns to the wrong scroll position, scrolls twice after content renders, or fails to reveal the fragment target. | `history-scroll-restoration-contracts` | Which same-document history entry owns the position, who performs restoration, and when is the target layout stable? |
@@ -261,7 +261,7 @@ Source model: README lists routing and evidence documents; detailed citations li
 
 Install the [`skills` CLI](https://www.skills.sh/). Skills follow the [`SKILL.md` format](https://agentskills.io/specification).
 
-These skills target Claude Code, Codex, and other agents that honour the specification's 1024-character `description` cap, and they spend that budget on trigger phrases so the right skill fires. The Claude.ai upload path caps `description` at 200 characters instead, so uploading these unchanged will fail there ([Claude docs](https://claude.com/docs/skills/how-to)).
+These skills target Claude Code, Codex, and other agents that honour the specification's 1024-character `description` cap, and they spend that budget on trigger phrases so the right skill fires. The Claude.ai custom-skill upload is documented with a 200-character `description` maximum ([Claude Help Center](https://support.claude.com/en/articles/12512198-how-to-create-custom-skills)), and uploading these skills unchanged was rejected there, even though the [Claude skills docs](https://claude.com/docs/skills/how-to) state 1,024 characters. The short-description variant in [CONTRIBUTING](CONTRIBUTING.md#claudeai) is only needed while the upload path enforces 200 (checked 2026-09-25).
 
 The `voidmatcha/frontend-niche-skills` commands below assume the public repository or plugin marketplace entry is available. For a local or pre-release checkout, use the local checkout commands in this section instead.
 
@@ -288,6 +288,8 @@ This repo includes `.codex-plugin/plugin.json` and Claude plugin manifests. From
 codex plugin marketplace add "$(pwd)"
 codex plugin add frontend-niche-skills@frontend-niche-skills
 ```
+
+When the public repository is available, `codex plugin marketplace add voidmatcha/frontend-niche-skills` works in place of the local path; the Codex CLI accepts `owner/repo` marketplace sources.
 
 Start a new Codex or Claude Code session after installing or updating so bundled skills refresh.
 
@@ -336,11 +338,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
-Sources sections checked: 50
+Local markdown refs checked: 350
+Sources sections checked: 51
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 177
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4
@@ -373,7 +375,7 @@ Smaller skills keep context focused. `frontend-report-triage` exists for messy r
 
 ### Why does a page work in desktop Chrome but break inside an app WebView?
 
-Because the host differs, not the markup. Safe-area and viewport insets, bridge readiness, renderer death on resume, and compositing behavior are host contracts, not page bugs. `webview-bridge-pages` covers them, and the evidence has to come from the app WebView rather than a desktop browser.
+Because the host differs, not the markup. Safe-area and viewport insets, bridge readiness, renderer death on resume, and compositing behavior are set by the host, so the fix is usually a page written to that host's contract: viewport meta, `svh`/`dvh` units, re-sending READY, and state that survives a reload. `webview-bridge-pages` covers them, and the evidence has to come from the app WebView rather than a desktop browser.
 
 ### Which coding agents can use these skills?
 

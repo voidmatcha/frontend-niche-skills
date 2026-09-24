@@ -26,12 +26,12 @@
     {
       "id": 3,
       "prompt": "Every card in a search-results grid renders its title as `<h1 className=\"text-sm\">` because the designer wanted the type token reused. A reviewer says this is fine for screen readers since the HTML outline algorithm re-ranks nested headings by section depth, and separately says the page will be penalized in search because there are 20 h1 elements.",
-      "expected_output": "Corrects the outline-algorithm premise, confirms the flat h1 repetition is a real structure defect for assistive technology and heading-based tests, downgrades the SEO framing to a soft signal, and gives a small rank fix that keeps the visual size.",
+      "expected_output": "Corrects the outline-algorithm premise, confirms the flat h1 repetition is a real structure defect for assistive technology and heading-based tests, rejects the SEO-penalty framing (Google Search documents that heading order and count do not matter to it, so the defect is assistive-technology and test structure only), and gives a small rank fix that keeps the visual size.",
       "expectations": [
         "The response states the HTML outline algorithm was never implemented by browsers or assistive technology and was removed from the HTML spec, so nesting does not re-rank headings.",
-        "It concludes that structure comes from the literal h1 to h6 rank in logical document order, so 20 sibling h1 elements flatten the page's section structure.",
+        "It concludes that structure comes from the heading level (the h1 to h6 rank, adjusted by `headingoffset` where supported) in logical document order, so 20 sibling h1 elements flatten the page's section structure.",
         "The fix keeps the visual type token and changes only the rank, for example an h2 or h3 per card under the results-section heading, rather than restyling or removing the headings.",
-        "The SEO claim is stated as a soft structure signal rather than a ranking penalty, since the title text is still indexed."
+        "It rejects the claimed search penalty for 20 h1 elements, stating that Google Search says heading order and count do not matter to it, so the finding rests on assistive-technology and test structure, not SEO."
       ]
     },
     {

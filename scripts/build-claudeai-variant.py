@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """Emit a Claude.ai-compatible variant of the skill pack.
 
-Claude.ai caps the SKILL.md frontmatter `description` at 200 characters, while
-the Agent Skills specification allows 1024. This pack spends the larger budget
-on routing triggers, so the canonical skills cannot be uploaded to Claude.ai
-unchanged. This script copies each skill and swaps in the short description
-from docs/claudeai-short-descriptions.json. The canonical SKILL.md files are
+The Claude Help Center documents a 200-character maximum for the SKILL.md
+frontmatter `description` on Claude.ai custom-skill uploads
+(https://support.claude.com/en/articles/12512198-how-to-create-custom-skills),
+and uploads of the canonical skills were rejected there. The Claude skills docs
+(https://claude.com/docs/skills/how-to) and the Agent Skills specification
+allow 1024, so this variant is only needed while the upload path enforces 200
+(checked 2026-09-25). This pack spends the larger budget on routing triggers.
+This script copies each skill and swaps in the short description from
+docs/claudeai-short-descriptions.json. The canonical SKILL.md files are
 never modified; the variant is build output.
 """
 

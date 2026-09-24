@@ -46,6 +46,7 @@
         "If the answer chooses setPointerCapture, it moves or confirms pointermove and terminal-event consumption on the capturing element or before the propagation blocker rather than leaving the broken document bubble listener unchanged.",
         "The answer also recognizes an appropriate window capture-phase or correctly managed global listener as a valid alternative ownership path with explicit cleanup.",
         "The answer includes pointercancel, lostpointercapture, zero-buttons recovery where applicable, and teardown cleanup.",
+        "For the touch-only stop, it notes that browsers are expected to implicitly capture touch pointers to the pointerdown target (a SHOULD in Pointer Events), not guaranteed, so it checks whether pointercancel fired and what the computed touch-action is on the touch path instead of treating missing capture as the cause.",
         "The regression covers rapid movement outside the narrow handle on touch and checks mouse and pen without claiming unrun physical-device coverage."
       ]
     },

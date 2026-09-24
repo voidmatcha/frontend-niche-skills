@@ -5,9 +5,7 @@ description: "Use when implementing or reviewing UI against a design reference w
 
 # Design-to-code fidelity
 
-Use this skill to assess how closely an implemented UI matches a design reference and to report the highest evidence tier reached. It must stay
-**general-purpose**: do not bake in one product, one repository, one Figma file, one renderer,
-or one design-tool vendor. Every finding must state which evidence tier it reached.
+Use this skill to assess how closely an implemented UI matches a design reference and to report the highest evidence tier reached. It must stay **general-purpose**: do not bake in one product, one repository, one Figma file, one renderer, or one design-tool vendor. Every finding must state which evidence tier it reached.
 
 ## Core contract
 
@@ -48,9 +46,7 @@ Only T1 should be called strict raster-diff validated, and only for the declared
 | `scripts/render-capture.mjs <url> <out.png> [w] [h] [scale]` | Capture a web/Storybook/local-route screenshot at the target viewport and device scale. Supports `INIT_SCRIPT`, `NEUTRALIZE_CSS`, `ALLOW_ANIMATION=1` (keeps CSS animations/transitions running; JS-driven motion via WAAPI/rAF/canvas/GSAP is unaffected — neutralize it in `INIT_SCRIPT`), and `ALLOW_INSECURE_HTTPS=1` for local/self-signed capture only. | `@playwright/test` or `playwright` resolvable from cwd |
 | `scripts/visual-diff.sh <ref.png> <render.png> [diff.png]` | Compare reference vs implementation screenshots. Stdout fields: `AE`, `AE_RATIO`, `STATUS=PASS\|FAIL`, `STRUCT=ALIGNED\|DRIFT\|UNKNOWN`, `MAX_BLOCK=<px>@<WxH+X+Y>`, `STRUCT_RATIO`, `REGION=<top\|middle\|bottom>`, `MAX_AE`. | ImageMagick |
 
-The bundled capture script is a **web adapter**. For native/mobile/desktop/canvas, add or
-invoke the appropriate capture adapter instead of forcing web tooling — see
-[non-web-capture](./references/non-web-capture.md) for the per-platform list.
+The bundled capture script is a **web adapter**. For native/mobile/desktop/canvas, add or invoke the appropriate capture adapter instead of forcing web tooling — see [non-web-capture](./references/non-web-capture.md) for the per-platform list.
 
 ## Artifact contract
 
@@ -65,9 +61,7 @@ artifacts/<slug>/
   report.md|json       # tier, findings, unknowns, upgrade path
 ```
 
-Do not overwrite previous runs. Include viewport, DPR/scale, theme, locale, fixture, browser/device,
-safe-area/chrome policy, and all masks/exclusions in the manifest. Project-native paths (`fixtures/figma`,
-`fixtures/screenshots`, Storybook output) are fine if they carry the same information and the report links them.
+Do not overwrite previous runs. Include viewport, DPR/scale, theme, locale, fixture, browser/device, safe-area/chrome policy, and all masks/exclusions in the manifest. Project-native paths (`fixtures/figma`, `fixtures/screenshots`, Storybook output) are fine if they carry the same information and the report links them.
 
 ## Universal workflow
 
@@ -89,15 +83,9 @@ AE_FUZZ=10% STRUCT_GATE=1 bash scripts/visual-diff.sh ref.png impl.png diff.png
 
 ## PR-worthiness gate
 
-Require an exact design node/frame/image and a deterministic implementation
-capture for the same state, viewport, scale, content, theme, and chrome policy.
-Promote a mismatch only after capture/setup differences are ruled out and the
-implementation source offers a bounded fix.
+Require an exact design node/frame/image and a deterministic implementation capture for the same state, viewport, scale, content, theme, and chrome policy. Promote a mismatch only after capture/setup differences are ruled out and the implementation source offers a bounded fix.
 
-Reject weak findings: visual judgment from memory, mismatched crops or states,
-loading/font/timer drift, undocumented masks, a T3/T4 static observation
-presented as pixel proof, or a component-extraction preference with no measured
-fidelity change.
+Reject weak findings: visual judgment from memory, mismatched crops or states, loading/font/timer drift, undocumented masks, a T3/T4 static observation presented as pixel proof, or a component-extraction preference with no measured fidelity change.
 
 ## Boundary with sibling skills
 
@@ -144,3 +132,18 @@ Do not publish a strict validation claim while any required row is only T2/T3/T4
 - [non-web-capture](./references/non-web-capture.md) — per-platform capture adapters and the T3-vs-T4 fallback.
 - [diff-interpretation](./references/diff-interpretation.md) — reading diff output, dynamic-fidelity checks, the L1-L5 ladder, the iteration loop guard.
 - [mismatch-checklist](./references/mismatch-checklist.md) — recurring PR-worthy defect checklist.
+
+## Sources
+
+Checked 2026-09-25; these are living docs, so re-check endpoint tiers, scopes, and plan limits before relying on them.
+
+- Figma REST API, [File endpoints](https://developers.figma.com/docs/rest-api/file-endpoints/): the file key "can be parsed from any Figma file url" (path pattern `figma.com/:file_type/:file_key/:file_name`); node ids in API calls use colons (`GET /v1/files/:key/nodes?ids=1:2,1:3`, `GET /v1/images/:key?ids=1:2,1:3,1:4`); error codes "403 The developer / OAuth token is invalid or expired" and "404 The specified file was not found"; the images endpoint lists "500 Unexpected rendering error".
+- Figma REST API, [Rate limits](https://developers.figma.com/docs/rest-api/rate-limits/): when the rate limit is exceeded "the endpoint returns a 429 error" with a `Retry-After` field.
+- Figma, [Embed a Figma file](https://developers.figma.com/docs/embeds/embed-figma-file/): URL `node-id` values use dashes ("node-id=0-3", "node-id=2654-15"), while the REST examples above use colons.
+- Figma REST API, [Components and styles types](https://developers.figma.com/docs/rest-api/component-types/): a published component has a `key` ("The unique identifier of the component") separate from its `node_id` ("ID of the component node within the figma file").
+- Figma, [Code Connect introduction](https://developers.figma.com/docs/code-connect/) ("Code Connect is a bridge between your codebase and Figma's Dev Mode"; seat and plan availability is listed on the page).
+- Figma, [Guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server) ("Pull in variables, components, and layout data directly into your IDE") and [MCP tools and prompts](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/) (`get_design_context`, `get_metadata`, `get_screenshot`, `get_variable_defs`, `get_code_connect_map`).
+- Playwright, [Screenshots](https://playwright.dev/docs/screenshots) (`page.screenshot({ fullPage: true })` for full scrollable pages) and [Visual comparisons](https://playwright.dev/docs/test-snapshots) (`toHaveScreenshot`).
+- ImageMagick, [compare](https://imagemagick.org/compare/) and [`-metric`](https://imagemagick.org/command-line-options/#metric) ("AE the magnitude of pixel differences between two images (-fuzz affected)").
+- Android Developers, [Android Debug Bridge — Take a screenshot](https://developer.android.com/tools/adb) ("use 'exec-out' instead of 'shell' to get raw data $ adb exec-out screencap -p > screen.png").
+- `xcrun simctl help io` (Xcode 16.4 built-in help): "Save a screenshot of the booted device to screenshot.png: simctl io booted screenshot screenshot.png".

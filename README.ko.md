@@ -19,10 +19,10 @@
 
 <p align="center">
 <a href="#skills">skill 41개</a> ·
-<a href="./evals/routing/results/2026-07-31-targeted-metadata-comparison/">블라인드 라우팅 비교, 138건 중 16건</a> ·
+<a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">블라인드 라우팅 실행, 138건 전체</a> ·
 <a href="./evals/behavioral/">자체 실행 행동 시험 두 건, 모두 동률</a> ·
 <a href="./docs/oss-validation-cases.md">커밋을 고정한 OSS 사례집</a> ·
-<a href="#개발-검사">eval 케이스 명세 173개</a> ·
+<a href="#개발-검사">eval 케이스 명세 177개</a> ·
 <a href="./.github/workflows/link-check.yml">CI가 검사하는 인용</a>
 </p>
 
@@ -119,7 +119,7 @@ did not stop it.
 
 | 실패 신호 | 시작할 skill | 먼저 물어볼 질문 |
 | --- | --- | --- |
-| 페이지가 React Native WebView, WKWebView, Android WebView, Flutter WebView 또는 인앱 브라우저 안에서 실행되며, safe area, 키보드, 재개(resume), bridge, 페인트가 데스크톱 Chrome과 다릅니다. | `webview-bridge-pages` | 레이아웃, 히트 테스트, 페인트/컴포지팅, bridge 타이밍, 호스트 생명주기 중 무엇의 문제인가? |
+| 페이지가 React Native WebView, WKWebView, Android WebView, Flutter WebView 또는 인앱 WebView 안에서 실행되며, safe area, 키보드, 재개(resume), bridge, 페인트가 데스크톱 Chrome과 다릅니다. | `webview-bridge-pages` | 레이아웃, 히트 테스트, 페인트/컴포지팅, bridge 타이밍, 호스트 생명주기 중 무엇의 문제인가? |
 | 브라우저 iframe/widget이 비어 있거나, 위조 메시지를 받거나, READY/init을 놓치거나, 크기 조절 중 깜빡이거나, 필요한 권한이 없거나, 임베드 로그인 상태를 잃습니다. | `iframe-embed-contracts` | 정확한 부모/게스트 origin, 전달된 frame 정책, 인증된 메시지 핸드셰이크, 크기 프로토콜, 스토리지 모드는 무엇인가? |
 | 브라우저 뒤로/앞으로 이동이 오래되었거나 사적인 UI를 복원하거나, 돌아온 뒤 타이머, 소켓, observer가 죽어 있거나 중복됩니다. | `browser-page-lifecycle-bfcache-contracts` | 이것이 persisted 복원이었는가, 어떤 상태와 자원이 멱등하게 재조정되어야 하는가, 실제 history 이동은 무엇을 보여 주는가? |
 | SPA 뒤로/앞으로 또는 같은 문서의 hash 탐색 뒤 잘못된 스크롤 위치로 돌아가거나, 콘텐츠 렌더링 뒤 두 번 스크롤하거나, fragment 대상을 보여 주지 못합니다. | `history-scroll-restoration-contracts` | 어느 same-document history entry가 위치를 소유하고, 누가 복원하며, 대상 레이아웃은 언제 안정되는가? |
@@ -261,7 +261,7 @@ did not stop it.
 
 [`skills` CLI](https://www.skills.sh/)를 설치하세요. skill은 [`SKILL.md` 포맷](https://agentskills.io/specification)을 따릅니다.
 
-이 skill들은 명세의 `description` 1024자 상한을 지키는 Claude Code, Codex를 비롯한 에이전트를 대상으로 하며, 알맞은 skill이 실행되도록 그 분량을 트리거 표현에 씁니다. Claude.ai 업로드 경로는 `description`을 200자로 제한하므로 그대로 올리면 실패합니다 ([Claude 문서](https://claude.com/docs/skills/how-to)).
+이 skill들은 명세의 `description` 1024자 상한을 지키는 Claude Code, Codex를 비롯한 에이전트를 대상으로 하며, 알맞은 skill이 실행되도록 그 분량을 트리거 표현에 씁니다. Claude.ai 커스텀 skill 업로드는 `description` 최대 길이를 200자로 안내하고 있고([Claude 고객센터](https://support.claude.com/en/articles/12512198-how-to-create-custom-skills)), 이 skill들을 그대로 올리면 거부되었습니다. [Claude skills 문서](https://claude.com/docs/skills/how-to)는 1,024자라고 적고 있지만, 업로드 경로가 200자를 적용하는 동안에는 [CONTRIBUTING](CONTRIBUTING.md#claudeai)의 짧은 설명 변형이 필요합니다(2026-09-25 확인).
 
 아래의 `voidmatcha/frontend-niche-skills` 명령은 공개 저장소 또는 plugin marketplace 항목이 있다는 것을 전제합니다. 로컬 또는 사전 릴리스 checkout에서는 이 섹션의 로컬 checkout 명령을 대신 사용하세요.
 
@@ -288,6 +288,8 @@ npx skills add voidmatcha/frontend-niche-skills --skill '*' -g --agent '*'
 codex plugin marketplace add "$(pwd)"
 codex plugin add frontend-niche-skills@frontend-niche-skills
 ```
+
+공개 저장소를 쓸 수 있으면 로컬 경로 대신 `codex plugin marketplace add voidmatcha/frontend-niche-skills`를 써도 됩니다. Codex CLI는 `owner/repo` 형식의 marketplace 소스를 받습니다.
 
 설치하거나 업데이트한 뒤에는 번들 skill이 갱신되도록 새 Codex 또는 Claude Code 세션을 시작하세요.
 
@@ -336,11 +338,11 @@ $ python3 scripts/audit-skill-pack.py
 Skill pack audit: PASS
 Root: /path/to/frontend-niche-skills
 Skills: 41
-Local markdown refs checked: 335
-Sources sections checked: 50
+Local markdown refs checked: 350
+Sources sections checked: 51
 Skill contracts checked: 40
 Eval files checked: 41
-Eval cases checked: 173
+Eval cases checked: 177
 Reference files checked: 36
 README skill orders checked: 4
 README symptom maps checked: 4
@@ -373,7 +375,7 @@ Scripts syntax checked: 16
 
 ### 왜 데스크톱 Chrome에서는 되는 페이지가 앱 WebView에서는 깨지나요?
 
-마크업이 아니라 호스트가 다르기 때문입니다. safe area와 뷰포트 inset, bridge 준비 상태, 재개 시 렌더러 종료, 컴포지팅 동작은 페이지 버그가 아니라 호스트 계약입니다. `webview-bridge-pages`가 이를 다루며, 증거는 데스크톱 브라우저가 아니라 앱 WebView에서 나와야 합니다.
+마크업이 아니라 호스트가 다르기 때문입니다. safe area와 뷰포트 inset, bridge 준비 상태, 재개 시 렌더러 종료, 컴포지팅 동작은 호스트가 정하므로, 수정은 대개 그 호스트 계약에 맞춰 페이지를 작성하는 것입니다. viewport meta, `svh`/`dvh` 단위, READY 재전송, 새로고침 후에도 복원되는 상태가 여기에 해당합니다. `webview-bridge-pages`가 이를 다루며, 증거는 데스크톱 브라우저가 아니라 앱 WebView에서 나와야 합니다.
 
 ### 어떤 코딩 에이전트에서 이 skill들을 쓸 수 있나요?
 

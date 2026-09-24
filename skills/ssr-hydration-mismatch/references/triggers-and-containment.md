@@ -9,43 +9,22 @@
 - [Other frameworks (same principle, different escape hatch)](#other-frameworks-same-principle-different-escape-hatch)
 - [Sources](#sources)
 
-Hydration is the client attaching to server HTML in place. React's rule is strict: *"React
-expects that the rendered content is identical between the server and the client."* When it
-isn't, you get a hydration error, the server markup for that tree is discarded, and the
-client re-renders from scratch.
+Hydration is the client attaching to server HTML in place. React's rule is strict: *"React expects that the rendered content is identical between the server and the client."* When the text or structure isn't, you get a hydration error, the server markup for that tree is discarded, and the client re-renders from scratch. When only attributes differ, React keeps the server attributes and warns in development only (see [Containment & the blast radius](#containment--the-blast-radius)).
 
 ## What actually diverges (the trigger taxonomy)
 
-React's own docs list the common causes. They all reduce to "the first client render computed
-something different from the server."
+React's own docs list the common causes. They all reduce to "the first client render computed something different from the server."
 
-- **Non-deterministic values in render** — `Date.now()`, `Math.random()`, `new Date()`
-  rendered to text, or `crypto.randomUUID()` rendered into an **attribute** (`id`, `htmlFor`,
-  `aria-labelledby`/`aria-describedby`, etc.). The server computes one value, the client
-  another, so the serialized attribute diverges. (A random *key* is a separate bug: keys are
-  never serialized to HTML, so a per-render key causes reconciliation churn, not a hydration
-  mismatch.) For SSR-safe deterministic ids, use React's `useId()` — it produces the same id on
-  server and client.
-- **Timezone / locale formatting** — `date.toLocaleString()`,
-  `new Intl.DateTimeFormat().format()`, or number/currency formatting without a pinned
-  `timeZone`/`locale`. The server's zone/locale differs from the user's. (Fix in
-  **datetime-correctness**: serialize a stable instant; format in a fixed zone, or after
-  mount.)
-- **Server/client branching in render** — `typeof window !== "undefined"`,
-  `if (isServer) ... else ...`, or reading `window`/`document`/`localStorage`/`navigator`
-  /`matchMedia` directly in the render body. The branch resolves differently on each side.
-- **External, changing data without a snapshot** — reading a mutable browser store during
-  render instead of through `useSyncExternalStore` (which has a dedicated server snapshot).
-- **Invalid HTML nesting** — `<div>` or `<p>` inside `<p>`, `<a>` inside `<a>`, or text/`<div>`
-  placed directly inside `<table>`/`<tbody>`/`<tr>`. The HTML parser *repairs* invalid
-  nesting (e.g. closes the `<p>` early), so the parsed client DOM no longer matches the string
-  the server streamed — a mismatch you didn't write explicitly.
+- **Non-deterministic values in render** — `Date.now()`, `Math.random()`, `new Date()` rendered to text, or `crypto.randomUUID()` rendered into an **attribute** (`id`, `htmlFor`, `aria-labelledby`/`aria-describedby`, etc.). The server computes one value, the client another, so the serialized attribute diverges. Text divergence throws a recoverable error; attribute-only divergence is a dev-only warning that production never reports. (A random *key* is a separate bug: keys are never serialized to HTML, so a per-render key causes reconciliation churn, not a hydration mismatch.) For SSR-safe deterministic ids, use React's `useId()` — it produces the same id on server and client.
+- **Timezone / locale formatting** — `date.toLocaleString()`, `new Intl.DateTimeFormat().format()`, or number/currency formatting without a pinned `timeZone`/`locale`. The server's zone/locale differs from the user's. (Fix in **datetime-correctness**: serialize a stable instant; format in a fixed zone, or after mount.)
+- **Server/client branching in render** — `typeof window !== "undefined"`, `if (isServer) ... else ...`, or reading `window`/`document`/`localStorage`/`navigator` /`matchMedia` directly in the render body. The branch resolves differently on each side.
+- **External, changing data without a snapshot** — reading a mutable browser store during render instead of through `useSyncExternalStore` (which has a dedicated server snapshot).
+- **Invalid HTML nesting** — `<div>` or `<p>` inside `<p>`, `<a>` inside `<a>`, or text/`<div>` placed directly inside `<table>`/`<tbody>`/`<tr>`. The HTML parser *repairs* invalid nesting (e.g. closes the `<p>` early), so the parsed client DOM no longer matches the string the server streamed — a mismatch you didn't write explicitly.
 - **Wrong/extra/missing attributes or whitespace-sensitive text** that one side trims.
 
 ## The fixes
 
-- **Two-pass render for client-only output.** Render the server-safe version first, then
-  update in `useEffect` (which runs only on the client, after hydration):
+- **Two-pass render for client-only output.** Render the server-safe version first, then update in `useEffect` (which runs only on the client, after hydration):
 
   ```jsx
   function LocalTime({ iso }) {
@@ -57,65 +36,36 @@ something different from the server."
   }
   ```
 
-- **`useSyncExternalStore` for external/browser state.** It takes a client `getSnapshot` and a
-  separate `getServerSnapshot`, so the server render is deterministic and the client subscribes
-  after hydration — the supported way to read viewport size, media queries, online status, etc.
-- **No-SSR dynamic import for irreducibly client-only widgets.** `next/dynamic(() => import(...),
-  { ssr: false })` (or `React.lazy` behind a mounted flag) skips server rendering for that
-  component, so there's nothing to mismatch.
-- **`suppressHydrationWarning` for unavoidable, known-divergent leaves only.** React applies it
-  **one level deep** — it suppresses the warning for that element's own text and attributes,
-  not for its children. Use it on a single timestamp node, not a subtree. It silences the
-  warning; it does not make the values agree, so the rendered text may still differ for a
-  frame.
+- **`useSyncExternalStore` for external/browser state.** It takes a client `getSnapshot` and a separate `getServerSnapshot`, so the server render is deterministic and the client subscribes after hydration — the supported way to read viewport size, media queries, online status, etc.
+- **No-SSR dynamic import for irreducibly client-only widgets.** `next/dynamic(() => import(...), { ssr: false })` (or `React.lazy` behind a mounted flag) skips server rendering for that component, so there's nothing to mismatch. Call it from a Client Component; Next.js does not allow `ssr: false` with `next/dynamic` in Server Components.
+- **`suppressHydrationWarning` for unavoidable, known-divergent leaves only.** React applies it **one level deep** — it suppresses the warning for that element's own text and attributes, not for its children. Use it on a single timestamp node, not a subtree. It silences the warning only: React does not patch the mismatched text, so the server-rendered value stays on screen until that element re-renders — which may be never.
 
 ## Containment & the blast radius
 
-- A mismatch is not local by default. In React 18, an error during hydration makes React
-  **discard the server-rendered tree up to the nearest `<Suspense>` boundary and re-render it
-  on the client** — without any boundary, that can be the whole document. Wrapping a risky,
-  client-dependent region in its own `<Suspense>` (or rendering it no-SSR) limits the
-  re-render to that island so the rest stays hydrated.
-- **The prod signal is easy to miss.** React 18 treats a hydration mismatch as a *recoverable error*:
-  it logs in **both** dev and production (via `onRecoverableError`, with dev additionally
-  surfacing the server-vs-client diff) and then succeeds by client rendering. So a mismatch
-  can ship unnoticed — wire `hydrateRoot(container, <App/>, {
-  onRecoverableError })` (or your framework's hook) into monitoring instead of trusting that a
-  broken hydration would have been obvious.
+- A mismatch is not local by default. In React 18+, an error during hydration makes React **discard the server-rendered tree up to the nearest `<Suspense>` boundary and re-render it on the client** — without any boundary, that can be the whole document. Wrapping a risky, client-dependent region in its own `<Suspense>` (or rendering it no-SSR) limits the re-render to that island so the rest stays hydrated.
+- **Attribute-only mismatches never reach production.** React's hydration compares text content and tree structure; attributes are diffed only in development. The source comment in `hydrateProperties` says *"Our requirement is not to produce perfect HTML and attributes"*, and the `hydrateRoot` docs warn that attribute differences are not guaranteed to be patched up in case of mismatches. When hydration otherwise succeeds, React logs a dev-only `console.error` — *"A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up."* — and keeps the server attribute. No recoverable error is thrown and `onRecoverableError` is not called, so a random `id`/`htmlFor`/`aria-*` value is only caught by a dev or CI hydration check that fails on that console error.
+- **The prod signal for text/structure mismatches is easy to miss.** React 18+ treats a text or structure mismatch as a *recoverable error* ("Hydration failed because the server rendered text/HTML didn't match the client"): it reports it in **both** dev and production through `onRecoverableError`, whose default calls the platform `reportError` — a window `error` event, so a global error listener already sees it — with dev additionally surfacing the server-vs-client diff, and then succeeds by client rendering. In production that default event carries only the minified error, with no diff and no `componentStack`, so existing monitoring may already hold these events without anyone recognizing them. Wire `hydrateRoot(container, <App/>, { onRecoverableError })` (or your framework's hook) into monitoring with `errorInfo.componentStack` instead of trusting that a broken hydration would have been obvious; a custom handler replaces the default, so it must report the error itself.
 
 ## Diagnosing the diverging node
 
-- In development the error names the element and shows a server-vs-client diff — start there;
-  the offending value is usually a clock, a random id, or a `window` read nearby.
-- Reproduce with JS disabled (or "view source") to see the raw server HTML, then compare to
-  the hydrated DOM. Diffs in text, attribute order that matters, or repaired nesting point to
-  the cause.
+- In development the error names the element and shows a server-vs-client diff — start there; the offending value is usually a clock, a random id, or a `window` read nearby.
+- Reproduce with JS disabled (or "view source") to see the raw server HTML, then compare to the hydrated DOM. Diffs in text, attribute order that matters, or repaired nesting point to the cause.
 - Toggle the suspect subtree to no-SSR; if the warning disappears, the trigger is inside it.
 
 ## Other frameworks (same principle, different escape hatch)
 
-- **Vue / Nuxt** — Vue warns "Hydration node mismatch" / "Hydration text mismatch" in dev and
-  falls back to client render for that subtree. Wrap client-only UI in Nuxt's `<ClientOnly>`
-  (or guard browser APIs to `onMounted`).
-- **Svelte / SvelteKit** — same determinism rule under SvelteKit SSR; keep browser-only reads
-  in `onMount` / behind the `browser` guard from `$app/environment`.
-- **Astro** — server-render by default; mark genuinely client-only components `client:only`
-  (with the framework name) so Astro skips SSR for them entirely.
+- **Vue / Nuxt** — Vue warns "Hydration node mismatch" / "Hydration text mismatch" in dev and falls back to client render for that subtree. Wrap client-only UI in Nuxt's `<ClientOnly>` (or guard browser APIs to `onMounted`).
+- **Svelte / SvelteKit** — same determinism rule under SvelteKit SSR; keep browser-only reads in `onMount` / behind the `browser` guard from `$app/environment`.
+- **Astro** — server-render by default; mark genuinely client-only components `client:only` (with the framework name) so Astro skips SSR for them entirely.
 
 ## Sources
 
-- React — [Hydration mismatch errors](https://react.dev/link/hydration-mismatch) and
-  [`hydrateRoot`](https://react.dev/reference/react-dom/client/hydrateRoot) (the identical
-  server/client expectation; common-causes list; `onRecoverableError`;
-  `suppressHydrationWarning` is one level deep)
-- React — [`<Suspense>`](https://react.dev/reference/react/Suspense) (boundary behavior during
-  hydration)
-- React 18 RFC — [server-errors in React 18](https://github.com/reactjs/rfcs/blob/c15bc9df5afa8fd1dca6e5fd1c2ed073f7a9bd79/text/0215-server-errors-in-react-18.md)
-  (hydration mismatch as a recoverable error; client-render fallback)
-- Next.js — [Hydration error guide](https://nextjs.org/docs/messages/react-hydration-error)
-  and [`next/dynamic` `{ ssr: false }`](https://nextjs.org/docs/app/guides/lazy-loading)
-- React — [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore)
-  (`getServerSnapshot` for SSR-safe external state)
-- Vue — [SSR Hydration Mismatch](https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch)
-  ; Nuxt [`<ClientOnly>`](https://nuxt.com/docs/api/components/client-only)
+- React — [Hydration mismatch errors](https://react.dev/link/hydration-mismatch) and [`hydrateRoot`](https://react.dev/reference/react-dom/client/hydrateRoot) (the identical server/client expectation; common-causes list; `onRecoverableError`; attribute differences not guaranteed to be patched up; `suppressHydrationWarning` is one level deep)
+- React — [`<Suspense>`](https://react.dev/reference/react/Suspense) (boundary behavior during hydration)
+- React source at a pinned commit — [`ReactFiberHydrationContext.js`](https://github.com/react/react/blob/d083ec1da1e5252abd3ddfdde6dfbc09701a2c51/packages/react-reconciler/src/ReactFiberHydrationContext.js) (`throwOnHydrationMismatch` queues the recoverable "Hydration failed" error; `emitPendingHydrationWarnings` logs the dev-only "some attributes … won't be patched up" warning) and [`ReactDOMComponent.js`](https://github.com/react/react/blob/d083ec1da1e5252abd3ddfdde6dfbc09701a2c51/packages/react-dom-bindings/src/client/ReactDOMComponent.js) (`hydrateProperties` fails hydration only on unmatched text content, and with `suppressHydrationWarning` skips the text check without writing `textContent`), plus [`ReactFiberErrorLogger.js`](https://github.com/react/react/blob/d083ec1da1e5252abd3ddfdde6dfbc09701a2c51/packages/react-reconciler/src/ReactFiberErrorLogger.js) (`defaultOnRecoverableError` calls `reportGlobalError`) and [`reportGlobalError.js`](https://github.com/react/react/blob/d083ec1da1e5252abd3ddfdde6dfbc09701a2c51/packages/shared/reportGlobalError.js) ("In modern browsers, reportError will dispatch an error event, emulating an uncaught JavaScript error"); the `ReactFiberHydrationContext.js` recoverable-error message at that commit still says "this tree will be regenerated on the client"
+- React 19 release post — [Diffs for hydration errors](https://react.dev/blog/2024/12/05/react-19#diffs-for-hydration-errors) (a single dev error with a diff replaces several errors without mismatch detail)
+- React 18 RFC — [server-errors in React 18](https://github.com/reactjs/rfcs/blob/c15bc9df5afa8fd1dca6e5fd1c2ed073f7a9bd79/text/0215-server-errors-in-react-18.md) (hydration mismatch as a recoverable error; client-render fallback)
+- Next.js — [Hydration error guide](https://nextjs.org/docs/messages/react-hydration-error) and [`next/dynamic` `{ ssr: false }`](https://nextjs.org/docs/app/guides/lazy-loading)
+- React — [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) (`getServerSnapshot` for SSR-safe external state)
+- Vue — [SSR Hydration Mismatch](https://vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch) ; Nuxt [`<ClientOnly>`](https://nuxt.com/docs/api/components/client-only)
 - Astro — [`client:only` directive](https://docs.astro.build/en/reference/directives-reference/#clientonly)

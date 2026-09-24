@@ -32,14 +32,14 @@
     },
     {
       "id": 3,
-      "prompt": "Following the reflow guidance we removed the fixed height from our product cards and added `overflow-wrap: break-word; word-break: break-all;` so nothing clips. German compound nouns are fine now. But the Japanese build got worse: titles now break in the middle of words and phrases at arbitrary characters, and reviewers say it reads as broken Japanese. Should we just put the fixed height back and truncate with an ellipsis for ja?",
-      "expected_output": "Keeps the reflow fix, rejects reverting to fixed height plus truncation, and identifies word-break: break-all as the cause of the Japanese regression, whose correct line-breaking behavior is a blocking condition owned by cjk-text-and-input. Keeps the height and line-spacing part here.",
+      "prompt": "Following the reflow guidance we removed the fixed height from our product cards and added `overflow-wrap: break-word; word-break: break-all;` so nothing clips. German compound nouns are fine now. But the Japanese build got worse: a title like `ワイヤレスイヤホン Bluetooth 5.3 対応` now wraps as `Blue` / `tooth`, and since the cards grew to multiple lines reviewers also notice Japanese phrases splitting at arbitrary characters and say it reads as broken Japanese. Should we just put the fixed height back and truncate with an ellipsis for ja?",
+      "expected_output": "Keeps the reflow fix, rejects reverting to fixed height plus truncation, and attributes only the split Latin run (`Blue` / `tooth`) to word-break: break-all, which inserts breaks between characters of non-CJK text but leaves CJK text unchanged. The per-character splitting of Japanese phrases is the default CJK line-breaking behavior that the taller cards now expose, not something break-all caused; phrase-aware wrapping is a blocking condition owned by cjk-text-and-input. Keeps the height and line-spacing part here.",
       "expectations": [
         "The response declines to restore the fixed height and per-locale truncation, since that reintroduces the clipping defect the reflow fix removed and hides real content from one locale.",
-        "It identifies word-break: break-all as the specific declaration causing arbitrary breaks in Japanese text, rather than blaming the removal of the fixed height.",
-        "It notes that break-word and break-all were added for the unbreakable German compound-noun case and should be scoped to that need rather than applied globally to all locales.",
-        "Choosing the correct Japanese line-breaking behavior, including word-break: keep-all and phrase-boundary breaking, is routed to cjk-text-and-input as the blocking condition.",
-        "It keeps the part this skill still owns: vertical space and line-height headroom, since Japanese, Thai, Arabic, and Devanagari glyphs need more line spacing than Latin and fixed-height rows clip them even at equal character counts.",
+        "It attributes the mid-word break inside the embedded Latin word to word-break: break-all, and does not blame break-all for the splitting of the Japanese characters themselves, since break-all excludes Chinese/Japanese/Korean text.",
+        "It notes that `overflow-wrap: break-word` alone already covers the unbreakable German compound-noun case (it breaks only a word that cannot fit on its own line), so `word-break: break-all` is not needed for German and should be removed or narrowly scoped rather than applied globally to all locales.",
+        "Phrase-aware Japanese wrapping (for example word-break: auto-phrase as progressive enhancement) is routed to cjk-text-and-input as the blocking condition, and the response does not recommend word-break: keep-all for Japanese running text.",
+        "It keeps the part this skill still owns: vertical space and line-height headroom for the multi-line Japanese titles, since CJK glyphs need more line spacing than Latin and fixed-height rows clip them even at equal character counts.",
         "Verification uses real translated copy or pseudo-localized strings in the affected locales rather than English or placeholder text."
       ]
     }

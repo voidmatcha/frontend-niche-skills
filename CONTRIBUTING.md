@@ -74,8 +74,13 @@ it will not pass review.
 
 ## Claude.ai
 
-Claude.ai caps `description` at 200 characters while the specification allows
-1024. The canonical skills target the specification, and
+The Claude Help Center documents a 200-character `description` maximum for
+custom-skill uploads
+(<https://support.claude.com/en/articles/12512198-how-to-create-custom-skills>),
+and uploads of the canonical skills were rejected there. The Claude skills docs
+(<https://claude.com/docs/skills/how-to>) and the specification allow 1,024, so
+the variant below is only needed while the upload path enforces 200 (checked
+2026-09-25). The canonical skills target the specification, and
 `docs/claudeai-short-descriptions.json` carries a short form per skill. If you
 add a skill, add its entry there too, or the audit fails. Build the variant
 with:

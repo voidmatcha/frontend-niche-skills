@@ -40,10 +40,10 @@
     {
       "id": 4,
       "prompt": "Someone reported path traversal because our download filename is built from a user-entered report title and a title like `../../etc/passwd` is accepted. The download is a client-side Blob delivered via `a[download]`. There is also a server endpoint that streams the same report with `Content-Disposition: attachment; filename=\"<title>.csv\"`.",
-      "expected_output": "Corrects the path-traversal framing for the client anchor download, since browsers sanitize path separators and control characters in the download filename, and keeps the real findings on private labels/PII in the name and the unsanitized server Content-Disposition filename.",
+      "expected_output": "Corrects the path-traversal framing for the client anchor download, since browsers convert `/` and `\\` to underscores and adjust the download filename for the local file system, and keeps the real findings on private labels/PII in the name and the unsanitized server Content-Disposition filename.",
       "expectations": [
-        "The response corrects the client-side claim: for `a[download]`, browsers sanitize path separators and control characters in the resulting filename, so this is not client path traversal.",
-        "It keeps the server `Content-Disposition` filename as the genuine finding, requiring sanitization of path separators and control characters plus correct RFC 5987 encoding for non-ASCII titles.",
+        "The response corrects the client-side claim: for `a[download]`, browsers convert `/` and `\\` to underscores and adjust the resulting filename for the local file system, so this is not client path traversal.",
+        "It keeps the server `Content-Disposition` filename as the genuine finding, requiring sanitization of path separators and control characters plus correct `filename*` encoding for non-ASCII titles (RFC 8187, which obsoletes RFC 5987, or the RFC 5987 wording).",
         "It separately raises PII and private-label exposure in the filename as a distinct risk from invalid characters, and suggests neutral date or id suffixes.",
         "It distinguishes user inconvenience from a privacy or security claim instead of collapsing them into one severity.",
         "It proposes a narrow verification: a filename normalization test covering `/`, `\\`, control characters, emoji, long titles, and a private prefix."
@@ -52,12 +52,12 @@
     {
       "id": 5,
       "prompt": "Our 'Export table' button serializes the raw row objects returned by the API, even though the table only shows six of the twenty fields. The raw rows include `internalNotes`, `ownerEmail`, `cardLast4`, and a `createdAt` ISO timestamp that users say is off by a day in the CSV.",
-      "expected_output": "Defines an explicit export schema separate from visible table state as the fix, keeps the payload-leakage finding primary, and routes the timestamp semantics to datetime-correctness and the card data to payment-page-client-security.",
+      "expected_output": "Defines an explicit export schema separate from visible table state as the fix, keeps the payload-leakage finding primary, treats `cardLast4` as an export-schema/PII decision owned here, and routes the timestamp semantics to datetime-correctness.",
       "expectations": [
         "The response identifies that visual column filtering does not filter the export, and requires an explicit export schema declared separately from the table's visible state.",
         "`internalNotes` and `ownerEmail` are treated as concrete payload leakage with a named exported field path, not a generic warning.",
         "The off-by-a-day `createdAt` in the CSV is routed to datetime-correctness for timezone and date-only semantics, while this skill keeps ownership of which fields ship.",
-        "`cardLast4` in an export is routed to payment-page-client-security rather than resolved here.",
+        "`cardLast4` is treated as the already-masked card form, so whether it ships is an export-schema/PII decision made here; only full PAN/CVV in the export would route to payment-page-client-security.",
         "It proposes a regression check that asserts the exported column set matches the declared schema, so a new API field cannot silently join the export."
       ]
     }

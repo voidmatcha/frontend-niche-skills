@@ -36,7 +36,8 @@ rg -n 'scope:\s*\{|mutationKey|isMutating' src/ app/ 2>/dev/null               #
 - **js-form-validation-contracts** — submit-in-flight, double-submit, and async/server-error races *inside a form* (a create mutation is often both; keep the form's submit-gating there and the cache rollback here).
 - **a11y-contract-testing** — announcing success, failure, and rollback to assistive tech (a live region / `role="alert"` for a silent revert).
 - **ssr-hydration-mismatch** — server vs client *initial* render divergence (an optimistic value seeded at hydration is a different bug from one applied on user action).
-- The cache-invalidation *mechanics* of one specific data library (exact `invalidateQueries` filters, Apollo `keyFields`/`typePolicies`, SWR key scoping) are adjacent implementation detail — cite that library's own docs. This skill owns the cross-library contract, not any one API surface.
+- **frontend-data-fetching-cache-contracts** — whether the settle-time invalidation targets the key/tag the reader actually subscribes to, plus key design and serialization (exact `invalidateQueries` filters, Apollo `keyFields`/`typePolicies`, SWR key scoping). The invalidate-after-mutation call is the seam: it fires here, and its target key belongs there.
+- **realtime-transport-contracts** — pushed deltas (WebSocket/SSE) written into the same cache: sequence-based dedupe, ordering, gap detection, and replay after reconnect. This skill owns only how an optimistic entry reconciles once the confirming delta lands.
 
 ## PR-worthiness gate
 
@@ -51,7 +52,7 @@ Reject weak findings:
 
 - A mutation that already has snapshot + rollback + `onSettled` invalidate — that is the correct pattern, not a defect.
 - Optimistic UI on a low-failure single-surface action using `useOptimistic`/variables with no cache rollback — intentionally simpler; don't demand the full cache dance.
-- Pure "which `queryKey` to invalidate" tuning with no user-visible drift — that is library config.
+- Pure "which `queryKey` to invalidate" tuning with no rollback, temp-id, or ordering defect — route it to frontend-data-fetching-cache-contracts rather than filing it here.
 - A non-optimistic mutation (spinner until confirmed) — out of scope.
 
 Minimal useful PR: one failing test that drives apply -> server-error -> assert rollback to the snapshot; plus, for creates, apply temp id -> server response -> assert a single row under the real id and no duplicate after refetch.

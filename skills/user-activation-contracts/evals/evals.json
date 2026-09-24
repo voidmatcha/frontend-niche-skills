@@ -7,7 +7,7 @@
       "expected_output": "Traces transient activation through both awaits, verifies window.open returning null in the affected browser, considers a synchronously pre-opened named window with close-on-failure or redirect fallback, and keeps OAuth callback policy in frontend-auth-flow-contracts.",
       "expectations": [
         "The response traces transient user activation from the click through both awaited operations before the window.open call.",
-        "The reproduction checks the actual window.open return value and popup behavior in the affected target browser instead of inferring the cause from cross-browser difference alone.",
+        "The reproduction checks the actual window.open return value and popup behavior in the affected target browser instead of inferring the cause from cross-browser difference alone, and reads a null return as blocked only when noopener/noreferrer were not requested.",
         "The smallest frontend options include synchronously pre-opening a named window and closing it on failure, or using an explicit same-tab redirect fallback.",
         "OAuth callback, state, and token policy remain owned by frontend-auth-flow-contracts rather than being redesigned inside the activation fix."
       ]
