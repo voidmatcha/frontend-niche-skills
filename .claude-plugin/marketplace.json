@@ -10,7 +10,7 @@
       "name": "frontend-niche-skills",
       "source": "./",
       "description": "Evidence-oriented, framework-agnostic frontend skills for recurrent browser and host-edge failures across WebViews/iframes, rendering, interaction, data, accessibility, security, performance, offline, exports, and design verification.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "YONGJAE LEE"
       },

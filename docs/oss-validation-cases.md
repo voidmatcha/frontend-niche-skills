@@ -2,16 +2,9 @@
 
 Purpose: check whether selected bundled frontend niche skills find real, PR-worthy defects rather than search-noise. Newly added skills may start without a validation case until a reproduced OSS example exists. A case counts only when it has source-line evidence, a concrete user-visible failure mode, a small plausible patch, and a maintainer-facing rationale.
 
-Status as of 2026-08-01: nothing in this document has been filed upstream and no
-maintainer has accepted anything. With one exception, every row is a
-source-verified reading of public code at a pinned commit and nothing more. The
-exception is the n8n Storybook Callout row, which carries a recorded
-export/render/diff run. Individual sections do not repeat this disclaimer; it
-applies to the whole document.
+Status as of 2026-08-01: nothing in this document has been filed upstream and no maintainer has accepted anything. With one exception, every row is a source-verified reading of public code at a pinned commit and nothing more. The exception is the n8n Storybook Callout row, which carries a recorded export/render/diff run. Individual sections do not repeat this disclaimer; it applies to the whole document.
 
-Snapshots: 2026-06-17 and 2026-06-26 for the per-skill cases and the candidate
-sweep, 2026-07-04 for the skill axes not yet shipped as first-class skills.
-Temporary local checkouts and public GitHub tree/raw-file research were used.
+Snapshots: 2026-06-17 and 2026-06-26 for the per-skill cases and the candidate sweep, 2026-07-04 for the skill axes not yet shipped as first-class skills. Temporary local checkouts and public GitHub tree/raw-file research were used.
 
 Verification posture: evidence references should stay source-addressable by repository, commit, path, and line range. Treat third-party script URLs in code snippets as source evidence about the inspected project, not as availability or endorsement claims for that provider URL.
 
@@ -19,26 +12,13 @@ Freshness note: every candidate is tied to the inspected commit, not a claim abo
 
 ## Evidence status
 
-Every row below sits at **E2 source-verified** on the evidence ladder in
-[skill-evidence-coverage.md](./skill-evidence-coverage.md) unless it says
-otherwise: the cited lines exist at the pinned commit and say what the row
-claims. That is the whole claim. E2 is not a defect claim, and no E2 row here has
-been reproduced, filed, or accepted upstream. Re-check the current default branch
-and reproduce locally before filing an issue or PR.
+Every row below sits at **E2 source-verified** on the evidence ladder in [skill-evidence-coverage.md](./skill-evidence-coverage.md) unless it says otherwise: the cited lines exist at the pinned commit and say what the row claims. That is the whole claim. E2 is not a defect claim, and no E2 row here has been reproduced, filed, or accepted upstream. Re-check the current default branch and reproduce locally before filing an issue or PR.
 
-Exactly one row sits at **E1 measured**: the n8n Storybook Callout case in the
-strict Figma export recheck at the end of this document. A Figma export, a
-Storybook render, and a pixel diff were actually run and the result recorded. It
-is still not filed and still not a confirmed production defect.
+Exactly one row sits at **E1 measured**: the n8n Storybook Callout case in the strict Figma export recheck at the end of this document. A Figma export, a Storybook render, and a pixel diff were actually run and the result recorded. It is still not filed and still not a confirmed production defect.
 
-Rows come in two depths. **Worked cases** carry a failure mode and a minimal PR
-shape and are presented as tables. **Leads** are one-line source-verified
-observations that have not been worked into full cases yet. Both sit at E2; they
-differ in how much analysis has been done, not in how well the source was
-checked.
+Rows come in two depths. **Worked cases** carry a failure mode and a minimal PR shape and are presented as tables. **Leads** are one-line source-verified observations that have not been worked into full cases yet. Both sit at E2; they differ in how much analysis has been done, not in how well the source was checked.
 
-Positive-control rows document patterns the skills should **not** flag as bugs.
-They keep that label; the ladder rung describes verification, not verdict.
+Positive-control rows document patterns the skills should **not** flag as bugs. They keep that label; the ladder rung describes verification, not verdict.
 
 ## Repositories sampled
 
@@ -329,14 +309,9 @@ Strict note: these are open-source export/copy cases, not a list of confirmed de
 
 #### Re-verification, 2026-08-01
 
-Method: raw-file fetch of each cited path at the default branch, then locating
-the cited pattern and recording its current line. No local checkout, no
-reproduction, and nothing filed. This only answers "does the evidence still
-resolve", which is the first of the three things the evidence-status note above
-requires before filing.
+Method: raw-file fetch of each cited path at the default branch, then locating the cited pattern and recording its current line. No local checkout, no reproduction, and nothing filed. This only answers "does the evidence still resolve", which is the first of the three things the evidence-status note above requires before filing.
 
-All five rows still resolve. Line drift since the 2026-06-26 snapshot is minor
-and the cited ranges still contain the claimed code.
+All five rows still resolve. Line drift since the 2026-06-26 snapshot is minor and the cited ranges still contain the claimed code.
 
 | Row | Cited 2026-06-26 | Located 2026-08-01 | Status |
 | --- | --- | --- | --- |
@@ -346,13 +321,7 @@ and the cited ranges still contain the claimed code.
 | `calcom/cal.com@apps/web/modules/bookings/components/BookingsCsvDownload.tsx` | 102-105 | row map at 103; filename and download at 104-105 | Caller unchanged within the cited range. |
 | `grafana/grafana@public/app/features/inspector/utils/download.ts` | 78-92 | UTF-16LE BOM branch at 78; `toCSV` at 77 and 83; utf-8 blob at 85 | Positive/lead holds. The Excel-aware encoding branch is still deliberate, so spreadsheet consumption is intended and the formula-cell question is a policy question rather than an oversight. |
 
-What this does not establish: that any of the three candidates is a defect the
-maintainer would accept. Formula-cell policy on CSV export is contested, and a
-project can reasonably decide the spreadsheet is responsible for how it
-interprets a cell. The maintainer-facing question is whether the project intends
-its exports to be opened in a spreadsheet, which the Grafana row shows can be an
-explicit yes. Filing still requires the local reproduction and the failing test
-this document asks for.
+What this does not establish: that any of the three candidates is a defect the maintainer would accept. Formula-cell policy on CSV export is contested, and a project can reasonably decide the spreadsheet is responsible for how it interprets a cell. The maintainer-facing question is whether the project intends its exports to be opened in a spreadsheet, which the Grafana row shows can be an explicit yes. Filing still requires the local reproduction and the failing test this document asks for.
 
 ### `overlay-focus-scroll-contracts`
 
@@ -661,17 +630,8 @@ Strict recheck notes:
 
 Every row here is E2, with the single E1 exception noted at the top. None is ready to file as-is.
 
-1. Pick a row whose failure mode is concrete and whose patch is small. Good first
-   targets: Supabase autocomplete/OTP, Appwrite native validation stale errors,
-   NextChat IME search, NextChat clipboard rejection handling, Cal.com CSV
-   formula-prefix policy, Cal.com ModalBox nested scroll-lock tests, gronxb/alinz
-   bridge guard/order issues, Appwrite/NextChat `_blank` opener fixes, and the
-   Spurtcommerce unused payment-page script removal.
-2. Re-check the cited lines against the current default branch. Line drift is
-   normal; a vanished pattern means the row is dead.
-3. Reproduce in the target repo with a failing unit/E2E/storybook/browser test or
-   a minimal platform snippet. Without this the row stays at E2.
-4. Keep issue titles narrow and maintainer-owned: one behavior, one failing
-   reproduction, one proposed patch. Do not pitch the skill pack in the issue body.
-5. Only promote to README evidence after a maintainer acknowledges, accepts, or
-   merges the fix.
+1. Pick a row whose failure mode is concrete and whose patch is small. Good first targets: Supabase autocomplete/OTP, Appwrite native validation stale errors, NextChat IME search, NextChat clipboard rejection handling, Cal.com CSV formula-prefix policy, Cal.com ModalBox nested scroll-lock tests, gronxb/alinz bridge guard/order issues, Appwrite/NextChat `_blank` opener fixes, and the Spurtcommerce unused payment-page script removal.
+2. Re-check the cited lines against the current default branch. Line drift is normal; a vanished pattern means the row is dead.
+3. Reproduce in the target repo with a failing unit/E2E/storybook/browser test or a minimal platform snippet. Without this the row stays at E2.
+4. Keep issue titles narrow and maintainer-owned: one behavior, one failing reproduction, one proposed patch. Do not pitch the skill pack in the issue body.
+5. Only promote to README evidence after a maintainer acknowledges, accepts, or merges the fix.

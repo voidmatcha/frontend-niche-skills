@@ -20,7 +20,7 @@
 <p align="center">
 <a href="#skills">41 スキル</a> ·
 <a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">ブラインドのルーティング実行、全 138 件</a> ·
-<a href="./evals/behavioral/">自前で実行した行動テスト 2 件、いずれも同点</a> ·
+<a href="./evals/behavioral/">自前で実行した行動テスト 3 件、いずれも同点</a> ·
 <a href="./docs/oss-validation-cases.md">コミットを固定した OSS ケースブック</a> ·
 <a href="#development-checks">177 件の eval ケース仕様</a> ·
 <a href="./.github/workflows/link-check.yml">CI で検証される出典リンク</a>
@@ -305,7 +305,7 @@ codex plugin add frontend-niche-skills@frontend-niche-skills
 
 ## エビデンス
 
-- [`evals/behavioral/`](./evals/behavioral/) — このパックが自らの中心的な主張を 実測した 2 回です。同じバグを、該当スキルを与えた場合と与えない場合で診断させました。 ルーブリックは毎回、実行前にコミットしています。2 件とも同点だったため、この 2 つの レポートでは、事前登録した基準で観測できる差をスキルは生みませんでした。2 件目の 記録には、基準の外でスキル側が正しかった差が 1 つと、それを後から気づくことが なぜ証拠にならないかが書かれています。
+- [`evals/behavioral/`](./evals/behavioral/) — このパックが自らの中心的な主張を 実測した 3 回です。同じバグを、該当スキルを与えた場合と与えない場合で診断させました。 ルーブリックは毎回、実行前にコミットしており、3 件目のスキルは選ばずに固定シードで 抽選しました。3 件とも同点だったため、この 3 つのレポートでは、事前登録した基準で 観測できる差をスキルは生みませんでした。2 件目と 3 件目の記録には、基準の外で スキル側にあった差と、それを後から気づくことがなぜ証拠にならないかが書かれています。
 - [`.github/workflows/checks.yml`](./.github/workflows/checks.yml) — 41 スキルのうち 4 つのブラウザフィクスチャを push ごとに再実行します。3 つは Chromium・Firefox・WebKit で、1 つは Chromium のみです。該当スキルが記述するブラウザ挙動が事実かを確認するものであり、このパックがエージェントの出力を変えるかは測定しません。同じスイートが push をゲートするため、失敗した実行は記録として残らず push を止めます。
 
 このリポジトリは、grep のヒットをそのままバグとして扱いません。すべての主張は [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) のエビデンスラダーのいずれかの段に位置づけられます。**E1 測定済み**、**E2 ソース確認済み**、**E3 一次情報の引用**、**E4 ルーティング例**です。段が記録するのは実際に何をしたかであり、どれだけ確信しているかではありません。2026-08-01 時点で、OSS ケースブックのどの行も upstream に報告されておらず、ローカルで再現されておらず、メンテナに受け入れられてもいません。

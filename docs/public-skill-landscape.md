@@ -2,24 +2,15 @@
 
 Last checked: 2026-07-31.
 
-Use this document before adding broad frontend skills. It records public skill
-packs that overlap with `frontend-niche-skills`, then explains whether they are
-duplicates, complements, or sources for routing ideas.
+Use this document before adding broad frontend skills. It records public skill packs that overlap with `frontend-niche-skills`, then explains whether they are duplicates, complements, or sources for routing ideas.
 
 ## Methodology
 
-- Checked opened public GitHub repositories at pinned commits and opened
-  `skills.sh` pages where GitHub search was insufficient.
+- Checked opened public GitHub repositories at pinned commits and opened `skills.sh` pages where GitHub search was insufficient.
 - Preferred `SKILL.md` files and repository trees over marketplace summaries.
-- Treated broad implementation guides as complementary execution surfaces, not
-  evidence that this pack should add the same broad skill.
-- Did not claim an exhaustive census. GitHub code search and Exa search hit
-  intermittent rate limits during the wider sweep, so this is a maintained
-  snapshot of opened evidence, not the whole ecosystem.
-- Marketplace-only links below record pages retrieved on 2026-07-31. They are
-  mutable discovery evidence, not reproducible source snapshots; conclusions
-  based only on those pages remain provisional until a pinned upstream source
-  is available.
+- Treated broad implementation guides as complementary execution surfaces, not evidence that this pack should add the same broad skill.
+- Did not claim an exhaustive census. GitHub code search and Exa search hit intermittent rate limits during the wider sweep, so this is a maintained snapshot of opened evidence, not the whole ecosystem.
+- Marketplace-only links below record pages retrieved on 2026-07-31. They are mutable discovery evidence, not reproducible source snapshots; conclusions based only on those pages remain provisional until a pinned upstream source is available.
 
 ## Comparable public packs
 
@@ -63,55 +54,29 @@ duplicates, complements, or sources for routing ideas.
 
 ## Differentiator for this pack
 
-In the surveyed set, most sources are broad implementation guides, audit checklists, or
-browser automation helpers; the direct matches above are implementation or
-debugging guides rather than pack-level replacements. This pack should stay
-narrower:
+In the surveyed set, most sources are broad implementation guides, audit checklists, or browser automation helpers; the direct matches above are implementation or debugging guides rather than pack-level replacements. This pack should stay narrower:
 
 1. Start from the user-visible symptom.
-2. Identify the exact evidence surface: DOM, accessibility tree, network,
-   lifecycle event, browser metric, host bridge, file bytes, or runtime state.
+2. Identify the exact evidence surface: DOM, accessibility tree, network, lifecycle event, browser metric, host bridge, file bytes, or runtime state.
 3. Reject weak findings before recommending a fix.
-4. Route to sibling skills when a keyword overlaps but the evidence model does
-   not.
-5. End with the smallest reproduction or regression shape that can support the
-   contract.
+4. Route to sibling skills when a keyword overlaps but the evidence model does not.
+5. End with the smallest reproduction or regression shape that can support the contract.
 
-That shape is why a public near match should not automatically block one of our
-skills. A near match blocks us only when it already owns the same trigger,
-evidence type, success criterion, and false-positive boundary.
+That shape is why a public near match should not automatically block one of our skills. A near match blocks us only when it already owns the same trigger, evidence type, success criterion, and false-positive boundary.
 
 ## Adoption rules
 
-- Do not import whole packs. They carry broad product, framework, or tool
-  assumptions that would blur this pack's edge-case routing.
-- Treat broad app-builder, React, accessibility, and web-quality skills as
-  complementary execution surfaces.
-- Add a new skill only when it passes `docs/skill-quality-standard.md`: recurring
-  failure, cross-framework or real host surface, general-agent difficulty,
-  distinct sibling boundary, testability, and weak-finding rejection.
-- Prefer improving sibling routing over adding a skill when a public pack already
-  covers the same failure model.
-- If a public skill has a stronger workflow for evidence collection, cite it as
-  a complementary tool and keep our `SKILL.md` focused on the frontend contract.
+- Do not import whole packs. They carry broad product, framework, or tool assumptions that would blur this pack's edge-case routing.
+- Treat broad app-builder, React, accessibility, and web-quality skills as complementary execution surfaces.
+- Add a new skill only when it passes `docs/skill-quality-standard.md`: recurring failure, cross-framework or real host surface, general-agent difficulty, distinct sibling boundary, testability, and weak-finding rejection.
+- Prefer improving sibling routing over adding a skill when a public pack already covers the same failure model.
+- If a public skill has a stronger workflow for evidence collection, cite it as a complementary tool and keep our `SKILL.md` focused on the frontend contract.
 
 ## Open follow-ups
 
-- Re-run a wider marketplace search when GitHub code search and Exa are not rate
-  limited.
-- Recheck browser-permission skills before admitting a generic permissions
-  candidate; the current API-specific activation, iframe-policy, and media
-  boundaries remain safer.
-- Research a plain mobile-browser/PWA viewport-and-keyboard candidate separately
-  from `webview-bridge-pages`. Admit it only after a reproducible mobile-browser
-  case and boundary evals against WebView, overlay/focus, and design-fidelity
-  ownership; the current issue reports are leads, not enough runtime evidence
-  for a new public skill.
-- Keep cross-tab state coordination as research-only until independent recurring
-  examples and a two-context regression distinguish it from bfcache restoration,
-  IndexedDB durability, authentication revalidation, and server sync policy.
-- Periodically repeat the IndexedDB and contenteditable searches. The opened
-  snapshot found broad implementation/PWA complements, not a direct replacement
-  for the newly admitted failure-contract skills.
-- If a new public pack becomes a direct match, add it here before changing the
-  README or manifests.
+- Re-run a wider marketplace search when GitHub code search and Exa are not rate limited.
+- Recheck browser-permission skills before admitting a generic permissions candidate; the current API-specific activation, iframe-policy, and media boundaries remain safer.
+- Research a plain mobile-browser/PWA viewport-and-keyboard candidate separately from `webview-bridge-pages`. Admit it only after a reproducible mobile-browser case and boundary evals against WebView, overlay/focus, and design-fidelity ownership; the current issue reports are leads, not enough runtime evidence for a new public skill.
+- Keep cross-tab state coordination as research-only until independent recurring examples and a two-context regression distinguish it from bfcache restoration, IndexedDB durability, authentication revalidation, and server sync policy.
+- Periodically repeat the IndexedDB and contenteditable searches. The opened snapshot found broad implementation/PWA complements, not a direct replacement for the newly admitted failure-contract skills.
+- If a new public pack becomes a direct match, add it here before changing the README or manifests.

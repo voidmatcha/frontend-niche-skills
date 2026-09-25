@@ -25,7 +25,7 @@ window.ReactNativeWebView.postMessage(jsonString); // string only
 
 ## Receiving (app → web)
 
-- App calls `injectJavaScript()` (the path shown in official docs) or `webViewRef.postMessage()`. For the latter, the dispatch target differs by platform in the pinned source: iOS dispatches a `MessageEvent` on `window` (`apple/RNCWebViewImpl.m`), Android dispatches on `document` (`RNCWebViewManager.kt`) — a page listening only on `window` silently receives nothing on Android. Register the same handler on both `window` and `document`. Neither listener is shown in the official guide.
+- App calls `injectJavaScript()` (the path shown in official docs) or `webViewRef.postMessage()`. For the latter, the dispatch target differs by platform in the pinned source: iOS dispatches a `MessageEvent` on `window` (`apple/RNCWebViewImpl.m`), Android dispatches on `document` (`RNCWebViewManager.kt`) — a page listening only on `window` silently receives nothing on Android. The app's build may differ: forks and patch-package patches can change the dispatch target (for example to `document` on both platforms), so read the installed copy in `node_modules`, not only the upstream source. Register the same handler on both `window` and `document`. Neither listener is shown in the official guide.
 - Prefer not to need this at all (one-way design). If used, validate payload schema — and note the race: injected JS runs in whatever page is currently loaded.
 
 ## Loading & lifecycle

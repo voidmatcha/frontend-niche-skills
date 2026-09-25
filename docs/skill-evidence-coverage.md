@@ -4,10 +4,7 @@ This map shows where each skill gets its supporting evidence. It is not a bug li
 
 ## Evidence ladder
 
-One ladder is used everywhere in this repository. Each rung says **what was
-actually done**, not how confident anyone feels about it. Confidence ratings and
-verification steps used to be separate axes in separate documents, which let a
-row read as stronger than the work behind it.
+One ladder is used everywhere in this repository. Each rung says **what was actually done**, not how confident anyone feels about it. Confidence ratings and verification steps used to be separate axes in separate documents, which let a row read as stronger than the work behind it.
 
 | Rung | Name | What it means | Where it lives |
 | --- | --- | --- | --- |
@@ -18,28 +15,11 @@ row read as stronger than the work behind it.
 
 Two things this ladder deliberately makes visible.
 
-E1 is nearly empty where it matters most. Only four runs measure whether this
-pack changes what an agent does: two behavioral comparisons that both tied, one
-routing comparison covering 16 of 138 cases, and one Figma-vs-Storybook pixel
-diff on an n8n Callout story. That is the honest state of the pack's own
-central claim.
+E1 is nearly empty where it matters most. Only a handful of runs measure whether this pack changes what an agent does: three behavioral comparisons that all tied, one routing comparison covering 16 of 138 cases, one full-catalog routing record (138 cases, five batched runs plus a name-only baseline, which measures selection rather than diagnosis), and one Figma-vs-Storybook pixel diff on an n8n Callout story. That is the honest state of the pack's own central claim.
 
-A second kind of E1 is not nearly empty, but it is a different kind.
-`.github/workflows/checks.yml` re-runs the browser fixtures under
-`skills/*/tests/` on every push. Four of the 41 skills have them: the
-history-scroll-restoration, media-capture-device, and pointer-gesture suites
-run across Chromium, Firefox, and WebKit, and the iframe-embed suite runs on
-Chromium only. These runs verify that the browser behaviors those skills
-describe are real; they do not measure whether handing an agent a skill changes
-its output. They also fall short of this rung's own definition in one respect:
-the same suite gates pushes through `scripts/pre-push-checks.sh`, so a failing
-fixture blocks the push instead of leaving a recorded negative result. The only
-record is CI run history. The two kinds are counted separately for that reason.
+A second kind of E1 is not nearly empty, but it is a different kind. `.github/workflows/checks.yml` re-runs the browser fixtures under `skills/*/tests/` on every push. Four of the 41 skills have them: the history-scroll-restoration, media-capture-device, and pointer-gesture suites run across Chromium, Firefox, and WebKit, and the iframe-embed suite runs on Chromium only. These runs verify that the browser behaviors those skills describe are real; they do not measure whether handing an agent a skill changes its output. They also fall short of this rung's own definition in one respect: the same suite gates pushes through `scripts/pre-push-checks.sh`, so a failing fixture blocks the push instead of leaving a recorded negative result. The only record is CI run history. The two kinds are counted separately for that reason.
 
-E2 is not a defect claim. It means someone opened the file and the code is
-there. Whether the pattern is a bug the maintainer would accept is a separate
-question that no row in this repository has answered, because nothing has been
-reproduced locally or filed upstream.
+E2 is not a defect claim. It means someone opened the file and the code is there. Whether the pattern is a bug the maintainer would accept is a separate question that no row in this repository has answered, because nothing has been reproduced locally or filed upstream.
 
 ## Coverage table
 
@@ -69,7 +49,7 @@ reproduced locally or filed upstream.
 | `bff-proxy-security-contracts` | `skills/bff-proxy-security-contracts/SKILL.md`, `skills/bff-proxy-security-contracts/references/prior-art.md`, `skills/bff-proxy-security-contracts/evals/evals.json` | Primary-source and open-source comparison for SSRF allowlists, configured proxy routes, method/auth/header policy, alternate ingress, multipart budgets/boundaries, and persistent business-flow controls; eval prompts cover proxy, upload, and replay decisions. | A frontend-owned server route relays upstream HTTP and the evidence identifies the client-controlled capability or a cross-ingress policy gap. |
 | `payment-page-client-security` | `skills/payment-page-client-security/references/pci-payment-page-scope.md`, `docs/oss-validation-cases.md`, `README.md` | Has payment-page scope guidance and source-verified leads. It collects frontend evidence, not PCI scope decisions. | A case has runtime script inventory or PAN/CVV boundary evidence for a real checkout page. |
 | `optimistic-update-rollback-contracts` | `skills/optimistic-update-rollback-contracts/SKILL.md` | Primary-source reference coverage for optimistic apply, rollback, temp/server id reconciliation, refetch races, and concurrent mutation ordering. | Evidence shows the apply -> confirm/rollback -> reconcile sequence, not only a generic mutation failure. |
-| `file-ingest-contracts` | `skills/file-ingest-contracts/SKILL.md`, `skills/file-ingest-contracts/references/file-ingest-contracts.md` | Primary-source reference coverage for drag/drop, paste, directory/multiple upload, type trust, and object-URL preview lifecycle. | The case involves files entering the page; export/download issues belong to `download-export-safety`. |
+| `file-ingest-contracts` | `skills/file-ingest-contracts/SKILL.md`, `skills/file-ingest-contracts/references/file-ingest-contracts.md`, `evals/behavioral/2026-09-25-folder-drop-empty-after-await/` | Primary-source reference coverage for drag/drop, paste, directory/multiple upload, type trust, and object-URL preview lifecycle. One pre-registered behavioral run (E1) tied: the model reached every criterion without the skill. | The case involves files entering the page; export/download issues belong to `download-export-safety`. |
 | `download-export-safety` | `skills/download-export-safety/references/export-contracts.md`, `docs/oss-validation-cases.md` | Has E2 casebook coverage for CSV/Excel, Blob/Object URL, clipboard, filenames, and export boundaries. | Evidence inspects final exported cells/files or lifecycle cleanup, not only helper names. |
 | `design-to-code-fidelity` | `skills/design-to-code-fidelity/references/*.md`, `skills/design-to-code-fidelity/scripts/*`, `docs/oss-validation-cases.md` | Strong tooling-backed coverage. It has capture/diff scripts, Figma adapters, mismatch interpretation, and E2 casebook coverage. | The case has a design reference and implementation capture, or explicitly states why it remains [T3/T4 evidence](../skills/design-to-code-fidelity/SKILL.md#evidence-tiers). |
 | `component-extraction-judgment` | `skills/component-extraction-judgment/references/prior-art.md`, `docs/oss-validation-cases.md` | Source-verified leads plus React/Vue/Svelte/Web Components composition references. This is a refactor/maintenance judgment skill, not a runtime-defect detector. | A case has stable duplication evidence and a bounded extraction or non-extraction decision. |

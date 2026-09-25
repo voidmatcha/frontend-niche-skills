@@ -20,7 +20,7 @@
 <p align="center">
 <a href="#skills">41 skills</a> ·
 <a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">blinded routing runs, all 138 cases</a> ·
-<a href="./evals/behavioral/">two self-run behavioral tests, both tied</a> ·
+<a href="./evals/behavioral/">three self-run behavioral tests, all tied</a> ·
 <a href="./docs/oss-validation-cases.md">commit-pinned OSS casebook</a> ·
 <a href="#development-checks">177 eval-case specs</a> ·
 <a href="./.github/workflows/link-check.yml">CI-checked citations</a>
@@ -314,7 +314,7 @@ Where evidence lives:
 - [`docs/skill-quality-standard.md`](./docs/skill-quality-standard.md) — portable format, routing, workflow, evidence, output, evaluation, and new-skill admission criteria used by this pack.
 - `skills/*/SKILL.md` and `skills/*/references/*.md` — per-skill official docs, prior art, examples, false-positive notes, and implementation-specific evidence.
 
-- [`evals/behavioral/`](./evals/behavioral/) — the two times this pack measured its own central claim, an agent diagnosing a bug with and without the relevant skill. Each rubric was committed before its runs. Both cases tied, so on those two reports the skill changed nothing a pre-registered criterion could see. The second write-up records one unscored difference that went to the skill, and says why noticing it afterwards is not evidence.
+- [`evals/behavioral/`](./evals/behavioral/) — the three times this pack measured its own central claim, an agent diagnosing a bug with and without the relevant skill. Each rubric was committed before its runs, and the third case's skill was drawn with a fixed seed rather than picked. All three cases tied, so on those three reports the skill changed nothing a pre-registered criterion could see. The second and third write-ups record unscored differences that went to the skill, and say why noticing them afterwards is not evidence.
 - [`.github/workflows/checks.yml`](./.github/workflows/checks.yml) — browser fixtures for four of the 41 skills re-run on every push: three suites across Chromium, Firefox, and WebKit, and one on Chromium only. They verify that the browser behaviors those skills describe are real; they do not measure whether the pack changes what an agent does. Because the same suite gates pushes, a failing run blocks the push rather than leaving a recorded negative.
 
 E2 rows are **not** confirmed upstream bugs. An E2 row becomes evidence only after the current branch is re-checked, the behavior is reproduced locally, and a maintainer accepts the fix or a failing test backs it.

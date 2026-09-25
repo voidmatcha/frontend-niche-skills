@@ -20,7 +20,7 @@
 <p align="center">
 <a href="#skills">skill 41개</a> ·
 <a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">블라인드 라우팅 실행, 138건 전체</a> ·
-<a href="./evals/behavioral/">자체 실행 행동 시험 두 건, 모두 동률</a> ·
+<a href="./evals/behavioral/">자체 실행 행동 시험 세 건, 모두 동률</a> ·
 <a href="./docs/oss-validation-cases.md">커밋을 고정한 OSS 사례집</a> ·
 <a href="#개발-검사">eval 케이스 명세 177개</a> ·
 <a href="./.github/workflows/link-check.yml">CI가 검사하는 인용</a>
@@ -303,7 +303,7 @@ codex plugin add frontend-niche-skills@frontend-niche-skills
 
 ## 증거
 
-- [`evals/behavioral/`](./evals/behavioral/) — 이 팩이 자기 중심 주장을 실제로 측정한 두 번입니다. 같은 버그를 해당 skill을 주고/주지 않고 진단하게 했습니다. 채점 기준은 매번 실행 전에 커밋했습니다. 두 사례 모두 동률이라, 이 두 리포트에서는 사전 등록한 기준으로 볼 수 있는 차이를 skill이 만들지 못했습니다. 두 번째 기록에는 기준 밖에서 skill 쪽이 옳았던 차이 하나와, 그것을 나중에 알아챈 것이 왜 증거가 아닌지가 적혀 있습니다.
+- [`evals/behavioral/`](./evals/behavioral/) — 이 팩이 자기 중심 주장을 실제로 측정한 세 번입니다. 같은 버그를 해당 skill을 주고/주지 않고 진단하게 했습니다. 채점 기준은 매번 실행 전에 커밋했고, 세 번째 사례의 skill은 고르지 않고 고정 시드로 추첨했습니다. 세 사례 모두 동률이라, 이 세 리포트에서는 사전 등록한 기준으로 볼 수 있는 차이를 skill이 만들지 못했습니다. 두 번째와 세 번째 기록에는 기준 밖에서 skill 쪽에 있었던 차이와, 그것을 나중에 알아챈 것이 왜 증거가 아닌지가 적혀 있습니다.
 - [`.github/workflows/checks.yml`](./.github/workflows/checks.yml): 41개 skill 중 4개의 브라우저 픽스처를 푸시마다 다시 실행합니다. 세 개는 Chromium, Firefox, WebKit에서, 하나는 Chromium에서만 돕니다. 해당 skill이 서술하는 브라우저 동작이 사실인지를 확인할 뿐, 이 팩이 에이전트의 출력을 바꾸는지는 측정하지 않습니다. 같은 스위트가 푸시를 막기 때문에, 실패한 실행은 기록으로 남는 대신 푸시를 차단합니다.
 
 이 저장소는 grep 매치를 곧 버그로 취급하지 않습니다. 모든 주장은 [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md)의 증거 ladder에서 등급 하나를 답니다. **E1 측정됨**, **E2 소스 확인됨**, **E3 1차 출처 인용**, **E4 라우팅 예시**입니다. 등급은 실제로 무엇을 했는지를 기록하며, 얼마나 확신하는지는 기록하지 않습니다. 2026-08-01 기준 OSS casebook의 어떤 항목도 upstream에 제보되거나, 로컬에서 재현되거나, 메인테이너에게 수용된 적이 없습니다.

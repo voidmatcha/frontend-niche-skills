@@ -20,7 +20,7 @@
 <p align="center">
 <a href="#skills">41 个技能</a> ·
 <a href="./evals/routing/results/2026-09-25-full-catalog-boundary-edit/">盲测路由运行，全部 138 例</a> ·
-<a href="./evals/behavioral/">两次自测行为实验，均为平局</a> ·
+<a href="./evals/behavioral/">三次自测行为实验，均为平局</a> ·
 <a href="./docs/oss-validation-cases.md">锚定 commit 的开源案例集</a> ·
 <a href="#development-checks">177 条评估用例规格</a> ·
 <a href="./.github/workflows/link-check.yml">CI 校验的引用</a>
@@ -305,7 +305,7 @@ codex plugin add frontend-niche-skills@frontend-niche-skills
 
 ## 证据
 
-- [`evals/behavioral/`](./evals/behavioral/) — 本技能包实测自身核心主张的两次记录： 同一个缺陷，分别在提供和不提供相关技能的情况下让智能体去诊断。评分标准都在运行前 提交。两个案例均为平局，因此在这两份报告上，技能没有产生任何预先登记的标准能够 观测到的差异。第二份记录写明了一处标准之外、技能一方更正确的差异，以及事后才发现 它为什么不算证据。
+- [`evals/behavioral/`](./evals/behavioral/) — 本技能包实测自身核心主张的三次记录： 同一个缺陷，分别在提供和不提供相关技能的情况下让智能体去诊断。评分标准都在运行前 提交，第三个案例的技能不是挑选的，而是用固定种子抽取的。三个案例均为平局，因此在这三份 报告上，技能没有产生任何预先登记的标准能够观测到的差异。第二份和第三份记录写明了标准 之外、技能一方的差异，以及事后才发现它们为什么不算证据。
 - [`.github/workflows/checks.yml`](./.github/workflows/checks.yml)——41 个技能中有 4 个的浏览器夹具在每次推送时重跑：3 套在 Chromium、Firefox、WebKit 上运行，1 套仅在 Chromium 上。它们验证相关技能所描述的浏览器行为是否属实，但不测量本技能包是否改变智能体的输出。由于同一套件同时把关推送，失败的运行会阻断推送，而不会留下可见的负面记录。
 
 本仓库避免把一次 grep 命中当作缺陷。每一项主张都对应 [`docs/skill-evidence-coverage.md`](./docs/skill-evidence-coverage.md) 中证据阶梯的一个层级：**E1 已测量**、**E2 源码核实**、**E3 引用一手来源**、**E4 路由示例**。层级记录的是实际做了什么，而不是有多确信。截至 2026-08-01，OSS 案例集中没有任何一条被上报给上游、在本地复现，或被维护者接受。

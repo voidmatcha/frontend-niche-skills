@@ -112,3 +112,69 @@ Sources for the criteria:
 - A result favourable to the pack is weak evidence; an unfavourable one is
   strong evidence, since the conditions are chosen to suit the pack.
 - Repository isolation and grader blinding are instructions, not sandboxes.
+
+## Result
+
+Added after both conditions ran. Nothing above this heading was changed.
+
+Both conditions met all five criteria. The skill did not change the diagnosis
+on this case.
+
+| Criterion | A, no skill | B, with skill |
+| --- | :---: | :---: |
+| R1 the `await` ends drop-time access; capture before it | met | met |
+| R2 folders need `items` → entries and recursion | met | met |
+| R3 `readEntries()` called until it returns an empty list | met | met |
+| R4 `accept` is a picker hint, not validation; server checks | met | met |
+| R5 fix kept at the drop handler | met | met |
+
+The grader saw the two answers as X and Y in a seeded random order, with the
+condition headings removed and no condition-revealing terms left in either
+body (checked by search). It scored both 5/5. The maintainer then read both
+files against the rubric and agreed with every verdict: condition A states
+R1–R5 at lines 9–11 and 16, 15, 17 and 70, 23 and 90, and in its handler;
+condition B at lines 9 and 13, 11, 49, 17 and 59, and in its handler.
+
+R3 is not in the skill. Both conditions stated it anyway, including the
+roughly-100-entries-per-call behaviour in Chromium, so the skill neither
+supplied it nor crowded it out.
+
+Minor inaccuracies, none of which changed a verdict:
+
+- Condition A calls the post-dispatch state "protected mode"; in the HTML
+  model the store is disabled once dispatch ends, and protected mode still
+  lists item kinds and types.
+- Condition A says `file.type` can be empty "for files from folders"; files
+  from directory entries normally get the extension-inferred type.
+- Condition B calls `item.getAsEntry?.()`, a method no current browser ships;
+  the optional call makes it harmless.
+- Condition B says only `items` → `webkitGetAsEntry()` can walk into a dropped
+  directory, leaving out `getAsFileSystemHandle()`.
+
+Outside the rubric, condition B added a window-level `dragover`/`drop` guard,
+a `dropEffect` hint, the polyglot caveat on magic-byte sniffing, and a concrete
+regression-test design with a `DataTransfer` that empties after a microtask.
+Condition A added reporting a rejected-file count to the user and a
+`getAsFile()` fallback. Most of condition B's extras are items 1, 3, and 5 of
+the skill. None of them were in the rubric, and none changed the diagnosis or
+the fix.
+
+## Reading this honestly
+
+This is the third null result for the claim these runs test. The case was
+drawn rather than picked, and its best-known traps were set aside, yet a strong
+model without the skill still reached every criterion, including one the skill
+does not contain. On this report the skill's content was redundant for the
+diagnosis.
+
+The skill did make condition B's answer broader, mostly by restating its own
+checklist. That is the same kind of difference the second run recorded, and it
+is not evidence for the same reason: it was noticed after the fact and no
+pre-registered criterion measured it.
+
+Separately, a same-day comparison graded 27 eval cases with and without their
+skills and found the skill-supplied answers far ahead. That comparison is not
+recorded here: its expectations were written from the skills' own text and
+several were reworded after earlier answers were graded, so it measured
+conformance to the skills rather than diagnosis quality, and it did not meet
+this folder's pre-registration rule.
